@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: LibraSys
+  #  profiles:
+  #    active: dev
+  datasource:
+    url: jdbc:mysql://localhost:3306/libraSysDB
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    database: mysql
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+  mail:
+    port: 465
+    host: pro14.emailserver.vn
+    username: quy2003@wuy.id.vn
+    password: v9QcI2{ehK^)
+    protocol: smtp
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            enable: true
+jwt:
+  signer-key: 0fCUCfplKd4o5fNUOBAkk1waUF7wbSHrPM5+MABZtLb13nzOw1yLekTVI2ChTbRs
+  valid-duration: 86400 #in seconds 1days
+  refreshable-duration: 604800 #in seconds 7days
+server:
+  port: 8009
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
