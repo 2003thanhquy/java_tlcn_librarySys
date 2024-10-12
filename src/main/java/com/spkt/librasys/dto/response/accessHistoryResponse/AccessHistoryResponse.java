@@ -14,6 +14,6 @@ public class AccessHistoryResponse {
     String accessId;
     LocalDateTime accessTime;
     String activity;  // Ví dụ: "READ", "DOWNLOAD"
-    String documentId;
+    Long documentId;
     String userId;
 }

@@ -32,6 +32,9 @@ public class AccessHistoryServiceImpl implements AccessHistoryService {
     AccessHistoryMapper accessHistoryMapper;
     @Override
     public void recordAccess(User user, Document document, String activity) {
+        if (user == null || document == null || activity == null || activity.isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_REQUEST);
+        }
         AccessHistory accessHistory = AccessHistory.builder()
                 .user(user)
                 .document(document)

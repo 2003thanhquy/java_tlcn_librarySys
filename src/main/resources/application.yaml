@@ -33,6 +33,20 @@ spring:
             required: true
           ssl:
             enable: true
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 616603233526-hu5q0l6h3ha9icuq5r3nbnagb1ji4rqf.apps.googleusercontent.com
+            client-secret: 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
+            scope: profile, email
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
 jwt:
   signer-key: 0fCUCfplKd4o5fNUOBAkk1waUF7wbSHrPM5+MABZtLb13nzOw1yLekTVI2ChTbRs
   valid-duration: 86400 #in seconds 1days

@@ -3,6 +3,7 @@ package com.spkt.librasys.controller;
 import com.nimbusds.jose.JOSEException;
 import com.spkt.librasys.dto.request.AuthenticationRequest;
 import com.spkt.librasys.dto.request.IntrospectRequest;
+import com.spkt.librasys.dto.request.LogoutRequest;
 import com.spkt.librasys.dto.request.RefreshRequest;
 import com.spkt.librasys.dto.response.ApiResponse;
 import com.spkt.librasys.dto.response.AuthenticationResponse;
@@ -34,7 +35,8 @@ public class AuthenticationController {
 
     }
     @PostMapping("/logout")
-    public ApiResponse<Void> logout(){
+    public ApiResponse<Void> logout(@RequestBody LogoutRequest request) throws ParseException, JOSEException {
+        authenticationService.logout(request);
         return ApiResponse.<Void>builder()
                 .build();
 

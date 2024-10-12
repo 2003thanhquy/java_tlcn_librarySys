@@ -75,7 +75,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public void logout(LogoutRequest request) {
+    public void logout(LogoutRequest request) throws ParseException, JOSEException{
         try {
             var signToken = verifyToken(request.getToken(), true);
 
@@ -84,8 +84,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
             InvalidatedToken invalidatedToken =
                     InvalidatedToken.builder().id(jit).expiryTime(expiryTime).build();
+
             invalidatedTokenRepository.save(invalidatedToken);
-        } catch (AppException | JOSEException | ParseException exception) {
+        } catch (AppException exception) {
             log.info("Token already expired");
         }
     }
@@ -106,28 +107,25 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     }
 
     @Override
-    public AuthenticationResponse refresh(RefreshRequest request) {
-        String token = request.getToken();
-        try {
-            SignedJWT signedJWT = verifyToken(token,true);
-            Date expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+    public AuthenticationResponse refresh(RefreshRequest request)  throws JOSEException, ParseException  {
+        var signedJWT = verifyToken(request.getToken(), true);
 
-            if (expiryTime.before(new Date())) {
-                throw new AppException(ErrorCode.TOKEN_EXPIRED);
-            }
+        var jit = signedJWT.getJWTClaimsSet().getJWTID();
+        var expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
 
-            User user = userRepository.findByUsername(signedJWT.getJWTClaimsSet().getSubject())
-                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        InvalidatedToken invalidatedToken =
+                InvalidatedToken.builder().id(jit).expiryTime(expiryTime).build();
 
-            String newToken = generationToken(user);
-            return AuthenticationResponse.builder()
-                    .token(newToken)
-                    .authenticated(true)
-                    .build();
-        } catch (ParseException | JOSEException e) {
-            log.error("Token refresh failed", e);
-            throw new AppException(ErrorCode.INVALID_REQUEST);
-        }
+        invalidatedTokenRepository.save(invalidatedToken);
+
+        var username = signedJWT.getJWTClaimsSet().getSubject();
+
+        var user =
+                userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.UNAUTHORIZED));
+
+        var token = generationToken(user);
+
+        return AuthenticationResponse.builder().token(token).authenticated(true).build();
     }
     private SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
