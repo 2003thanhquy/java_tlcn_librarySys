@@ -17,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -43,7 +45,7 @@ public class UserServiceImpl implements UserService {
 
         return userMapper.toUserResponse(user);
     }
-    @PostAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_' + @roleProvider.ADMIN_ROLE)")
     @Override
     public UserResponse getUserById(String id) {
         return userMapper.toUserResponse(
@@ -67,19 +69,32 @@ public class UserServiceImpl implements UserService {
         }
         return userMapper.toUserResponse(user);
     }
-    @PostAuthorize("hasRole('ADMIN')")
+
+    @PreAuthorize("hasRole('ROLE_' + @roleProvider.ADMIN_ROLE)")
     @Override
-    public List<UserResponse> getAllUsers() {
-      return userRepository.findAll().stream().map(userMapper::toUserResponse).toList();
+    public Page<UserResponse> getAllUsers(String username, Pageable pageable) {
+        Page<User> users;
+
+        // Nếu người dùng có nhập username để tìm kiếm
+        if (username != null && !username.trim().isEmpty()) {
+            users = userRepository.findByUsernameContainingIgnoreCase(username, pageable);
+        } else {
+            users = userRepository.findAll(pageable);
+        }
+        return users.map(userMapper::toUserResponse);
     }
 
     @Override
     public UserResponse updateUser(String id, UserUpdateRequest userUpdateRequest) {
-        return null;
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        userMapper.updateUser(user, userUpdateRequest);
+        userRepository.save(user);
+        return userMapper.toUserResponse(user);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     public void deleteUser(String id) {
-
+        //userRepository.deleteById(id);
     }
 }

@@ -17,5 +17,8 @@ public class UserResponse {
     String firstName;
     String lastName;
     LocalDate dob;
-   // Set<RoleResponse> roles;
+    String phoneNumber;
+    String address;
+    LocalDate registrationDate;
+    LocalDate expirationDate;
 }

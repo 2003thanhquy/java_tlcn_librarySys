@@ -10,6 +10,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,10 +32,12 @@ public class UserController {
                 .build();
     }
     @GetMapping
-    public  ApiResponse<List<UserResponse>> getAllUsers() {
-
-        return ApiResponse.<List<UserResponse>>builder()
-                .result(userService.getAllUsers())
+    public ApiResponse<Page<UserResponse>> getAllUsers(
+            @RequestParam(required = false) String username,
+            Pageable pageable) {
+        Page<UserResponse> users = userService.getAllUsers(username, pageable);
+        return ApiResponse.<Page<UserResponse>>builder()
+                .result(users)
                 .build();
     }
     @GetMapping("/my-info")
