@@ -48,7 +48,8 @@ public class User {
 
     @Column(name = "expiration_date")
     LocalDate expirationDate;  // Ngày hết hạn tài khoản (membership expiration)
-
+//    @Column(name = "google_refresh_token")
+//    String googleRefreshToken;
     // Một người dùng có nhiều lịch sử truy cập
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     List<AccessHistory> accessHistories;

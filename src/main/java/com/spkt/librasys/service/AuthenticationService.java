@@ -7,6 +7,7 @@ import com.spkt.librasys.dto.request.LogoutRequest;
 import com.spkt.librasys.dto.request.RefreshRequest;
 import com.spkt.librasys.dto.response.AuthenticationResponse;
 import com.spkt.librasys.dto.response.IntrospectResponse;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 
 import java.text.ParseException;
 
@@ -15,4 +16,5 @@ public interface AuthenticationService {
     void logout(LogoutRequest request) throws ParseException, JOSEException;
     IntrospectResponse introspect(IntrospectRequest request);
     AuthenticationResponse refresh(RefreshRequest request) throws JOSEException, ParseException;
+    AuthenticationResponse handleGoogleLogin(OAuth2AuthenticationToken authenticationToken);
 }

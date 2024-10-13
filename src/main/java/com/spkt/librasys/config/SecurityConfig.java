@@ -23,7 +23,9 @@ import org.springframework.web.filter.CorsFilter;
 @EnableMethodSecurity
 public class SecurityConfig {
     private final String[] PUBLIC_ENDPOINTS = {"/api/v1/users",
-    "api/v1/token","/auth/introspect"
+    "api/v1/token","/auth/introspect",
+            "/api/v1/auth/login-google", // Cho phép đăng nhập Google
+            "/oauth2/**"
     };
     @Value("${jwt.signer-key}")
     private String signerKey;
@@ -34,18 +36,29 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request->
                 request.requestMatchers(HttpMethod.POST,PUBLIC_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.GET,"*/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/**").permitAll()
                         .requestMatchers(HttpMethod.POST,"*/**").permitAll()
 //                        .requestMatchers(HttpMethod.GET,"/identity/users")
                         //.hasAuthority("SCOPE_ADMIN")
                        // .hasRole(Role.ADMIN.name())
-                .anyRequest().authenticated());
+                .anyRequest().authenticated())
+                .oauth2Login(oauth2Login ->
+                        oauth2Login
+                                .loginPage("/api/v1/auth/login-google")  // Endpoint đăng nhập Google
+                                .defaultSuccessUrl("/api/v1/auth/oauth2/success", true)
+                                .failureUrl("/api/v1/auth/oauth2/failure")
+//                                .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
+//                                        .userService(customOAuth2UserService()))  // Service lấy thông tin người dùng
 
-        httpSecurity.oauth2ResourceServer(oauth2->oauth2.jwt(
-                jwtConfigurer -> jwtConfigurer.decoder(customJwtDecode)
-                        .jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                .authenticationEntryPoint(new JwtAuthenticationEntryPoint() )
-        );
+                )
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwtConfigurer -> jwtConfigurer
+                                .decoder(customJwtDecode)
+                                .jwtAuthenticationConverter(jwtAuthenticationConverter()))
+                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
+                );
+        ;
+
 
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
 
@@ -59,30 +72,23 @@ public class SecurityConfig {
         converter.setJwtGrantedAuthoritiesConverter(jwtGrantedAuthoritiesConverter);
         return converter;
     }
-//    @Bean
-//    JwtDecoder jwtDecoder() {
-//        SecretKeySpec secretKeySpec = new SecretKeySpec(signerKey.getBytes(), "HS512");
-//        return  NimbusJwtDecoder
-//                .withSecretKey(secretKeySpec)
-//                .macAlgorithm(MacAlgorithm.HS512)
-//                .build();
-//    }
-@Bean
-public CorsFilter corsFilter() {
-    CorsConfiguration corsConfiguration = new CorsConfiguration();
+    @Bean
+    public CorsFilter corsFilter() {
+        CorsConfiguration corsConfiguration = new CorsConfiguration();
 
-    corsConfiguration.addAllowedOrigin("*");
-    corsConfiguration.addAllowedMethod("*");
-    corsConfiguration.addAllowedHeader("*");
+        corsConfiguration.addAllowedOrigin("*");
+        corsConfiguration.addAllowedMethod("*");
+        corsConfiguration.addAllowedHeader("*");
 
-    UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
-    urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
+        UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
+        urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);
 
-    return new CorsFilter(urlBasedCorsConfigurationSource);
-}
+        return new CorsFilter(urlBasedCorsConfigurationSource);
+    }
 
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(10);
     }
+
 }

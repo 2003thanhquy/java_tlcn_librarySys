@@ -5,6 +5,7 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.spkt.librasys.constant.PredefinedRole;
 import com.spkt.librasys.dto.request.AuthenticationRequest;
 import com.spkt.librasys.dto.request.IntrospectRequest;
 import com.spkt.librasys.dto.request.LogoutRequest;
@@ -12,10 +13,12 @@ import com.spkt.librasys.dto.request.RefreshRequest;
 import com.spkt.librasys.dto.response.AuthenticationResponse;
 import com.spkt.librasys.dto.response.IntrospectResponse;
 import com.spkt.librasys.entity.InvalidatedToken;
+import com.spkt.librasys.entity.Role;
 import com.spkt.librasys.entity.User;
 import com.spkt.librasys.exception.AppException;
 import com.spkt.librasys.exception.ErrorCode;
 import com.spkt.librasys.repository.access.InvalidatedTokenRepository;
+import com.spkt.librasys.repository.access.RoleRepository;
 import com.spkt.librasys.repository.access.UserRepository;
 import com.spkt.librasys.service.AuthenticationService;
 import lombok.AccessLevel;
@@ -24,17 +27,19 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.client.RestTemplate;
 
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.StringJoiner;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -42,7 +47,9 @@ import java.util.UUID;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthenticationServiceImpl implements AuthenticationService {
     UserRepository userRepository;
+    RoleRepository roleRepository;
     InvalidatedTokenRepository invalidatedTokenRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @NonFinal
     @Value("${jwt.signer-key}")
@@ -86,6 +93,16 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     InvalidatedToken.builder().id(jit).expiryTime(expiryTime).build();
 
             invalidatedTokenRepository.save(invalidatedToken);
+            // thu hoai token google tu user neu user login bang google
+//            String username = signToken.getJWTClaimsSet().getSubject();
+//            User user = userRepository.findByUsername(username)
+//                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+//            if (user.getGoogleRefreshToken() != null) {
+//                revokeGoogleToken(user.getGoogleRefreshToken());
+//                user.setGoogleRefreshToken(null);
+//                userRepository.save(user);
+//            }
+
         } catch (AppException exception) {
             log.info("Token already expired");
         }
@@ -127,6 +144,40 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         return AuthenticationResponse.builder().token(token).authenticated(true).build();
     }
+    @Override
+    public AuthenticationResponse handleGoogleLogin(OAuth2AuthenticationToken authenticationToken) {
+        OAuth2User userAuth = authenticationToken.getPrincipal();
+
+        // Lấy các thông tin từ Google như email, name
+        String email = userAuth.getAttribute("email");
+        String name = userAuth.getAttribute("name");
+        String givenName = userAuth.getAttribute("given_name");
+        String familyName = userAuth.getAttribute("family_name");
+        String refreshToken = (String) userAuth.getAttribute("refresh_token");
+        log.info("refreshToken"+refreshToken);
+        HashSet<Role> roles = new HashSet<>();
+        roleRepository.findById(PredefinedRole.USER_ROLE).ifPresent(roles::add);
+
+        User user = userRepository.findByUsername(email)
+                .orElseGet(() -> {
+                    User newUser = User.builder()
+                            .username(email)
+                            .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                            .firstName(givenName)
+                            .lastName(familyName)
+                            .roles(roles)
+//                            .googleRefreshToken(refreshToken)
+                            .build();
+                    return userRepository.save(newUser);
+                });
+
+        String token = generationToken(user); // Tạo JWT cho người dùng này
+        return AuthenticationResponse.builder()
+                .token(token)
+                .authenticated(true)
+                .build();
+    }
+
     private SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
 
@@ -192,5 +243,30 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         return stringJoiner.toString();
+    }
+    private void revokeGoogleToken(String googleRefreshToken) {
+        String revokeUrl = "https://oauth2.googleapis.com/revoke";
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        // Thiết lập headers cho yêu cầu
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        // Tham số để gửi yêu cầu hủy token
+        String requestBody = "token=" + googleRefreshToken;
+
+        // Tạo yêu cầu HttpEntity với headers và body
+        HttpEntity<String> request = new HttpEntity<>(requestBody, headers);
+
+        // Gửi yêu cầu POST để hủy token
+        try {
+            restTemplate.postForEntity(revokeUrl, request, String.class);
+            System.out.println("Token đã bị hủy thành công.");
+        } catch (Exception e) {
+            System.err.println("Lỗi khi hủy token: " + e.getMessage());
+        }
+
+
     }
 }

@@ -9,15 +9,15 @@ import com.spkt.librasys.dto.response.ApiResponse;
 import com.spkt.librasys.dto.response.AuthenticationResponse;
 import com.spkt.librasys.dto.response.IntrospectResponse;
 import com.spkt.librasys.service.AuthenticationService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.text.ParseException;
 
 @RestController
@@ -53,5 +53,21 @@ public class AuthenticationController {
         var result = authenticationService.introspect(request);
         return ApiResponse.<IntrospectResponse>builder().result(result).build();
     }
+    // handle google login
+    @GetMapping("/login-google")
+    public void googleLogin(HttpServletResponse response) throws IOException {
+        String googleOAuth2Endpoint = "/oauth2/authorization/google";
+        response.sendRedirect(googleOAuth2Endpoint);
+    }
+    @GetMapping("/oauth2/success")
+    public ApiResponse<AuthenticationResponse> googleLoginSuccess(OAuth2AuthenticationToken authenticationToken) {
+        AuthenticationResponse response = authenticationService.handleGoogleLogin(authenticationToken);
+        return ApiResponse.<AuthenticationResponse>builder()
+                .message("Google login successful")
+                .result(response)
+                .build();
+    }
+
+
 
 }
