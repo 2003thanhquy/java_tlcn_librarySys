@@ -43,6 +43,7 @@ public enum ErrorCode {
     DATABASE_ERROR(5001, "Database error occurred", HttpStatus.INTERNAL_SERVER_ERROR),
     DATA_INTEGRITY_VIOLATION(5002, "Data integrity violation", HttpStatus.CONFLICT),
     TRANSACTION_FAILED(5003, "Database transaction failed", HttpStatus.INTERNAL_SERVER_ERROR),
+    TRANSACTION_NOT_FOUND(5004, "Loan transaction not found", HttpStatus.NOT_FOUND), // Thêm dòng này
 
     // Nhóm lỗi hệ thống
     SERVER_ERROR(6001, "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR),

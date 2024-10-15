@@ -1,4 +1,4 @@
-package com.spkt.librasys.constant;
+package com.spkt.librasys.entity.enums;
 
 
 public enum DocumentActivityStatus {

@@ -147,14 +147,14 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public AuthenticationResponse handleGoogleLogin(OAuth2AuthenticationToken authenticationToken) {
         OAuth2User userAuth = authenticationToken.getPrincipal();
-
+        log.info("userAuth ",userAuth);
         // Lấy các thông tin từ Google như email, name
         String email = userAuth.getAttribute("email");
         String name = userAuth.getAttribute("name");
         String givenName = userAuth.getAttribute("given_name");
         String familyName = userAuth.getAttribute("family_name");
-        String refreshToken = (String) userAuth.getAttribute("refresh_token");
-        log.info("refreshToken"+refreshToken);
+//        String refreshToken = (String) userAuth.getAttribute("refresh_token");
+//        log.info("refreshToken"+refreshToken);
         HashSet<Role> roles = new HashSet<>();
         roleRepository.findById(PredefinedRole.USER_ROLE).ifPresent(roles::add);
 

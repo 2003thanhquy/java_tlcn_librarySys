@@ -38,6 +38,8 @@ public class Document {
 
     @Column(name = "quantity")
     int quantity;
+    @Column(name = "borrowed_count", nullable = false, columnDefinition = "integer default 0")
+    int borrowedCount; // Số lượng sách đã mượn
 
     @Column(name = "description", length = 1000)
     String description;

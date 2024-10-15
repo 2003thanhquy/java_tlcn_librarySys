@@ -9,7 +9,7 @@ import com.spkt.librasys.exception.ErrorCode;
 import com.spkt.librasys.mapper.AccessHistoryMapper;
 import com.spkt.librasys.repository.AccessHistoryRepository;
 import com.spkt.librasys.service.AccessHistoryService;
-import com.spkt.librasys.specification.AccessHistorySpecification;
+import com.spkt.librasys.repository.specification.AccessHistorySpecification;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

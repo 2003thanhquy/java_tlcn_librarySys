@@ -48,8 +48,7 @@ public class SecurityConfig {
                                 .defaultSuccessUrl("/api/v1/auth/oauth2/success", true)
                                 .failureUrl("/api/v1/auth/oauth2/failure")
 //                                .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
-//                                        .userService(customOAuth2UserService()))  // Service lấy thông tin người dùng
-
+//                                        .userService(customOAuth2UserService()))  // Service lấy thông tin người dùngs
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwtConfigurer -> jwtConfigurer

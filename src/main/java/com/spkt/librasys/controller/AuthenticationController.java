@@ -9,6 +9,7 @@ import com.spkt.librasys.dto.response.ApiResponse;
 import com.spkt.librasys.dto.response.AuthenticationResponse;
 import com.spkt.librasys.dto.response.IntrospectResponse;
 import com.spkt.librasys.service.AuthenticationService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -55,8 +56,9 @@ public class AuthenticationController {
     }
     // handle google login
     @GetMapping("/login-google")
-    public void googleLogin(HttpServletResponse response) throws IOException {
+    public void googleLogin(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String googleOAuth2Endpoint = "/oauth2/authorization/google";
+        request.getSession().invalidate();
         response.sendRedirect(googleOAuth2Endpoint);
     }
     @GetMapping("/oauth2/success")

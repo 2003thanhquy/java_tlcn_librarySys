@@ -1,4 +1,4 @@
-package com.spkt.librasys.specification;
+package com.spkt.librasys.repository.specification;
 
 import com.spkt.librasys.entity.Document;
 import org.springframework.data.jpa.domain.Specification;

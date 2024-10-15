@@ -33,8 +33,13 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = exception.getErrorCode();
         ApiResponse apiResponse = new ApiResponse();
 
+        // Sử dụng thông điệp tùy chỉnh nếu có
+        String message = (exception.getMessageCustom() != null && !exception.getMessageCustom().isEmpty())
+                ? exception.getMessageCustom()
+                : errorCode.getMessage();
+
         apiResponse.setCode(errorCode.getCode());
-        apiResponse.setMessage(errorCode.getMessage());
+        apiResponse.setMessage(message);
 
         return ResponseEntity.status(errorCode.getStatusCode()).body(apiResponse);
     }

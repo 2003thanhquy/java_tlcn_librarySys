@@ -1,6 +1,5 @@
 package com.spkt.librasys.service.impl;
 
-import com.spkt.librasys.constant.DocumentActivityStatus;
 import com.spkt.librasys.dto.request.documentRequest.DocumentCreateRequest;
 import com.spkt.librasys.dto.request.documentRequest.DocumentUpdateRequest;
 import com.spkt.librasys.dto.response.documentResponse.DocumentResponse;
@@ -14,8 +13,7 @@ import com.spkt.librasys.repository.document.DocumentRepository;
 import com.spkt.librasys.repository.document.DocumentTypeRepository;
 import com.spkt.librasys.repository.access.UserRepository;
 import com.spkt.librasys.service.DocumentService;
-import com.spkt.librasys.specification.DocumentSpecification;
-import com.spkt.librasys.service.impl.AccessHistoryServiceImpl;
+import com.spkt.librasys.repository.specification.DocumentSpecification;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -25,8 +23,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
