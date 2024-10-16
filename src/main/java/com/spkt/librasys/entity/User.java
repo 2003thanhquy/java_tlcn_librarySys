@@ -66,4 +66,7 @@ public class User {
     // Một người dùng có nhiều khoản phạt
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Fine> fines;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    List<Notification> notifications;
 }

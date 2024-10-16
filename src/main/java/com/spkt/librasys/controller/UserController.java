@@ -1,5 +1,6 @@
 package com.spkt.librasys.controller;
 
+import com.spkt.librasys.dto.PageDTO;
 import com.spkt.librasys.dto.request.userRequest.UserCreateRequest;
 import com.spkt.librasys.dto.request.userRequest.UserUpdateRequest;
 import com.spkt.librasys.dto.response.ApiResponse;
@@ -32,12 +33,13 @@ public class UserController {
                 .build();
     }
     @GetMapping
-    public ApiResponse<Page<UserResponse>> getAllUsers(
+    public ApiResponse<PageDTO<UserResponse>> getAllUsers(
             @RequestParam(required = false) String username,
             Pageable pageable) {
         Page<UserResponse> users = userService.getAllUsers(username, pageable);
-        return ApiResponse.<Page<UserResponse>>builder()
-                .result(users)
+        PageDTO<UserResponse> pageDTO = new PageDTO<>(users);
+        return ApiResponse.<PageDTO<UserResponse>>builder()
+                .result(pageDTO)
                 .build();
     }
     @GetMapping("/my-info")

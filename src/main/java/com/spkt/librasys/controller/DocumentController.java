@@ -1,5 +1,6 @@
 package com.spkt.librasys.controller;
 
+import com.spkt.librasys.dto.PageDTO;
 import com.spkt.librasys.dto.request.documentRequest.DocumentCreateRequest;
 import com.spkt.librasys.dto.request.documentRequest.DocumentUpdateRequest;
 import com.spkt.librasys.dto.response.ApiResponse;
@@ -60,16 +61,17 @@ public class DocumentController {
     }
 
     @GetMapping
-    public ApiResponse<Page<DocumentResponse>> getAllDocuments(
+    public ApiResponse<PageDTO<DocumentResponse>> getAllDocuments(
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String author,
             @RequestParam(required = false) String publisher,
             @RequestParam(required = false) Long documentTypeId,
             Pageable pageable) {
         Page<DocumentResponse> responseList = documentService.getAllDocuments(title, author, publisher, documentTypeId, pageable);
-        return ApiResponse.<Page<DocumentResponse>>builder()
+        PageDTO<DocumentResponse> pageDTO = new PageDTO<>(responseList);
+        return ApiResponse.<PageDTO<DocumentResponse>>builder()
                 .message("Documents retrieved successfully")
-                .result(responseList)
+                .result(pageDTO)
                 .build();
     }
 }

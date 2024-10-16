@@ -1,5 +1,6 @@
 package com.spkt.librasys.controller;
 
+import com.spkt.librasys.dto.PageDTO;
 import com.spkt.librasys.dto.request.loanTransactionRequest.LoanTransactionRequest;
 import com.spkt.librasys.dto.request.loanTransactionRequest.UpdateTransactionStatusRequest;
 import com.spkt.librasys.dto.response.ApiResponse;
@@ -68,16 +69,17 @@ public class LoanTransactionController {
     }
 
     @GetMapping
-    public ApiResponse<Page<LoanTransactionResponse>> getAllLoanTransactions(
+    public ApiResponse<PageDTO<LoanTransactionResponse>> getAllLoanTransactions(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String username,
             @RequestParam(required = false) String documentName,
             Pageable pageable) {
 
         Page<LoanTransactionResponse> response = loanTransactionService.getAllLoanTransactions(status, username, documentName, pageable);
-        return ApiResponse.<Page<LoanTransactionResponse>>builder()
+        PageDTO<LoanTransactionResponse> pageDTO = new PageDTO<>(response);
+        return ApiResponse.<PageDTO<LoanTransactionResponse>>builder()
                 .message("Tất cả giao dịch được lấy thành công")
-                .result(response)
+                .result(pageDTO)
                 .build();
     }
 

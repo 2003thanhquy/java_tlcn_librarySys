@@ -1,5 +1,6 @@
 package com.spkt.librasys.controller;
 
+import com.spkt.librasys.dto.PageDTO;
 import com.spkt.librasys.dto.response.accessHistoryResponse.AccessHistoryResponse;
 import com.spkt.librasys.dto.response.ApiResponse;
 import com.spkt.librasys.service.AccessHistoryService;
@@ -17,11 +18,12 @@ public class AccessHistoryController {
 
     // Lấy tất cả lịch sử truy cập có phân trang
     @GetMapping
-    public ApiResponse<Page<AccessHistoryResponse>> getAllAccessHistories(Pageable pageable) {
+    public ApiResponse<PageDTO<AccessHistoryResponse>> getAllAccessHistories(Pageable pageable) {
         Page<AccessHistoryResponse> responseList = accessHistoryService.getAllAccessHistories(pageable);
-        return ApiResponse.<Page<AccessHistoryResponse>>builder()
+        PageDTO<AccessHistoryResponse> pageDTO = new PageDTO<>(responseList);
+        return ApiResponse.<PageDTO<AccessHistoryResponse>>builder()
                 .message("Access histories retrieved successfully")
-                .result(responseList)
+                .result(pageDTO)
                 .build();
     }
 
@@ -37,7 +39,7 @@ public class AccessHistoryController {
 
     // Tìm kiếm nâng cao lịch sử truy cập (có phân trang)
     @GetMapping("/search")
-    public ApiResponse<Page<AccessHistoryResponse>> searchAccessHistories(
+    public ApiResponse<PageDTO<AccessHistoryResponse>> searchAccessHistories(
             @RequestParam(required = false) String userId,
             @RequestParam(required = false) Long documentId,
             @RequestParam(required = false) String activity,
@@ -45,9 +47,10 @@ public class AccessHistoryController {
             @RequestParam(required = false) String toDate,
             Pageable pageable) {
         Page<AccessHistoryResponse> responseList = accessHistoryService.searchAccessHistories(userId, documentId, activity, fromDate, toDate, pageable);
-        return ApiResponse.<Page<AccessHistoryResponse>>builder()
+        PageDTO<AccessHistoryResponse> pageDTO = new PageDTO<>(responseList);
+        return ApiResponse.<PageDTO<AccessHistoryResponse>>builder()
                 .message("Access histories retrieved successfully")
-                .result(responseList)
+                .result(pageDTO)
                 .build();
     }
 
