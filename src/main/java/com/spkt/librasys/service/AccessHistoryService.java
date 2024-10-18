@@ -1,6 +1,6 @@
 package com.spkt.librasys.service;
 
-import com.spkt.librasys.dto.response.accessHistoryResponse.AccessHistoryResponse;
+import com.spkt.librasys.dto.response.accessHistory.AccessHistoryResponse;
 import com.spkt.librasys.entity.Document;
 import com.spkt.librasys.entity.User;
 import org.springframework.data.domain.Page;

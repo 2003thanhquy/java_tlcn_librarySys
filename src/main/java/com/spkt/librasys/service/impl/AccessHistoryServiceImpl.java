@@ -1,6 +1,6 @@
 package com.spkt.librasys.service.impl;
 
-import com.spkt.librasys.dto.response.accessHistoryResponse.AccessHistoryResponse;
+import com.spkt.librasys.dto.response.accessHistory.AccessHistoryResponse;
 import com.spkt.librasys.entity.AccessHistory;
 import com.spkt.librasys.entity.Document;
 import com.spkt.librasys.entity.User;

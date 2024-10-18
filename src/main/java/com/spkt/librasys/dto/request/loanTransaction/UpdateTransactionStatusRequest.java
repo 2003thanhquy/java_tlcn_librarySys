@@ -1,6 +1,5 @@
-package com.spkt.librasys.dto.request.loanTransactionRequest;
+package com.spkt.librasys.dto.request.loanTransaction;
 
-import com.spkt.librasys.entity.enums.LoanTransactionStatus;
 import lombok.Getter;
 import lombok.Setter;
 

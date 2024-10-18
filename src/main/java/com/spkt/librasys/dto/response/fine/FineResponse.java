@@ -1,4 +1,4 @@
-package com.spkt.librasys.dto.request.fineRequest;
+package com.spkt.librasys.dto.response.fine;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -8,7 +8,8 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class FineCreateRequest {
+public class FineResponse {
+    String fineId;
     double amount;
     String status;  // UNPAID, PAID
     String loanTransactionId;

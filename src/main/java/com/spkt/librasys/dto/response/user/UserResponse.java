@@ -1,8 +1,9 @@
-package com.spkt.librasys.dto.response.userResponse;
+package com.spkt.librasys.dto.response.user;
 
 import java.time.LocalDate;
-import java.util.Set;
+import java.util.List;
 
+import com.spkt.librasys.entity.Role;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -21,4 +22,5 @@ public class UserResponse {
     String address;
     LocalDate registrationDate;
     LocalDate expirationDate;
+    List<Role> roles;
 }

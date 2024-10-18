@@ -1,11 +1,10 @@
 package com.spkt.librasys.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.spkt.librasys.dto.response.accessHistoryResponse.AccessHistoryResponse;
+import com.spkt.librasys.dto.response.accessHistory.AccessHistoryResponse;
 import com.spkt.librasys.service.AccessHistoryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -22,7 +21,6 @@ import java.util.Collections;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AccessHistoryController.class)

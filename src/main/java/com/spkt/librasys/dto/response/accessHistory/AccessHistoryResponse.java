@@ -1,4 +1,4 @@
-package com.spkt.librasys.dto.response.accessHistoryResponse;
+package com.spkt.librasys.dto.response.accessHistory;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;

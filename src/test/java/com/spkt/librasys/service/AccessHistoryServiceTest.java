@@ -1,10 +1,9 @@
 package com.spkt.librasys.service;
 
-import com.spkt.librasys.dto.response.accessHistoryResponse.AccessHistoryResponse;
+import com.spkt.librasys.dto.response.accessHistory.AccessHistoryResponse;
 import com.spkt.librasys.entity.AccessHistory;
 import com.spkt.librasys.entity.Document;
 import com.spkt.librasys.entity.User;
-import com.spkt.librasys.exception.AppException;
 import com.spkt.librasys.repository.AccessHistoryRepository;
 import com.spkt.librasys.service.impl.AccessHistoryServiceImpl;
 import org.junit.jupiter.api.BeforeEach;

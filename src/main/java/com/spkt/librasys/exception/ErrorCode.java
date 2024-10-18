@@ -50,8 +50,9 @@ public enum ErrorCode {
     SERVICE_UNAVAILABLE(6002, "Service temporarily unavailable", HttpStatus.SERVICE_UNAVAILABLE),
     GATEWAY_TIMEOUT(6003, "Gateway timeout", HttpStatus.GATEWAY_TIMEOUT),
     CONFIGURATION_ERROR(6004, "System configuration error", HttpStatus.INTERNAL_SERVER_ERROR),
-    UNKNOWN_ERROR(6005, "Unknown error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
-
+    UNKNOWN_ERROR(6005, "Unknown error occurred", HttpStatus.INTERNAL_SERVER_ERROR),
+    //
+    NOTIFICATION_NOT_FOUND(7001, "Notification not found", HttpStatus.NOT_FOUND);
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;
         this.message = message;

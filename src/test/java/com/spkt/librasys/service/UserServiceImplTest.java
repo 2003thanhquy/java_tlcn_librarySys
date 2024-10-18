@@ -1,9 +1,9 @@
 package com.spkt.librasys.service.impl;
 
 import com.spkt.librasys.constant.PredefinedRole;
-import com.spkt.librasys.dto.request.userRequest.UserCreateRequest;
-import com.spkt.librasys.dto.request.userRequest.UserUpdateRequest;
-import com.spkt.librasys.dto.response.userResponse.UserResponse;
+import com.spkt.librasys.dto.request.user.UserCreateRequest;
+import com.spkt.librasys.dto.request.user.UserUpdateRequest;
+import com.spkt.librasys.dto.response.user.UserResponse;
 import com.spkt.librasys.entity.Role;
 import com.spkt.librasys.entity.User;
 import com.spkt.librasys.exception.AppException;
@@ -26,7 +26,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;

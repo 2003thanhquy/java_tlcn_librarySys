@@ -1,8 +1,6 @@
-
 package com.spkt.librasys.service.impl;
 
-import com.spkt.librasys.dto.request.loanTransactionRequest.LoanTransactionRequest;
-import com.spkt.librasys.dto.request.loanTransactionRequest.UpdateTransactionStatusRequest;
+import com.spkt.librasys.dto.request.loanTransaction.LoanTransactionRequest;
 import com.spkt.librasys.dto.response.LoanTransactionResponse;
 import com.spkt.librasys.entity.Document;
 import com.spkt.librasys.entity.Email;
@@ -19,6 +17,7 @@ import com.spkt.librasys.repository.document.DocumentRepository;
 import com.spkt.librasys.repository.specification.LoanTransactionSpecification;
 import com.spkt.librasys.service.EmailService;
 import com.spkt.librasys.service.LoanTransactionService;
+import com.spkt.librasys.service.NotificationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -26,11 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -50,21 +45,17 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
     LoanTransactionMapper loanTransactionMapper;
     EmailService emailService;
     EmailRepository emailRepository;
+    NotificationService notificationService;
 
     @Override
     @PreAuthorize("hasRole('USER')")
     public LoanTransactionResponse createLoanTransaction(LoanTransactionRequest request) {
-        // Lấy thông tin người dùng từ token
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        User user = getCurrentUser();
 
         Document document = documentRepository.findById(request.getDocumentId())
                 .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND));
 
-        if (document.getQuantity() <= document.getBorrowedCount()) {
+        if (document.getAvailableCount() <= 0) {
             throw new AppException(ErrorCode.RESOURCE_CONFLICT, "Số lượng sách không đủ để mượn");
         }
 
@@ -95,22 +86,34 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         if (isApproved) {
             loanTransaction.setStatus(LoanTransactionStatus.APPROVED);
             loanTransaction.setCreatedAt(LocalDateTime.now());
+
+            // Giảm số lượng sách có sẵn
+            Document document = loanTransaction.getDocument();
+            document.setAvailableCount(document.getAvailableCount() - 1);
+            documentRepository.save(document);
         } else {
             loanTransaction.setStatus(LoanTransactionStatus.REJECTED);
         }
 
         LoanTransaction updatedTransaction = loanTransactionRepository.save(loanTransaction);
         sendNotificationEmail(loanTransaction, isApproved);
-        System.out.println("Ket thuc send Email");
+        //notification
+        String notificationTitle = isApproved ? "Yêu cầu mượn sách đã được phê duyệt" : "Yêu cầu mượn sách đã bị từ chối";
+        String notificationContent = String.format("Yêu cầu mượn sách với tiêu đề '%s' của bạn đã %s.",
+                loanTransaction.getDocument().getDocumentName(),
+                isApproved ? "được phê duyệt" : "bị từ chối");
+       // notificationService.createNotification(loanTransaction.getUser().getUserId(), notificationTitle, notificationContent);
+
         return loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
     }
+
     @Override
     public LoanTransactionResponse receiveDocument(Long transactionId) {
         LoanTransaction loanTransaction = loanTransactionRepository.findById(transactionId)
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
 
         if (!loanTransaction.getStatus().equals(LoanTransactionStatus.APPROVED)) {
-            throw new AppException(ErrorCode.INVALID_REQUEST);
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Giao dịch chưa được phê duyệt.");
         }
 
         loanTransaction.setLoanDate(LocalDate.now());
@@ -123,8 +126,15 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         LoanTransaction loanTransaction = loanTransactionRepository.findById(transactionId)
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
 
+        if (loanTransaction.getStatus() != LoanTransactionStatus.APPROVED) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Giao dịch không ở trạng thái mượn.");
+        }
+
         loanTransaction.setReturnDate(LocalDate.now());
+        loanTransaction.getDocument().setAvailableCount(loanTransaction.getDocument().getAvailableCount() + 1);
+        Document updatedDocument = documentRepository.save(loanTransaction.getDocument());
         LoanTransaction updatedTransaction = loanTransactionRepository.save(loanTransaction);
+
         return loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
     }
 
@@ -145,7 +155,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
             try {
                 transactionStatus = LoanTransactionStatus.valueOf(status.toUpperCase());
             } catch (IllegalArgumentException e) {
-                throw new AppException(ErrorCode.INVALID_REQUEST);//, "Invalid status value");
+                throw new AppException(ErrorCode.INVALID_REQUEST, "Trạng thái không hợp lệ.");
             }
         }
 
@@ -157,20 +167,45 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         return loanTransactions.map(loanTransactionMapper::toLoanTransactionResponse);
     }
 
+    @Override
+    public void cancelExpiredApprovedTransactions() {
+        LocalDateTime cutoffTime = LocalDateTime.now().minusHours(24);
+        List<LoanTransaction> expiredTransactions = loanTransactionRepository
+                .findAllByStatusAndCreatedAtBefore(LoanTransactionStatus.APPROVED, cutoffTime);
 
-//    @Scheduled(cron = "0 0 0 * * *") // Chạy lúc 00:00 mỗi ngày
-//    public void cancelExpiredApprovedTransactions() {
-//        LocalDateTime expiredDateTime = LocalDateTime.now().minusHours(24);
-//        List<LoanTransaction> transactions = loanTransactionRepository.findAllByStatusAndCreatedAtBefore(LoanTransactionStatus.APPROVED, expiredDateTime);
-//
-//        for (LoanTransaction transaction : transactions) {
-//            transaction.setStatus(LoanTransactionStatus.USER_CANCELLED);
-//            loanTransactionRepository.save(transaction);
-//            sendCancellationEmail(transaction);
-//        }
-//    }
-    public void sendNotificationEmail(LoanTransaction loanTransaction, boolean isApproved) {
-        System.out.println("bat dau send email");
+        for (LoanTransaction transaction : expiredTransactions) {
+            transaction.setStatus(LoanTransactionStatus.USER_CANCELLED);
+            loanTransactionRepository.save(transaction);
+            sendCancellationEmail(transaction, "Yêu cầu mượn sách đã bị tự động hủy vì không được nhận trong vòng 24 giờ.");
+        }
+    }
+
+    @Override
+    @PreAuthorize("hasRole('USER')")
+    public LoanTransactionResponse cancelLoanTransactionByUser(Long transactionId) {
+        LoanTransaction loanTransaction = loanTransactionRepository.findById(transactionId)
+                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
+
+        if (loanTransaction.getStatus() == LoanTransactionStatus.APPROVED) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Không thể hủy yêu cầu đã được phê duyệt.");
+        }
+
+        loanTransaction.setStatus(LoanTransactionStatus.USER_CANCELLED);
+        LoanTransaction updatedTransaction = loanTransactionRepository.save(loanTransaction);
+
+        // Gửi email thông báo người dùng hủy thành công
+        sendCancellationEmail(loanTransaction, "Yêu cầu mượn sách đã bị hủy thành công bởi người dùng.");
+
+        return loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
+    }
+
+    private User getCurrentUser() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    private void sendNotificationEmail(LoanTransaction loanTransaction, boolean isApproved) {
         String email = loanTransaction.getUser().getUsername();
         String subject = isApproved ? "Yêu cầu mượn sách đã được phê duyệt" : "Yêu cầu mượn sách đã bị từ chối";
         String content = String.format("Xin chào, %s,\n\nYêu cầu mượn sách với tiêu đề '%s' của bạn đã %s.\n\nTrân trọng,\nThư viện",
@@ -193,66 +228,12 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         });
     }
 
-    private void sendCancellationEmail(LoanTransaction loanTransaction) {
-        String email = loanTransaction.getUser().getUsername();
-        String subject = "Yêu cầu mượn sách đã bị hủy";
-        String content = String.format("Xin chào, %s,\n\nYêu cầu mượn sách với tiêu đề '%s' của bạn đã bị hủy do quá thời hạn 24 giờ mà chưa nhận sách.\n\nTrân trọng,\nThư viện",
-                loanTransaction.getUser().getFirstName(),
-                loanTransaction.getDocument().getDocumentName());
-
-        Email cancellationEmail = Email.builder()
-                .toEmail(email)
-                .subject(subject)
-                .body(content)
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        emailService.sendTextEmail(cancellationEmail);
-        emailRepository.save(cancellationEmail);
-    }
-    @Override
-    @PreAuthorize("hasRole('USER')")
-    public LoanTransactionResponse cancelLoanTransactionByUser(Long transactionId) {
-        LoanTransaction loanTransaction = loanTransactionRepository.findById(transactionId)
-                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
-
-        if (loanTransaction.getStatus() == LoanTransactionStatus.APPROVED) {
-            throw new AppException(ErrorCode.INVALID_REQUEST);//, "Không thể hủy yêu cầu đã được phê duyệt");
-        }
-
-        loanTransaction.setStatus(LoanTransactionStatus.USER_CANCELLED);
-        LoanTransaction updatedTransaction = loanTransactionRepository.save(loanTransaction);
-
-        // Gửi email thông báo người dùng hủy thành công
-        sendCancellationEmail(loanTransaction, "Yêu cầu mượn sách đã bị hủy thành công bởi người dùng");
-
-        return loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
-    }
-
-    // Tự động hủy các giao dịch đã được phê duyệt nhưng chưa nhận sách trong 24 giờ
-    @Override
-    public void cancelExpiredApprovedTransactions() {
-        LocalDateTime cutoffTime = LocalDateTime.now().minusHours(24);
-        List<LoanTransaction> expiredTransactions = loanTransactionRepository
-                .findAllByStatusAndCreatedAtBefore(LoanTransactionStatus.APPROVED, cutoffTime);
-
-        for (LoanTransaction transaction : expiredTransactions) {
-            transaction.setStatus(LoanTransactionStatus.USER_CANCELLED);
-            loanTransactionRepository.save(transaction);
-
-            // Gửi email thông báo tự động hủy
-            sendCancellationEmail(transaction, "Yêu cầu mượn sách đã bị tự động hủy vì không được nhận trong vòng 24 giờ");
-        }
-    }
-
-    // Phương thức để gửi email thông báo hủy yêu cầu mượn sách
     private void sendCancellationEmail(LoanTransaction loanTransaction, String message) {
         String email = loanTransaction.getUser().getUsername();
         String subject = "Thông báo hủy yêu cầu mượn sách";
         String content = String.format("Xin chào, %s,\n\n%s với tiêu đề '%s'.\n\nTrân trọng,\nThư viện",
                 loanTransaction.getUser().getFirstName(), message, loanTransaction.getDocument().getDocumentName());
 
-        // Xây dựng email
         Email notificationEmail = Email.builder()
                 .toEmail(email)
                 .subject(subject)
@@ -260,7 +241,6 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        // Gửi email
         emailService.sendTextEmail(notificationEmail).thenAccept(isSuccess -> {
             if (!isSuccess) {
                 notificationEmail.setStatus("FAILED");

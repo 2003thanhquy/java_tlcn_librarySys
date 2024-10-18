@@ -1,10 +1,9 @@
 package com.spkt.librasys.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.spkt.librasys.dto.request.userRequest.UserCreateRequest;
-import com.spkt.librasys.dto.request.userRequest.UserUpdateRequest;
-import com.spkt.librasys.dto.response.ApiResponse;
-import com.spkt.librasys.dto.response.userResponse.UserResponse;
+import com.spkt.librasys.dto.request.user.UserCreateRequest;
+import com.spkt.librasys.dto.request.user.UserUpdateRequest;
+import com.spkt.librasys.dto.response.user.UserResponse;
 import com.spkt.librasys.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

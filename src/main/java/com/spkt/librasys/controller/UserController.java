@@ -1,10 +1,10 @@
 package com.spkt.librasys.controller;
 
 import com.spkt.librasys.dto.PageDTO;
-import com.spkt.librasys.dto.request.userRequest.UserCreateRequest;
-import com.spkt.librasys.dto.request.userRequest.UserUpdateRequest;
+import com.spkt.librasys.dto.request.user.UserCreateRequest;
+import com.spkt.librasys.dto.request.user.UserUpdateRequest;
 import com.spkt.librasys.dto.response.ApiResponse;
-import com.spkt.librasys.dto.response.userResponse.UserResponse;
+import com.spkt.librasys.dto.response.user.UserResponse;
 import com.spkt.librasys.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -14,8 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -56,7 +54,7 @@ public class UserController {
                 .build();
     }
     @PutMapping("/{userId}")
-    public ApiResponse<UserResponse> updateUser(@PathVariable String userId, @RequestBody UserUpdateRequest request) {
+    public ApiResponse<UserResponse> updateUser(@PathVariable String userId, @RequestBody @Valid UserUpdateRequest request) {
         return ApiResponse.<UserResponse>builder()
                 .result(userService.updateUser(userId, request))
                 .build();

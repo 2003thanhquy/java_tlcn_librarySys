@@ -2,9 +2,9 @@ package com.spkt.librasys.controller;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.spkt.librasys.dto.request.documentRequest.DocumentCreateRequest;
+import com.spkt.librasys.dto.request.document.DocumentCreateRequest;
 import com.spkt.librasys.dto.response.ApiResponse;
-import com.spkt.librasys.dto.response.documentResponse.DocumentResponse;
+import com.spkt.librasys.dto.response.document.DocumentResponse;
 import com.spkt.librasys.service.DocumentService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;

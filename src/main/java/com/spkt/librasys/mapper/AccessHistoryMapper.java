@@ -1,6 +1,6 @@
 package com.spkt.librasys.mapper;
 
-import com.spkt.librasys.dto.response.accessHistoryResponse.AccessHistoryResponse;
+import com.spkt.librasys.dto.response.accessHistory.AccessHistoryResponse;
 import com.spkt.librasys.entity.AccessHistory;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

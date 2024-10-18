@@ -2,9 +2,8 @@ package com.spkt.librasys.service;
 
 
 import com.github.javafaker.Faker;
-import com.spkt.librasys.dto.request.documentRequest.DocumentCreateRequest;
-import com.spkt.librasys.dto.request.documentRequest.DocumentUpdateRequest;
-import com.spkt.librasys.dto.response.documentResponse.DocumentResponse;
+import com.spkt.librasys.dto.request.document.DocumentCreateRequest;
+import com.spkt.librasys.dto.response.document.DocumentResponse;
 import com.spkt.librasys.entity.Document;
 import com.spkt.librasys.entity.DocumentType;
 import com.spkt.librasys.exception.AppException;
@@ -12,7 +11,6 @@ import com.spkt.librasys.exception.ErrorCode;
 import com.spkt.librasys.mapper.DocumentMapper;
 import com.spkt.librasys.repository.document.DocumentRepository;
 import com.spkt.librasys.repository.document.DocumentTypeRepository;
-import com.spkt.librasys.service.DocumentService;
 import com.spkt.librasys.service.impl.DocumentServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

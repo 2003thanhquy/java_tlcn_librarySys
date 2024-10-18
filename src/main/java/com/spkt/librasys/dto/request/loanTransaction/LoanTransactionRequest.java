@@ -1,4 +1,4 @@
-package com.spkt.librasys.dto.request.loanTransactionRequest;
+package com.spkt.librasys.dto.request.loanTransaction;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;

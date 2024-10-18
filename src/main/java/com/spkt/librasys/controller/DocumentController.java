@@ -1,11 +1,12 @@
 package com.spkt.librasys.controller;
 
 import com.spkt.librasys.dto.PageDTO;
-import com.spkt.librasys.dto.request.documentRequest.DocumentCreateRequest;
-import com.spkt.librasys.dto.request.documentRequest.DocumentUpdateRequest;
+import com.spkt.librasys.dto.request.document.DocumentCreateRequest;
+import com.spkt.librasys.dto.request.document.DocumentUpdateRequest;
 import com.spkt.librasys.dto.response.ApiResponse;
-import com.spkt.librasys.dto.response.documentResponse.DocumentResponse;
+import com.spkt.librasys.dto.response.document.DocumentResponse;
 import com.spkt.librasys.service.DocumentService;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -13,8 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,7 +25,7 @@ public class DocumentController {
     DocumentService documentService;
 
     @PostMapping
-    public ApiResponse<DocumentResponse> createDocument(@RequestBody DocumentCreateRequest request) {
+    public ApiResponse<DocumentResponse> createDocument(@RequestBody @Valid DocumentCreateRequest request) {
         DocumentResponse response = documentService.createDocument(request);
         return ApiResponse.<DocumentResponse>builder()
                 .message("Document created successfully")
@@ -44,7 +43,7 @@ public class DocumentController {
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<DocumentResponse> updateDocument(@PathVariable Long id, @RequestBody DocumentUpdateRequest request) {
+    public ApiResponse<DocumentResponse> updateDocument(@PathVariable Long id, @RequestBody @Valid DocumentUpdateRequest request) {
         DocumentResponse response = documentService.updateDocument(id, request);
         return ApiResponse.<DocumentResponse>builder()
                 .message("Document updated successfully")

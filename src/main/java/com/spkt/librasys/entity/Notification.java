@@ -13,26 +13,32 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity(name ="notification_001")
+@Entity(name = "notification_001")
 public class Notification {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     @ToString.Exclude
-    private User user;
+    User user;
 
     @Column(nullable = false)
-    private String title;
+    String title;
 
     @Column(nullable = false)
-    private String content;
+    String content;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
-    private NotificationStatus status; // Ví dụ: UNREAD, READ
+    @Column(nullable = false)
+    NotificationStatus status; // Ví dụ: UNREAD, READ
+
+    @Column(name = "group_name")
+    String groupName; // Nhóm người dùng (VD: "ADMIN", "USER", v.v.) nếu thông báo này dành cho nhóm
 }
+

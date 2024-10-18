@@ -20,13 +20,17 @@ import org.springframework.web.filter.CorsFilter;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity(jsr250Enabled = true) //@AllowRoles({})
 public class SecurityConfig {
-    private final String[] PUBLIC_ENDPOINTS = {"/api/v1/users",
-    "api/v1/token","/auth/introspect",
-            "/api/v1/auth/login-google", // Cho phép đăng nhập Google
+    private final String[] PUBLIC_GET_ENDPOINTS = {};
+    private final String[] PUBLIC_POST_ENDPOINTS = {
+            "/api/v1/users",
+            "/api/v1/auth/**",
+            "/api/v1/token",
+            "/api/v1/auth/login-google",
             "/oauth2/**"
     };
+
     @Value("${jwt.signer-key}")
     private String signerKey;
     @Autowired
@@ -35,10 +39,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request->
-                request.requestMatchers(HttpMethod.POST,PUBLIC_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.GET,"/**").permitAll()
-                        .requestMatchers(HttpMethod.POST,"*/**").permitAll()
-//                        .requestMatchers(HttpMethod.GET,"/identity/users")
+                request.requestMatchers(HttpMethod.POST,PUBLIC_POST_ENDPOINTS).permitAll()
+//                        .requestMatchers(HttpMethod.GET,"/**").permitAll()
+//                        .requestMatchers(HttpMethod.POST,PUBLIC_ENDPOINTS).permitAll()
                         //.hasAuthority("SCOPE_ADMIN")
                        // .hasRole(Role.ADMIN.name())
                 .anyRequest().authenticated())

@@ -1,11 +1,11 @@
 package com.spkt.librasys.service.impl;
 
-import com.spkt.librasys.dto.request.documentRequest.DocumentCreateRequest;
-import com.spkt.librasys.dto.request.documentRequest.DocumentUpdateRequest;
-import com.spkt.librasys.dto.response.documentResponse.DocumentResponse;
+import com.spkt.librasys.dto.request.document.DocumentCreateRequest;
+import com.spkt.librasys.dto.request.document.DocumentUpdateRequest;
+import com.spkt.librasys.dto.response.document.DocumentResponse;
 import com.spkt.librasys.entity.Document;
 import com.spkt.librasys.entity.DocumentType;
-import com.spkt.librasys.entity.User;
+import com.spkt.librasys.entity.enums.DocumentStatus;
 import com.spkt.librasys.exception.AppException;
 import com.spkt.librasys.exception.ErrorCode;
 import com.spkt.librasys.mapper.DocumentMapper;
@@ -21,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -43,6 +42,8 @@ public class DocumentServiceImpl implements DocumentService {
 
         Document document = documentMapper.toDocument(request);
         document.setDocumentType(documentType);
+        document.setStatus(DocumentStatus.AVAILABLE);  // Thiết lập trạng thái mặc định là "AVAILABLE"
+        document.setAvailableCount(request.getQuantity()); // Thiết lập số lượng sách có sẵn bằng tổng số lượng nhập vào
 
         Document savedDocument = documentRepository.save(document);
 
@@ -106,7 +107,8 @@ public class DocumentServiceImpl implements DocumentService {
     public void deleteDocument(Long id) {
         Document document = documentRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND));
-
+        document.setStatus(DocumentStatus.UNAVAILABLE);
+        documentRepository.save(document);
         //documentRepository.delete(document);
 
         // Ghi lại lịch sử xóa tài liệu
@@ -114,10 +116,4 @@ public class DocumentServiceImpl implements DocumentService {
 //        accessHistoryService.recordAccess(currentUser, document, "Deleted Document");
     }
 
-    // Lấy thông tin người dùng hiện tại từ SecurityContext
-    private User getCurrentUser() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-    }
 }

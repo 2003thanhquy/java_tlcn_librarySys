@@ -1,8 +1,8 @@
 package com.spkt.librasys.mapper;
 
-import com.spkt.librasys.dto.request.documentRequest.DocumentCreateRequest;
-import com.spkt.librasys.dto.request.documentRequest.DocumentUpdateRequest;
-import com.spkt.librasys.dto.response.documentResponse.DocumentResponse;
+import com.spkt.librasys.dto.request.document.DocumentCreateRequest;
+import com.spkt.librasys.dto.request.document.DocumentUpdateRequest;
+import com.spkt.librasys.dto.response.document.DocumentResponse;
 import com.spkt.librasys.entity.Document;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

@@ -1,7 +1,7 @@
 package com.spkt.librasys.controller;
 
 import com.spkt.librasys.dto.PageDTO;
-import com.spkt.librasys.dto.response.accessHistoryResponse.AccessHistoryResponse;
+import com.spkt.librasys.dto.response.accessHistory.AccessHistoryResponse;
 import com.spkt.librasys.dto.response.ApiResponse;
 import com.spkt.librasys.service.AccessHistoryService;
 import lombok.RequiredArgsConstructor;

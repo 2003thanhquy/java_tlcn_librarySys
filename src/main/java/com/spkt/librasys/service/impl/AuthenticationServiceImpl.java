@@ -28,6 +28,8 @@ import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -62,6 +64,26 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @NonFinal
     @Value("${jwt.refreshable-duration}")
     protected long REFRESHABLE_DURATION;
+
+    @Override
+    public User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+       System.out.println("authention" + authentication);
+        if (authentication == null) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+        String username = authentication.getName();
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+    }
+
+    // Thêm phương thức isAdmin()
+    @Override
+    public Boolean isAdmin(User user) {
+        return user.getRoles().stream()
+                .anyMatch(role -> role.getName().equals("ADMIN"));
+    }
+
 
     @Override
     public AuthenticationResponse login(AuthenticationRequest request) {
@@ -177,6 +199,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .authenticated(true)
                 .build();
     }
+
 
     private SignedJWT verifyToken(String token, boolean isRefresh) throws JOSEException, ParseException {
         JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());

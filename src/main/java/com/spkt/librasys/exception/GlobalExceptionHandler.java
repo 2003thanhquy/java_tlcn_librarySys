@@ -1,13 +1,17 @@
 package com.spkt.librasys.exception;
 
 import com.spkt.librasys.dto.response.ApiResponse;
+import jakarta.validation.ConstraintViolation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -54,34 +58,29 @@ public class GlobalExceptionHandler {
                         .message(errorCode.getMessage())
                         .build());
     }
-
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
-    ResponseEntity<ApiResponse> handlingValidation(MethodArgumentNotValidException exception) {
-        String enumKey = exception.getFieldError().getDefaultMessage();
-
+    public ResponseEntity<ApiResponse<Map<String, String>>> handlingValidation(MethodArgumentNotValidException exception) {
+        // Khởi tạo mã lỗi mặc định
         ErrorCode errorCode = ErrorCode.INVALID_REQUEST;
-        Map<String, Object> attributes = null;
-        try {
-            errorCode = ErrorCode.valueOf(enumKey);
 
-//            var constraintViolation =
-//                    exception.getBindingResult().getAllErrors().getFirst().unwrap(ConstraintViolation.class);
-//
-//            attributes = constraintViolation.getConstraintDescriptor().getAttributes();
+        // Tạo Map để lưu trữ các lỗi xác thực
+        Map<String, String> errors = new HashMap<>();
 
-            log.info(attributes.toString());
+        // Duyệt qua tất cả các lỗi xác thực
+        exception.getBindingResult().getAllErrors().forEach((error) -> {
+            if (error instanceof FieldError) {
+                String fieldName = ((FieldError) error).getField();
+                String errorMessage = error.getDefaultMessage();
+                errors.put(fieldName, errorMessage);
+            }
+        });
 
-        } catch (IllegalArgumentException e) {
-
-        }
-
-        ApiResponse apiResponse = new ApiResponse();
-
-        apiResponse.setCode(errorCode.getCode());
-        apiResponse.setMessage(
-                Objects.nonNull(attributes)
-                        ? mapAttribute(errorCode.getMessage(), attributes)
-                        : errorCode.getMessage());
+        // Tạo ApiResponse với mã lỗi và chi tiết lỗi
+        ApiResponse<Map<String, String>> apiResponse = ApiResponse.<Map<String, String>>builder()
+                .code(errorCode.getCode())
+                .message("Validation errors occurred")
+                .result(errors)
+                .build();
 
         return ResponseEntity.badRequest().body(apiResponse);
     }

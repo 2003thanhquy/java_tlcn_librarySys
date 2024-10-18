@@ -1,8 +1,8 @@
 package com.spkt.librasys.controller;
 
 import com.spkt.librasys.dto.PageDTO;
-import com.spkt.librasys.dto.request.loanTransactionRequest.LoanTransactionRequest;
-import com.spkt.librasys.dto.request.loanTransactionRequest.UpdateTransactionStatusRequest;
+import com.spkt.librasys.dto.request.loanTransaction.LoanTransactionRequest;
+import com.spkt.librasys.dto.request.loanTransaction.UpdateTransactionStatusRequest;
 import com.spkt.librasys.dto.response.ApiResponse;
 import com.spkt.librasys.dto.response.LoanTransactionResponse;
 import com.spkt.librasys.service.LoanTransactionService;
