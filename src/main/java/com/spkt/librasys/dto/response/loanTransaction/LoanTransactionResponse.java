@@ -4,6 +4,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -11,11 +12,14 @@ import java.time.LocalDate;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LoanTransactionResponse {
-    String transactionId;
-    LocalDate loanDate;
-    LocalDate dueDate;
-    LocalDate returnDate;
-    String status;
-    String documentId;
-    String userId;
+
+    long transactionId;
+    LocalDateTime loanDate;  // Ngày mượn sách
+    LocalDate returnDate;  // Ngày trả sách (nếu có)
+    String status;  // Trạng thái của giao dịch
+    LocalDateTime createdAt;  // Ngày tạo
+    LocalDateTime updatedAt;  // Ngày cập nhật
+
+    String documentName;  // Tên tài liệu
+    String username;  // Tên người mượn
 }

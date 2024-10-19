@@ -15,6 +15,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(name = "loan_transaction_001")
+@Table(name = "loan_transaction_001", indexes = {
+        @Index(name = "idx_loan_date", columnList = "loan_date"),
+        @Index(name = "idx_status", columnList = "status"),
+        @Index(name = "idx_user_id", columnList = "user_id")
+})
 public class LoanTransaction {
 
     @Id
@@ -23,17 +28,24 @@ public class LoanTransaction {
     long transactionId;
 
     @Column(name = "loan_date")
-    LocalDate loanDate;  // Ngày mượn sách la ngay
+    LocalDateTime loanDate;  // Ngày mượn sách
 
     @Column(name = "due_date")
     LocalDate dueDate;  // Ngày dự kiến trả
 
     @Column(name = "return_date")
-    LocalDate returnDate;  // Ngày trả sách thực tế (có thể null nếu chưa trả)
-    @Column(name = "status", nullable = false)
+    LocalDateTime returnDate;  // Ngày trả sách thực tế (có thể null nếu chưa trả)
+
+    @Column(name = "status", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     LoanTransactionStatus status;
+
+    @Column(name = "created_at", nullable = false)
     LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    LocalDateTime updatedAt;
+
     // Mối quan hệ ngược lại với Fine (một LoanTransaction có một Fine)
     @OneToOne(mappedBy = "transactionLoan", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     Fine fine;
@@ -47,4 +59,17 @@ public class LoanTransaction {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     User user;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+    public boolean isOverdue() {
+        return returnDate == null && dueDate.isBefore(LocalDate.now());
+    }
 }

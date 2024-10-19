@@ -68,9 +68,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-       System.out.println("authention" + authentication);
-        if (authentication == null) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
+            return null;
         }
         String username = authentication.getName();
         return userRepository.findByUsername(username)

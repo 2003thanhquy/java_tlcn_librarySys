@@ -22,7 +22,10 @@ import org.springframework.web.filter.CorsFilter;
 @EnableWebSecurity
 @EnableMethodSecurity(jsr250Enabled = true) //@AllowRoles({})
 public class SecurityConfig {
-    private final String[] PUBLIC_GET_ENDPOINTS = {};
+    private final String[] PUBLIC_GET_ENDPOINTS = {
+            "/api/v1/documents",        // Cho phép truy cập tài liệu công khai
+            "/api/v1/documents/**"    // Cho phép xem chi tiết tài liệu mà không cần xác thực
+    };
     private final String[] PUBLIC_POST_ENDPOINTS = {
             "/api/v1/users",
             "/api/v1/auth/**",
@@ -40,7 +43,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request->
                 request.requestMatchers(HttpMethod.POST,PUBLIC_POST_ENDPOINTS).permitAll()
-//                        .requestMatchers(HttpMethod.GET,"/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
 //                        .requestMatchers(HttpMethod.POST,PUBLIC_ENDPOINTS).permitAll()
                         //.hasAuthority("SCOPE_ADMIN")
                        // .hasRole(Role.ADMIN.name())

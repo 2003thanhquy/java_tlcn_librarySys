@@ -2,6 +2,7 @@ package com.spkt.librasys.controller;
 
 import com.spkt.librasys.dto.PageDTO;
 import com.spkt.librasys.dto.request.document.DocumentCreateRequest;
+import com.spkt.librasys.dto.request.document.DocumentSearchRequest;
 import com.spkt.librasys.dto.request.document.DocumentUpdateRequest;
 import com.spkt.librasys.dto.response.ApiResponse;
 import com.spkt.librasys.dto.response.document.DocumentResponse;
@@ -58,18 +59,28 @@ public class DocumentController {
                 .message("Document deleted successfully")
                 .build();
     }
-
     @GetMapping
-    public ApiResponse<PageDTO<DocumentResponse>> getAllDocuments(
-            @RequestParam(required = false) String title,
-            @RequestParam(required = false) String author,
-            @RequestParam(required = false) String publisher,
-            @RequestParam(required = false) Long documentTypeId,
-            Pageable pageable) {
-        Page<DocumentResponse> responseList = documentService.getAllDocuments(title, author, publisher, documentTypeId, pageable);
+    public ApiResponse<PageDTO<DocumentResponse>> getAllDocuments(Pageable pageable){
+        Page<DocumentResponse> responseList = documentService.getAllDocuments(pageable);
         PageDTO<DocumentResponse> pageDTO = new PageDTO<>(responseList);
         return ApiResponse.<PageDTO<DocumentResponse>>builder()
-                .message("Documents retrieved successfully")
+                .message("Documents getAll successfully")
+                .result(pageDTO)
+                .build();
+
+    }
+
+    @GetMapping("/search")
+    public ApiResponse<PageDTO<DocumentResponse>> getAllDocuments(
+            @ModelAttribute DocumentSearchRequest searchRequest,
+            Pageable pageable) {
+        Page<DocumentResponse> responseList = documentService.searchDocuments(
+                searchRequest,
+                pageable
+        );
+        PageDTO<DocumentResponse> pageDTO = new PageDTO<>(responseList);
+        return ApiResponse.<PageDTO<DocumentResponse>>builder()
+                .message("Documents searched successfully")
                 .result(pageDTO)
                 .build();
     }

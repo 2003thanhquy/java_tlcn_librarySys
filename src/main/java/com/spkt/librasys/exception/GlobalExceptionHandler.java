@@ -3,7 +3,9 @@ package com.spkt.librasys.exception;
 import com.spkt.librasys.dto.response.ApiResponse;
 import jakarta.validation.ConstraintViolation;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -29,6 +31,16 @@ public class GlobalExceptionHandler {
         apiResponse.setCode(ErrorCode.UNKNOWN_ERROR.getCode());
         apiResponse.setMessage(ErrorCode.UNKNOWN_ERROR.getMessage());
 
+        return ResponseEntity.badRequest().body(apiResponse);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse> handleIllegalArgumentException(HttpMessageNotReadableException ex) {
+        // Trả về thông báo lỗi khi gặp IllegalArgumentException
+        ApiResponse apiResponse = new ApiResponse();
+
+        apiResponse.setCode(ErrorCode.INVALID_REQUEST.getCode());
+        apiResponse.setMessage("Chuyen doi json khong dung format");  // Đưa thông báo chi tiết từ IllegalArgumentException vào message
         return ResponseEntity.badRequest().body(apiResponse);
     }
 

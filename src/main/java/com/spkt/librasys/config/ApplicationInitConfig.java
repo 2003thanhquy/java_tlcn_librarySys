@@ -50,6 +50,10 @@ public class ApplicationInitConfig {
                         .name(PredefinedRole.ADMIN_ROLE)
                         .description("Admin role")
                         .build());
+                Role managerRole = roleRepository.save(Role.builder()
+                        .name(PredefinedRole.MANAGER_ROLE)
+                        .description("Manager role")
+                        .build());
 
                 var roles = new HashSet<Role>();
                 roles.add(adminRole);

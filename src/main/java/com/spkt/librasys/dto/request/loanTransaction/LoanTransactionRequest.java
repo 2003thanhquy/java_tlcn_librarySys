@@ -1,19 +1,22 @@
 package com.spkt.librasys.dto.request.loanTransaction;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import com.spkt.librasys.entity.enums.LoanTransactionStatus;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-@Getter
-@Setter
-@Builder
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LoanTransactionRequest {
-    Long documentId;
-    LocalDate dueDate;
-    LoanTransactionStatus status = LoanTransactionStatus.PENDING; // Trạng thái mặc định là PENDING
+
+    @NotNull(message = "Document ID cannot be null")
+    Long documentId;  // Tài liệu cần mượn
+
+//    @NotNull(message = "Loan date cannot be null")
+//    LocalDateTime loanDate;  // Ngày mượn sách
+
 }

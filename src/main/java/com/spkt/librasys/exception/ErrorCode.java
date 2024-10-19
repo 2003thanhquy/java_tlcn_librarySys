@@ -38,7 +38,7 @@ public enum ErrorCode {
     FILE_NOT_FOUND(4004, "File not found", HttpStatus.NOT_FOUND),
     FILE_TOO_LARGE(4005, "File is too large", HttpStatus.PAYLOAD_TOO_LARGE),
     FILE_FORMAT_UNSUPPORTED(4006, "File format is not supported", HttpStatus.UNSUPPORTED_MEDIA_TYPE),
-
+    DOCUMENT_TYPE_NOT_FOUND(4007,"Documnet type id not found", HttpStatus.NOT_FOUND),
     // Nhóm lỗi cơ sở dữ liệu
     DATABASE_ERROR(5001, "Database error occurred", HttpStatus.INTERNAL_SERVER_ERROR),
     DATA_INTEGRITY_VIOLATION(5002, "Data integrity violation", HttpStatus.CONFLICT),

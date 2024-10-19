@@ -4,6 +4,7 @@ import com.spkt.librasys.entity.enums.DocumentStatus;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
@@ -22,6 +23,8 @@ public class DocumentResponse {
     String language;            // Ngôn ngữ của tài liệu
     int quantity;
     int availableCount;         // Số lượng sách có sẵn để mượn
+    BigDecimal price;
+    int maxLoanDays;
     DocumentStatus status;      // Trạng thái của sách
     String description;
     String documentLink;

@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Min;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
@@ -40,10 +41,20 @@ public class DocumentCreateRequest {
 
     @Min(value = 1, message = "Quantity must be greater than 0")
     int quantity;
+    @Min(value = 0, message = "Quantity must be greater than 0")
+    int availableCount;
 
-    String description;
 
-    String documentLink;
+    @NotBlank(message = "Location code cannot be blank")
+    String locationCode; // Mã vị trí trong thư viện
+
+    String description;  // Mô tả tài liệu (có thể không bắt buộc)
+
+    String coverImage;    // Đường dẫn ảnh bìa
+
+    String documentLink;  // Đường dẫn tới tài liệu điện tử (nếu có)
+    BigDecimal price;
+    int maxLoanDays;;
 
     @NotNull(message = "Document type ID cannot be null")
     Long documentTypeId;

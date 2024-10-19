@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @Builder
@@ -24,6 +26,12 @@ public class Fine {
     @Column(name = "status", nullable = false)
     String status;  // Trạng thái của khoản phạt (VD: Paid, Unpaid)
 
+    @Column(name = "issued_date", nullable = false)
+    LocalDateTime issuedDate;  // Ngày phát sinh phạt
+
+    @Column(name = "reason")
+    String reason;  // Lý do bị phạt
+
     // Mối quan hệ một-một với LoanTransaction
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "loan_transaction_id", nullable = false)
@@ -35,4 +43,3 @@ public class Fine {
     @ToString.Exclude
     User user;
 }
-

@@ -5,6 +5,7 @@ import com.spkt.librasys.entity.Document;
 import com.spkt.librasys.entity.DocumentType;
 import com.spkt.librasys.entity.Role;
 import com.spkt.librasys.entity.User;
+import com.spkt.librasys.entity.enums.DocumentStatus;
 import com.spkt.librasys.repository.access.RoleRepository;
 import com.spkt.librasys.repository.access.UserRepository;
 import com.spkt.librasys.repository.document.DocumentRepository;
@@ -13,10 +14,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -44,13 +47,17 @@ public class DataInitializer implements CommandLineRunner {
                         .documentName(faker.book().title())
                         .author(faker.book().author())
                         .publisher(faker.book().publisher())
+                        .isbn(UUID.randomUUID().toString())
                         .publishedDate(LocalDate.now().minusDays(random.nextInt(1000)))
                         .pageCount(random.nextInt(200) + 100)
                         .quantity(random.nextInt(10) + 1)
                         .description(faker.lorem().sentence())
                         .documentLink("https://example.com/" + faker.lorem().word())
                         .documentType(documentType)
+                        .status(DocumentStatus.AVAILABLE)
+                        .price(BigDecimal.valueOf(100000.00))
                         .build();
+                document.setAvailableCount(document.getQuantity());
 
                 documentRepository.save(document);
             }

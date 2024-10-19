@@ -92,11 +92,13 @@ public class UserServiceImpl implements UserService {
 //    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public UserResponse updateUser(String id, UserUpdateRequest request) {
         User currentUser = authenticationService.getCurrentUser(); // Lấy thông tin người dùng hiện tại từ SecurityContextHolder
-        System.out.println("currentUser"+ currentUser);
+        if(currentUser == null)  throw new AppException(ErrorCode.UNAUTHORIZED);
         // Tìm kiếm người dùng cần cập nhật thông qua ID
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
+        currentUser.getRoles().forEach(role -> {
+            System.out.println("name Role :" + role.getName());
+        });
         // Kiểm tra quyền và xác định hành động cần thực hiện dựa trên vai trò
         if (authenticationService.isAdmin(currentUser)) {
             // Quản trị viên có thể cập nhật mọi thông tin, bao gồm cả vai trò của người dùng

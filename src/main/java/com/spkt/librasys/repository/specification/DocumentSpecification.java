@@ -5,9 +5,9 @@ import org.springframework.data.jpa.domain.Specification;
 
 public class DocumentSpecification {
 
-    public static Specification<Document> hasTitle(String title) {
+    public static Specification<Document> hasTitle(String documentName) {
         return (root, query, builder) ->
-                title == null ? null : builder.like(builder.lower(root.get("documentName")), "%" + title.toLowerCase() + "%");
+                documentName == null ? null : builder.like(builder.lower(root.get("documentName")), "%" + documentName.toLowerCase() + "%");
     }
 
     public static Specification<Document> hasAuthor(String author) {

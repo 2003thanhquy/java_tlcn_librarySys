@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -41,7 +42,7 @@ public class Document {
     @Column(name = "page_count")
     int pageCount; // Số trang của tài liệu
 
-    @Column(name = "language", nullable = false)
+    @Column(name = "language")
     String language; // Ngôn ngữ của tài liệu
 
     // Quản lý số lượng và trạng thái
@@ -53,7 +54,7 @@ public class Document {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    DocumentStatus status; // Trạng thái của sách
+    DocumentStatus status  = DocumentStatus.AVAILABLE; // Trạng thái của sách
 
     @Column(name = "location_code")
     String locationCode; // Mã vị trí trong thư viện
@@ -68,6 +69,10 @@ public class Document {
     @Column(name = "document_link")
     String documentLink; // Đường dẫn tới tài liệu điện tử (nếu có)
 
+    @Column(name = "price", precision = 19, scale = 2)
+    BigDecimal price;
+    @Column(name = "max_loan_days", nullable = false)
+    int maxLoanDays; // Số ngày tối đa có thể mượn tài liệu
     // Quan hệ với các thực thể khác
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "document_type_id", nullable = false) // Khóa ngoại

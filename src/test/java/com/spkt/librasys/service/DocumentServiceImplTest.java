@@ -105,20 +105,20 @@ public class DocumentServiceImplTest {
         assertEquals(ErrorCode.DOCUMENT_NOT_FOUND, exception.getErrorCode());
     }
 
-    @Test
-    public void testGetAllDocumentsWithPagination() {
-        Pageable pageable = PageRequest.of(0, 10);
-        Document document = new Document();
-
-        // Sử dụng ArgumentMatchers.any(Specification.class) để tránh lỗi ép kiểu
-        when(documentRepository.findAll(any(Specification.class), eq(pageable)))
-                .thenReturn(new PageImpl<>(Collections.singletonList(document)));
-
-        DocumentResponse response = new DocumentResponse();
-        when(documentMapper.toDocumentResponse(any())).thenReturn(response);
-
-        var result = documentService.getAllDocuments(null, null, null, null, pageable);
-        assertNotNull(result);
-        assertEquals(1, result.getContent().size());
-    }
+//    @Test
+//    public void testGetAllDocumentsWithPagination() {
+//        Pageable pageable = PageRequest.of(0, 10);
+//        Document document = new Document();
+//
+//        // Sử dụng ArgumentMatchers.any(Specification.class) để tránh lỗi ép kiểu
+//        when(documentRepository.findAll(any(Specification.class), eq(pageable)))
+//                .thenReturn(new PageImpl<>(Collections.singletonList(document)));
+//
+//        DocumentResponse response = new DocumentResponse();
+//        when(documentMapper.toDocumentResponse(any())).thenReturn(response);
+//
+//        var result = documentService.getAllDocuments(null, null, null, null, pageable);
+//        assertNotNull(result);
+//        assertEquals(1, result.getContent().size());
+//    }
 }

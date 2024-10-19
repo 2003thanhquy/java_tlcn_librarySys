@@ -1,11 +1,13 @@
 package com.spkt.librasys.controller;
 
 import com.spkt.librasys.dto.PageDTO;
-import com.spkt.librasys.dto.request.loanTransaction.LoanTransactionRequest;
-import com.spkt.librasys.dto.request.loanTransaction.UpdateTransactionStatusRequest;
+import com.spkt.librasys.dto.request.loanTransaction.*;
 import com.spkt.librasys.dto.response.ApiResponse;
 import com.spkt.librasys.dto.response.LoanTransactionResponse;
+import com.spkt.librasys.exception.AppException;
+import com.spkt.librasys.exception.ErrorCode;
 import com.spkt.librasys.service.LoanTransactionService;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -21,6 +23,9 @@ public class LoanTransactionController {
 
     LoanTransactionService loanTransactionService;
 
+    /**
+     * Tạo yêu cầu mượn sách (POST)
+     */
     @PostMapping
     public ApiResponse<LoanTransactionResponse> createLoanTransaction(@RequestBody LoanTransactionRequest request) {
         LoanTransactionResponse response = loanTransactionService.createLoanTransaction(request);
@@ -30,35 +35,49 @@ public class LoanTransactionController {
                 .build();
     }
 
-    @PutMapping("/{id}/approve")
-    public ApiResponse<LoanTransactionResponse> approveTransaction(@PathVariable Long id,@RequestBody UpdateTransactionStatusRequest request) {
-       boolean isApproved = request.getIsApproved();
-        LoanTransactionResponse response = loanTransactionService.approveTransaction(id, isApproved);
+    @PatchMapping
+    public ApiResponse<LoanTransactionResponse> updateTransaction(@Valid @RequestBody LoanTransactionUpdateRequest request) {
+        LoanTransactionResponse response;
+        String message = switch (request.getAction()) {
+            case RECEIVE -> {
+                response = loanTransactionService.receiveDocument(request.getTransactionId());
+                yield "Người dùng đã nhận sách thành công";
+            }
+            case RETURN_REQUEST -> {
+                response = loanTransactionService.returnDocument(request.getTransactionId());
+                yield "Sách đã được trả thành công";
+            }
+            case CANCEL -> {
+                response = loanTransactionService.cancelLoanTransactionByUser(request.getTransactionId());
+                yield "Yêu cầu mượn sách đã được người dùng hủy thành công";
+            }
+            case APPROVE -> {
+                response = loanTransactionService.approveTransaction(request.getTransactionId());
+                yield "Yêu cầu mượn sách đã được phê duyệt";
+            }
+            case REJECTED -> {
+                response = loanTransactionService.rejectTransaction(request.getTransactionId());
+                yield "Yêu cầu mượn sách đã bị từ chối";
+            }
+            default -> throw new AppException(ErrorCode.INVALID_REQUEST, "Hành động không hợp lệ");
+        };
+
         return ApiResponse.<LoanTransactionResponse>builder()
-                .message(isApproved ? "Yêu cầu mượn sách đã được phê duyệt" : "Yêu cầu mượn sách đã bị từ chối")
+                .message(message)
                 .result(response)
                 .build();
     }
-
-    @PutMapping("/{id}/receive")
-    public ApiResponse<LoanTransactionResponse> receiveDocument(@PathVariable Long id) {
-        LoanTransactionResponse response = loanTransactionService.receiveDocument(id);
+    @PatchMapping("/confirm-return")
+    public ApiResponse<LoanTransactionResponse> confirmReturnDocument(@RequestBody LoanTransactionReturnRequest request) {
+        LoanTransactionResponse response = loanTransactionService.confirmReturnDocument(request);
         return ApiResponse.<LoanTransactionResponse>builder()
-                .message("Người dùng đã nhận sách thành công")
+                .message("Xác nhận trả sách thành công")
                 .result(response)
                 .build();
     }
-
-
-    @PutMapping("/{id}/return")
-    public ApiResponse<LoanTransactionResponse> returnDocument(@PathVariable Long id) {
-        LoanTransactionResponse response = loanTransactionService.returnDocument(id);
-        return ApiResponse.<LoanTransactionResponse>builder()
-                .message("Sách đã được trả thành công")
-                .result(response)
-                .build();
-    }
-
+    /**
+     * Lấy thông tin chi tiết của giao dịch mượn sách (GET)
+     */
     @GetMapping("/{id}")
     public ApiResponse<LoanTransactionResponse> getLoanTransactionById(@PathVariable Long id) {
         LoanTransactionResponse response = loanTransactionService.getLoanTransactionById(id);
@@ -68,14 +87,14 @@ public class LoanTransactionController {
                 .build();
     }
 
+    /**
+     * Lấy danh sách tất cả các giao dịch mượn sách với tìm kiếm nâng cao và phân trang (GET)
+     */
     @GetMapping
     public ApiResponse<PageDTO<LoanTransactionResponse>> getAllLoanTransactions(
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String username,
-            @RequestParam(required = false) String documentName,
+            LoanTransactionSearchRequest request,
             Pageable pageable) {
-
-        Page<LoanTransactionResponse> response = loanTransactionService.getAllLoanTransactions(status, username, documentName, pageable);
+        Page<LoanTransactionResponse> response = loanTransactionService.getAllLoanTransactions(request, pageable);
         PageDTO<LoanTransactionResponse> pageDTO = new PageDTO<>(response);
         return ApiResponse.<PageDTO<LoanTransactionResponse>>builder()
                 .message("Tất cả giao dịch được lấy thành công")
@@ -83,18 +102,10 @@ public class LoanTransactionController {
                 .build();
     }
 
-    // Phương thức để huỷ yêu cầu mượn sách
-    @PutMapping("/{id}/cancel")
-    public ApiResponse<LoanTransactionResponse> cancelLoanTransactionByUser(@PathVariable Long id) {
-        LoanTransactionResponse response = loanTransactionService.cancelLoanTransactionByUser(id);
-        return ApiResponse.<LoanTransactionResponse>builder()
-                .message("Yêu cầu mượn sách đã được người dùng hủy thành công")
-                .result(response)
-                .build();
-    }
-
-    // Phương thức để kiểm tra và tự động huỷ các yêu cầu đã được duyệt nhưng không nhận trong vòng 24 giờ
-    @PutMapping("/cancel-expired")
+    /**
+     * Tự động hủy các yêu cầu đã được phê duyệt nhưng chưa nhận sách trong vòng 24 giờ (Scheduled Task) (PATCH)
+     */
+    @PatchMapping("/cancel-expired")
     public ApiResponse<Void> cancelExpiredTransactions() {
         loanTransactionService.cancelExpiredApprovedTransactions();
         return ApiResponse.<Void>builder()
