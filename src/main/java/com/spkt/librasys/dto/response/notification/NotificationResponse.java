@@ -1,6 +1,6 @@
 package com.spkt.librasys.dto.response.notification;
 
-import com.spkt.librasys.entity.enums.NotificationStatus;
+import com.spkt.librasys.entity.Notification;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -17,7 +17,7 @@ public class NotificationResponse {
     String title;      // Tiêu đề thông báo
     String content;    // Nội dung thông báo
     LocalDateTime createdAt; // Thời gian tạo thông báo
-    NotificationStatus status; // Trạng thái của thông báo (READ/UNREAD)
+    Notification.NotificationStatus status; // Trạng thái của thông báo (READ/UNREAD)
     String groupName;  // Nhóm người dùng nhận thông báo
 }
 

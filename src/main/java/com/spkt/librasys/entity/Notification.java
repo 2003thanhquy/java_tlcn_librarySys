@@ -1,6 +1,5 @@
 package com.spkt.librasys.entity;
 
-import com.spkt.librasys.entity.enums.NotificationStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -36,9 +35,18 @@ public class Notification {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    NotificationStatus status; // Ví dụ: UNREAD, READ
+    NotificationStatus status; // UNREAD, READ
 
-    @Column(name = "group_name")
-    String groupName; // Nhóm người dùng (VD: "ADMIN", "USER", v.v.) nếu thông báo này dành cho nhóm
+//    @Enumerated(EnumType.STRING) // Optional, nếu dùng enum cho groupName
+//    @Column(name = "group_name")
+//    GroupName groupName; // Nhóm người dùng (VD: "ADMIN", "USER")
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+    public enum NotificationStatus {
+        UNREAD, READ
+    }
+
 }
-

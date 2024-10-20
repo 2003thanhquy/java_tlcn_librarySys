@@ -1,17 +1,18 @@
 package com.spkt.librasys.controller;
 
+import com.spkt.librasys.dto.PageDTO;
 import com.spkt.librasys.dto.request.notification.NotificationCreateRequest;
-import com.spkt.librasys.dto.request.notification.NotificationAllUsersRequest;
 import com.spkt.librasys.dto.response.ApiResponse;
 import com.spkt.librasys.dto.response.notification.NotificationResponse;
 import com.spkt.librasys.service.NotificationService;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,42 +23,51 @@ public class NotificationController {
 
     NotificationService notificationService;
 
+    @GetMapping("/{id}")
+    public ApiResponse<NotificationResponse> getNotification(@PathVariable Long id) {
+        return ApiResponse.<NotificationResponse>builder()
+                .result(notificationService.getNotificationById(id))
+                .build();
+    }
+
+    @GetMapping
+    public ApiResponse<PageDTO<NotificationResponse>> getAllNotifications(Pageable pageable) {
+        Page<NotificationResponse> notifications = notificationService.getAllNotifications(pageable);
+        PageDTO<NotificationResponse> pageDTO = new PageDTO<>(notifications);
+        return ApiResponse.<PageDTO<NotificationResponse>>builder()
+                .result(pageDTO)
+                .build();
+    }
+
+    @GetMapping("/my-notifications")
+    public ApiResponse<PageDTO<NotificationResponse>> getMyNotifications(Pageable pageable) {
+        Page<NotificationResponse> notifications = notificationService.getNotificationsForCurrentUser(pageable);
+        PageDTO<NotificationResponse> pageDTO = new PageDTO<>(notifications);
+        return ApiResponse.<PageDTO<NotificationResponse>>builder()
+                .result(pageDTO)
+                .build();
+    }
+
     @PostMapping
-    public ApiResponse<NotificationResponse> createNotification(@RequestBody NotificationCreateRequest request) {
-        NotificationResponse response = notificationService.createNotification(request);
+    public ApiResponse<NotificationResponse> createNotification(@RequestBody @Valid NotificationCreateRequest request) {
         return ApiResponse.<NotificationResponse>builder()
-                .code(1000)
-                .message("Notification created successfully")
-                .result(response)
+                .result(notificationService.createNotification(request))
                 .build();
     }
 
-    @GetMapping("/user/{userId}")
-    public ApiResponse<List<NotificationResponse>> getAllNotificationsForUser(@PathVariable String userId) {
-        List<NotificationResponse> responses = notificationService.getAllNotificationsForUser(userId);
-        return ApiResponse.<List<NotificationResponse>>builder()
-                .code(1000)
-                .message("Notifications retrieved successfully")
-                .result(responses)
-                .build();
-    }
-
-    @PutMapping("/{notificationId}/read")
-    public ApiResponse<NotificationResponse> updateNotificationStatus(@PathVariable Long notificationId) {
-        NotificationResponse response = notificationService.updateNotificationStatus(notificationId);
+    @PatchMapping("/{id}/mark-read")
+    public ApiResponse<NotificationResponse> markAsRead(@PathVariable Long id) {
         return ApiResponse.<NotificationResponse>builder()
-                .code(1000)
-                .message("Notification status updated successfully")
-                .result(response)
+                .result(notificationService.markAsRead(id))
+                .message("Notification has been marked as read")
                 .build();
     }
 
-    @PostMapping("/all-users")
-    public ApiResponse<Void> notifyAllUsers(@RequestBody NotificationAllUsersRequest request) {
-        notificationService.notifyAllUsers(request);
-        return ApiResponse.<Void>builder()
-                .code(1000)
-                .message("Notifications sent to all users successfully")
+    @DeleteMapping("/{id}")
+    public ApiResponse<String> deleteNotification(@PathVariable Long id) {
+        notificationService.deleteNotification(id);
+        return ApiResponse.<String>builder()
+                .result("Notification has been deleted")
                 .build();
     }
 }

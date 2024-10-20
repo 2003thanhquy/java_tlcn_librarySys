@@ -1,6 +1,7 @@
 package com.spkt.librasys.service.impl;
 
 import com.spkt.librasys.dto.request.loanTransaction.*;
+import com.spkt.librasys.dto.request.notification.NotificationCreateRequest;
 import com.spkt.librasys.dto.response.LoanTransactionResponse;
 import com.spkt.librasys.entity.*;
 import com.spkt.librasys.entity.enums.LoanTransactionStatus;
@@ -14,6 +15,7 @@ import com.spkt.librasys.repository.access.UserRepository;
 import com.spkt.librasys.repository.specification.LoanTransactionSpecification;
 import com.spkt.librasys.service.AuthenticationService;
 import com.spkt.librasys.service.LoanTransactionService;
+import com.spkt.librasys.service.NotificationService;
 import jakarta.annotation.security.RolesAllowed;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +45,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
     LoanTransactionMapper loanTransactionMapper;
     AuthenticationService authenticationService;
     FineRepository fineRepository;
+    NotificationService notificationService;
 
     @Override
     @Transactional
@@ -65,6 +68,14 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                 .status(LoanTransactionStatus.PENDING)
                 .build();
 
+        // Gửi thông báo về việc tạo giao dịch
+        NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
+                .userId(user.getUserId())
+                .title("Yêu cầu mượn sách được tạo")
+                .content(String.format("Yêu cầu mượn sách '%s' của bạn đã được tạo và đang chờ phê duyệt.", document.getDocumentName()))
+                .build();
+        notificationService.createNotification(notificationCreateRequest);
+
         LoanTransaction savedTransaction = loanTransactionRepository.save(loanTransaction);
         return loanTransactionMapper.toLoanTransactionResponse(savedTransaction);
     }
@@ -83,6 +94,15 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         loanTransaction.setStatus(LoanTransactionStatus.APPROVED);
         loanTransaction.setCreatedAt(LocalDateTime.now());
         LoanTransaction updatedTransaction = loanTransactionRepository.save(loanTransaction);
+
+        // Gửi thông báo phê duyệt giao dịch
+        NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
+                .userId(loanTransaction.getUser().getUserId())
+                .title("Yêu cầu mượn sách được phê duyệt")
+                .content(String.format("Yêu cầu mượn sách '%s' của bạn đã được phê duyệt.", loanTransaction.getDocument().getDocumentName()))
+                .build();
+        notificationService.createNotification(notificationCreateRequest);
+
 
         return loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
     }
@@ -105,6 +125,14 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         documentRepository.save(document);
 
         LoanTransaction updatedTransaction = loanTransactionRepository.save(loanTransaction);
+        // Gửi thông báo từ chối giao dịch
+        NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
+                .userId(loanTransaction.getUser().getUserId())
+                .title("Yêu cầu mượn sách bị từ chối")
+                .content(String.format("Yêu cầu mượn sách '%s' của bạn đã bị từ chối.", loanTransaction.getDocument().getDocumentName()))
+                .build();
+        notificationService.createNotification(notificationCreateRequest);
+
         return loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
     }
 
@@ -135,6 +163,14 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         // Lưu lại giao dịch
         LoanTransaction updatedTransaction = loanTransactionRepository.save(loanTransaction);
 
+        // Gửi thông báo nhận sách
+        NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
+                .userId(currentUser.getUserId())
+                .title("Sách đã được nhận")
+                .content(String.format("Bạn đã nhận sách '%s' thành công.", loanTransaction.getDocument().getDocumentName()))
+                .build();
+        notificationService.createNotification(notificationCreateRequest);
+
         return loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
     }
 
@@ -161,6 +197,15 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
 //        documentRepository.save(document);
         loanTransaction.setStatus(LoanTransactionStatus.RETURN_REQUESTED);
         LoanTransaction updatedTransaction = loanTransactionRepository.save(loanTransaction);
+
+        // Gửi thông báo yêu cầu trả sách
+        NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
+                .userId(currentUser.getUserId())
+                .title("Yêu cầu trả sách")
+                .content(String.format("Bạn đã yêu cầu trả sách '%s'.", loanTransaction.getDocument().getDocumentName()))
+                .build();
+        notificationService.createNotification(notificationCreateRequest);
+
         return loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
     }
 
@@ -213,6 +258,14 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         }
 
         LoanTransaction updatedTransaction = loanTransactionRepository.save(loanTransaction);
+        // Gửi thông báo xác nhận trả sách
+        NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
+                .userId(loanTransaction.getUser().getUserId())
+                .title("Xác nhận trả sách")
+                .content(String.format("Sách '%s' đã được trả và xác nhận thành công.", loanTransaction.getDocument().getDocumentName()))
+                .build();
+        notificationService.createNotification(notificationCreateRequest);
+
         return loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
     }
 
@@ -234,6 +287,14 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         documentRepository.save(document);
 
         LoanTransaction updatedTransaction = loanTransactionRepository.save(loanTransaction);
+        // Gửi thông báo hủy yêu cầu
+        NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
+                .userId(loanTransaction.getUser().getUserId())
+                .title("Yêu cầu mượn sách bị hủy")
+                .content(String.format("Yêu cầu mượn sách '%s' của bạn đã bị hủy.", loanTransaction.getDocument().getDocumentName()))
+                .build();
+        notificationService.createNotification(notificationCreateRequest);
+
         return loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
     }
 
