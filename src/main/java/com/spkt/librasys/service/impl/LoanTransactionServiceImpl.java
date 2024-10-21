@@ -51,6 +51,8 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
     @Transactional
     public LoanTransactionResponse createLoanTransaction(LoanTransactionRequest request) {
         User user = authenticationService.getCurrentUser();
+        if(user == null)
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
 
         Document document = documentRepository.findById(request.getDocumentId())
                 .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND));
