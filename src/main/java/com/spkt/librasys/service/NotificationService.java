@@ -1,6 +1,5 @@
 package com.spkt.librasys.service;
 
-import com.spkt.librasys.dto.PageDTO;
 import com.spkt.librasys.dto.request.notification.NotificationCreateRequest;
 import com.spkt.librasys.dto.response.notification.NotificationResponse;
 import org.springframework.data.domain.Page;
@@ -19,6 +18,9 @@ public interface NotificationService {
 
     // Đánh dấu thông báo là đã đọc
     NotificationResponse markAsRead(Long notificationId);
+
+    // Đánh dấu thông báo tat ca là đã đọc
+    void markAllRead();
 
     // Xóa thông báo
     void deleteNotification(Long notificationId);

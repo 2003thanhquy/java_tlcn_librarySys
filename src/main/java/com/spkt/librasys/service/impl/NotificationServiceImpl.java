@@ -18,6 +18,7 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,6 +60,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional(readOnly = true)
+    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
     public Page<NotificationResponse> getAllNotifications(Pageable pageable) {
         Page<Notification> notifications = notificationRepository.findAll(pageable);
         return notifications.map(notificationMapper::toNotificationResponse);
@@ -69,10 +71,24 @@ public class NotificationServiceImpl implements NotificationService {
     public NotificationResponse markAsRead(Long notificationId) {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_FOUND));
+        User user = authenticationService.getCurrentUser();
+        if(user == null)
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        if(!user.equals(notification.getUser()))
+            throw new AppException(ErrorCode.UNAUTHORIZED, "User current != user Notification");
 
         notification.setStatus(Notification.NotificationStatus.READ);
         notificationRepository.save(notification);
         return notificationMapper.toNotificationResponse(notification);
+    }
+
+    @Override
+    public void markAllRead() {
+        User user = authenticationService.getCurrentUser();
+        if(user == null) throw new AppException(ErrorCode.USER_NOT_FOUND);
+
+       //Notification notification = notificationRepository.findAllByUser(user);
+        notificationRepository.markAllAsRead(user);
     }
 
     @Override

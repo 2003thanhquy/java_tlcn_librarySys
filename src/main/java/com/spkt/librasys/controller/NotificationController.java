@@ -62,6 +62,14 @@ public class NotificationController {
                 .message("Notification has been marked as read")
                 .build();
     }
+    @PatchMapping("/mark-all-read")
+    public ApiResponse<Void> markAllRead() {
+        notificationService.markAllRead();
+        return ApiResponse.<Void>builder()
+//                .result()
+                .message("Notification has been marked all read")
+                .build();
+    }
 
     @DeleteMapping("/{id}")
     public ApiResponse<String> deleteNotification(@PathVariable Long id) {
