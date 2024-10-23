@@ -16,10 +16,6 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserUpdateRequest {
 
-    // Ràng buộc độ dài mật khẩu nếu cần cập nhật
-    @Size(min = 6, message = "INVALID_PASSWORD")
-    String password;
-
     // Ràng buộc thông tin tên không được để trống nếu cần cập nhật
     @NotBlank(message = "FIRST_NAME_CANNOT_BE_BLANK")
     String firstName;

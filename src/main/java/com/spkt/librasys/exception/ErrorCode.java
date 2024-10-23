@@ -46,6 +46,7 @@ public enum ErrorCode {
     TRANSACTION_FAILED(5003, "Database transaction failed", HttpStatus.INTERNAL_SERVER_ERROR),
     TRANSACTION_NOT_FOUND(5004, "Loan transaction not found", HttpStatus.NOT_FOUND), // Thêm dòng này
     FINE_NOT_FOUND(5005, "Fine not found", HttpStatus.NOT_FOUND),
+    POLICY_NOT_FOUND(5006,"Policy loan not found", HttpStatus.NOT_FOUND),
 
     // Nhóm lỗi hệ thống
     SERVER_ERROR(6001, "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR),

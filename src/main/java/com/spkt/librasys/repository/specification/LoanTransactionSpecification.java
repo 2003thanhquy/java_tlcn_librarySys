@@ -1,12 +1,11 @@
 package com.spkt.librasys.repository.specification;
 
 import com.spkt.librasys.entity.LoanTransaction;
-import com.spkt.librasys.entity.enums.LoanTransactionStatus;
 import org.springframework.data.jpa.domain.Specification;
 
 public class LoanTransactionSpecification {
 
-    public static Specification<LoanTransaction> hasStatus(LoanTransactionStatus status) {
+    public static Specification<LoanTransaction> hasStatus(LoanTransaction.Status status) {
         return (root, query, criteriaBuilder) ->
                 status == null ? null : criteriaBuilder.equal(root.get("status"), status);
     }

@@ -1,5 +1,6 @@
 package com.spkt.librasys.service;
 
+import com.spkt.librasys.dto.request.user.ChangePasswordRequest;
 import com.spkt.librasys.dto.request.user.UserCreateRequest;
 import com.spkt.librasys.dto.request.user.UserUpdateRequest;
 import com.spkt.librasys.dto.response.user.UserResponse;
@@ -13,5 +14,7 @@ public interface UserService {
     Page<UserResponse> getAllUsers(String username, Pageable pageable);  // Thêm phân trang và tìm kiếm
     UserResponse updateUser(String id, UserUpdateRequest userUpdateRequest);
     void deleteUser(String id);
+
+    void changePassword(ChangePasswordRequest request);
 
 }

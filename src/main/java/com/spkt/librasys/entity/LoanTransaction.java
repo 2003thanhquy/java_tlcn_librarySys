@@ -1,6 +1,5 @@
 package com.spkt.librasys.entity;
 
-import com.spkt.librasys.entity.enums.LoanTransactionStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -38,13 +37,16 @@ public class LoanTransaction {
 
     @Column(name = "status", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
-    LoanTransactionStatus status;
+    Status status;
 
     @Column(name = "created_at", nullable = false)
     LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     LocalDateTime updatedAt;
+
+//    @Column(name = "max_renewals", nullable = false)
+//    int maxRenewals = 2; // Số lần gia hạn tối đa cho người dùng
 
     // Mối quan hệ ngược lại với Fine (một LoanTransaction có một Fine)
     @OneToOne(mappedBy = "transactionLoan", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -71,5 +73,8 @@ public class LoanTransaction {
     }
     public boolean isOverdue() {
         return returnDate == null && dueDate.isBefore(LocalDate.now());
+    }
+    public enum Status {
+        PENDING,RECEIVED,RETURN_REQUESTED, RETURNED, CANCELLED_BY_USER,CANCELLED_AUTO, APPROVED,REJECTED
     }
 }

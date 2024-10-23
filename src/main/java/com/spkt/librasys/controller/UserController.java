@@ -1,6 +1,7 @@
 package com.spkt.librasys.controller;
 
 import com.spkt.librasys.dto.PageDTO;
+import com.spkt.librasys.dto.request.user.ChangePasswordRequest;
 import com.spkt.librasys.dto.request.user.UserCreateRequest;
 import com.spkt.librasys.dto.request.user.UserUpdateRequest;
 import com.spkt.librasys.dto.response.ApiResponse;
@@ -65,4 +66,13 @@ public class UserController {
         return ApiResponse.<String>builder()
                 .result("User has been deleted").build();
     }
+    // Phương thức để thay đổi mật khẩu
+    @PatchMapping("/change-password")
+    public ApiResponse<String> changePassword(@RequestBody @Valid ChangePasswordRequest request) {
+        userService.changePassword(request);
+        return ApiResponse.<String>builder()
+                .result("Password has been changed successfully")
+                .build();
+    }
+
 }

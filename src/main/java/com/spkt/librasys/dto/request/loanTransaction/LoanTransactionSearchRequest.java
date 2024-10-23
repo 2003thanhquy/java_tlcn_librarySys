@@ -1,6 +1,6 @@
 package com.spkt.librasys.dto.request.loanTransaction;
 
-import com.spkt.librasys.entity.enums.LoanTransactionStatus;
+import com.spkt.librasys.entity.LoanTransaction;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -11,7 +11,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LoanTransactionSearchRequest {
 
-    LoanTransactionStatus status;  // Trạng thái của giao dịch (APPROVED, PENDING, REJECTED, etc.)
+    LoanTransaction.Status status;  // Trạng thái của giao dịch (APPROVED, PENDING, REJECTED, etc.)
 
     String username;  // Tên người dùng
 

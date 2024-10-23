@@ -5,8 +5,6 @@ import com.spkt.librasys.dto.response.LoanTransactionResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.time.LocalDate;
-
 /**
  * Giao diện LoanTransactionService định nghĩa các hành vi liên quan đến giao dịch mượn sách.
  */
@@ -43,6 +41,15 @@ public interface LoanTransactionService {
      */
     LoanTransactionResponse receiveDocument(Long transactionId);
     LoanTransactionResponse confirmReturnDocument(LoanTransactionReturnRequest request);
+
+    /**
+     * Gia hạn giao dịch mượn sách.
+     *
+     * @param transactionId ID của giao dịch mượn sách cần gia hạn.
+     * @return LoanTransactionResponse chứa thông tin giao dịch đã được gia hạn.
+     */
+    LoanTransactionResponse renewLoanTransaction(Long transactionId);
+
     /**
      * Người dùng trả sách sau khi đã mượn.
      *
@@ -54,7 +61,7 @@ public interface LoanTransactionService {
     /**
      * Người dùng hủy yêu cầu mượn sách trước khi được phê duyệt.
      *
-     * @param transactionId  ID của giao dịch mượn sách cần huy
+     * @param transactionId  ID của giao dịch mượn sách cần hủy
      * @return LoanTransactionResponse chứa thông tin giao dịch đã được hủy.
      */
     LoanTransactionResponse cancelLoanTransactionByUser(Long transactionId);

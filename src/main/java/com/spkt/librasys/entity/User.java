@@ -51,6 +51,11 @@ public class User {
     LocalDate expirationDate;  // Ngày hết hạn tài khoản (membership expiration)
 //    @Column(name = "google_refresh_token")
 //    String googleRefreshToken;
+    @Column(name = "current_borrowed_count", nullable = false)
+    int currentBorrowedCount; // Số lượng sách đã mượn hiện tại của người dùng
+
+    @Column(name = "max_borrow_limit", nullable = false)
+    int maxBorrowLimit = 5; // Giới hạn số lượng sách tối đa mà người dùng có thể mượn
     // Một người dùng có nhiều lịch sử truy cập
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     List<AccessHistory> accessHistories;

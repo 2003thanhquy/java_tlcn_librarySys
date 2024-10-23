@@ -1,8 +1,8 @@
 package com.spkt.librasys.dto.response;
 
+import com.spkt.librasys.entity.LoanTransaction;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import com.spkt.librasys.entity.enums.LoanTransactionStatus;
 
 import java.time.LocalDate;
 
@@ -19,5 +19,5 @@ public class LoanTransactionResponse {
     LocalDate loanDate;  
     LocalDate dueDate;  
     LocalDate returnDate;  
-    LoanTransactionStatus status;  // Trạng thái của giao dịch
+    LoanTransaction.Status status;  // Trạng thái của giao dịch
 }

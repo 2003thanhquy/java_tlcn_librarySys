@@ -33,7 +33,7 @@ public class DocumentUpdateRequest {
 
     BigDecimal price;
 
-    String description;
+//    String description;
 
     String documentLink;
 

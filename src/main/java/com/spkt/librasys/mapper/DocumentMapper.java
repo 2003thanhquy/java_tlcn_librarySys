@@ -15,7 +15,7 @@ public interface DocumentMapper {
     @Mapping(source = "documentType.typeName", target = "documentTypeName")
     DocumentResponse toDocumentResponse(Document document);
 
-    @Mapping(target = "loanTransactions", ignore = true)
+   // @Mapping(target = "loanTransactions", ignore = true)
     @Mapping(target = "accessHistories", ignore = true)
   //  @Mapping(source = "documentTypeId", target = "documentType.documentTypeId")
     @BeanMapping(

@@ -1,6 +1,7 @@
 package com.spkt.librasys.service.impl;
 
 import com.spkt.librasys.constant.PredefinedRole;
+import com.spkt.librasys.dto.request.user.ChangePasswordRequest;
 import com.spkt.librasys.dto.request.user.UserCreateRequest;
 import com.spkt.librasys.dto.request.user.UserUpdateRequest;
 import com.spkt.librasys.dto.response.user.UserResponse;
@@ -110,12 +111,6 @@ public class UserServiceImpl implements UserService {
             // Nếu không phải là quản trị viên và không phải chính người dùng, ném ngoại lệ
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
-
-        // Cập nhật mật khẩu nếu có
-        if (request.getPassword() != null) {
-            request.setPassword(passwordEncoder.encode(request.getPassword()));
-        }
-
         // Ánh xạ các thông tin còn lại từ UserUpdateRequest vào thực thể User
         userMapper.updateUser(user, request);
 
@@ -131,4 +126,25 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(String id) {
         //userRepository.deleteById(id);
     }
+    @Override
+    public void changePassword(ChangePasswordRequest request) {
+        // Lấy thông tin người dùng hiện tại
+        User currentUser = authenticationService.getCurrentUser();
+        if(currentUser == null)  throw new AppException(ErrorCode.UNAUTHORIZED);
+
+        // Kiểm tra mật khẩu cũ
+        if (!passwordEncoder.matches(request.getOldPassword(), currentUser.getPassword())) {
+            throw new AppException(ErrorCode.INVALID_CREDENTIALS, "Mật khẩu cũ không chính xác");
+        }
+
+        // Kiểm tra mật khẩu mới và xác nhận mật khẩu mới
+        if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Mật khẩu mới không khớp với xác nhận mật khẩu");
+        }
+
+        // Cập nhật mật khẩu mới
+        currentUser.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(currentUser);
+    }
+
 }

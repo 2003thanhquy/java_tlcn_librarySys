@@ -71,8 +71,8 @@ public class Document {
 
     @Column(name = "price", precision = 19, scale = 2)
     BigDecimal price;
-    @Column(name = "max_loan_days", nullable = false)
-    int maxLoanDays; // Số ngày tối đa có thể mượn tài liệu
+//    @Column(name = "max_loan_days", nullable = false)
+//    int maxLoanDays; // Số ngày tối đa có thể mượn tài liệu
     // Quan hệ với các thực thể khác
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "document_type_id", nullable = false) // Khóa ngoại
