@@ -17,7 +17,7 @@ public interface DocumentMapper {
 
     @Mapping(target = "loanTransactions", ignore = true)
     @Mapping(target = "accessHistories", ignore = true)
-    @Mapping(source = "documentTypeId", target = "documentType.documentTypeId")
+  //  @Mapping(source = "documentTypeId", target = "documentType.documentTypeId")
     @BeanMapping(
             nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE
     )

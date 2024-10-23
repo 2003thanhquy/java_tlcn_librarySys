@@ -1,6 +1,7 @@
 package com.spkt.librasys.entity;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
@@ -20,6 +21,9 @@ public class Role {
 
     String description;
 
+    @ManyToMany(mappedBy = "roles")
+    @JsonBackReference
+    Set<User> users;
 //    @ManyToMany
 //    Set<Permission> permissions;
 }

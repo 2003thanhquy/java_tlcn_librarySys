@@ -13,4 +13,12 @@ public interface DocumentService {
     Page<DocumentResponse> searchDocuments(DocumentSearchRequest searchRequest, Pageable pageable);
     Page<DocumentResponse> getAllDocuments(Pageable pageable);
     void deleteDocument(Long id);
+    //
+    Page<DocumentResponse> getFavoriteDocuments(Pageable pageable);
+    void classifyDocument(Long id, String newTypeName);
+    void favoriteDocument(Long id);
+   // void downloadDocument(Long id);
+    void unFavoriteDocument(Long documentId);
+   boolean isFavoriteDocument(Long documentId);
+
 }

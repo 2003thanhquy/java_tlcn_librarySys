@@ -1,5 +1,6 @@
 package com.spkt.librasys.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -61,6 +62,7 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_name")
     )
+    @JsonManagedReference
     Set<Role> roles;
 
     // Một người dùng có nhiều khoản phạt
@@ -69,4 +71,8 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Notification> notifications;
+    Status is_active = Status.ACTIVE;
+    public enum Status {
+        ACTIVE,DELETE,BLOCK,
+    }
 }

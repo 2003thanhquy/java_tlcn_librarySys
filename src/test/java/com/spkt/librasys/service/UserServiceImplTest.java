@@ -8,7 +8,7 @@ import com.spkt.librasys.entity.Role;
 import com.spkt.librasys.entity.User;
 import com.spkt.librasys.exception.AppException;
 import com.spkt.librasys.mapper.UserMapper;
-import com.spkt.librasys.repository.access.RoleRepository;
+import com.spkt.librasys.repository.RoleRepository;
 import com.spkt.librasys.repository.access.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

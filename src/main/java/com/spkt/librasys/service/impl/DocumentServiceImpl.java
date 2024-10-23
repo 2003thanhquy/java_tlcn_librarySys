@@ -7,11 +7,13 @@ import com.spkt.librasys.dto.request.document.DocumentUpdateRequest;
 import com.spkt.librasys.dto.response.document.DocumentResponse;
 import com.spkt.librasys.entity.Document;
 import com.spkt.librasys.entity.DocumentType;
+import com.spkt.librasys.entity.FavoriteDocument;
 import com.spkt.librasys.entity.User;
 import com.spkt.librasys.entity.enums.DocumentStatus;
 import com.spkt.librasys.exception.AppException;
 import com.spkt.librasys.exception.ErrorCode;
 import com.spkt.librasys.mapper.DocumentMapper;
+import com.spkt.librasys.repository.FavoriteDocumentRepository;
 import com.spkt.librasys.repository.document.DocumentRepository;
 import com.spkt.librasys.repository.document.DocumentTypeRepository;
 import com.spkt.librasys.repository.access.UserRepository;
@@ -42,6 +44,7 @@ public class DocumentServiceImpl implements DocumentService {
     DocumentMapper documentMapper;
     AccessHistoryServiceImpl accessHistoryService;
     AuthenticationService authenticationService;
+    FavoriteDocumentRepository favoriteDocumentRepository;
 
     @Override
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
@@ -64,11 +67,11 @@ public class DocumentServiceImpl implements DocumentService {
         Document document = documentRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND));
 
-        if (request.getDocumentTypeId() != null) {
-            DocumentType documentType = documentTypeRepository.findById(request.getDocumentTypeId())
-                    .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_TYPE_NOT_FOUND));
-            document.setDocumentType(documentType);
-        }
+//        if (request.getDocumentTypeId() != null) {
+//            DocumentType documentType = documentTypeRepository.findById(request.getDocumentTypeId())
+//                    .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_TYPE_NOT_FOUND));
+//            document.setDocumentType(documentType);
+//        }
 
 
         documentMapper.updateDocument(document, request);
@@ -140,5 +143,77 @@ public class DocumentServiceImpl implements DocumentService {
 //        User currentUser = getCurrentUser();
 //        accessHistoryService.recordAccess(currentUser, document, "Deleted Document");
     }
+    @Override
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public void classifyDocument(Long id, String newTypeName) {
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Document not found"));
+        DocumentType newType = documentTypeRepository.findByTypeName(newTypeName)
+                .orElseThrow(() -> new RuntimeException("Document type not found"));
+        document.setDocumentType(newType);
+        documentRepository.save(document);
+    }
+
+    @Override
+    public void favoriteDocument(Long documentId) {
+        User user = authenticationService.getCurrentUser();
+        if(user == null)
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND));
+
+        // Kiểm tra nếu tài liệu đã được yêu thích trước đó
+        if (favoriteDocumentRepository.existsByUserAndDocument(user, document)) {
+            throw new RuntimeException("Document already marked as favorite");
+        }
+
+        FavoriteDocument favoriteDocument = FavoriteDocument.builder()
+                .user(user)
+                .document(document)
+                .build();
+
+        favoriteDocumentRepository.save(favoriteDocument);
+    }
+    @Override
+    public Page<DocumentResponse> getFavoriteDocuments( Pageable pageable) {
+        User user = authenticationService.getCurrentUser();
+        if(user == null)
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        return favoriteDocumentRepository.findAllByUser(user, pageable)
+                .map(favoriteDocument -> documentMapper.toDocumentResponse(favoriteDocument.getDocument()));
+    }
+
+    @Override
+    public void unFavoriteDocument(Long documentId) {
+        User user = authenticationService.getCurrentUser();
+        if (user == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // Tìm kiếm tài liệu yêu thích với người dùng và tài liệu cụ thể
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND));
+        FavoriteDocument favoriteDocument = favoriteDocumentRepository.findByUserAndDocument(user, document)
+                .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND));
+
+        // Xóa bản ghi yêu thích
+        favoriteDocumentRepository.delete(favoriteDocument);
+    }
+
+    @Override
+    public boolean isFavoriteDocument(Long documentId) {
+        User user = authenticationService.getCurrentUser();
+        if (user == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // Kiểm tra xem tài liệu có được người dùng yêu thích không
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND));
+
+        return favoriteDocumentRepository.existsByUserAndDocument(user, document);
+    }
+
+
 
 }

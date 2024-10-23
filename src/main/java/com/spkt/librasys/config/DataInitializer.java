@@ -6,7 +6,7 @@ import com.spkt.librasys.entity.DocumentType;
 import com.spkt.librasys.entity.Role;
 import com.spkt.librasys.entity.User;
 import com.spkt.librasys.entity.enums.DocumentStatus;
-import com.spkt.librasys.repository.access.RoleRepository;
+import com.spkt.librasys.repository.RoleRepository;
 import com.spkt.librasys.repository.access.UserRepository;
 import com.spkt.librasys.repository.document.DocumentRepository;
 import com.spkt.librasys.repository.document.DocumentTypeRepository;

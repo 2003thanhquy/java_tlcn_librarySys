@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface FineRepository extends JpaRepository<Fine, String> {
+public interface FineRepository extends JpaRepository<Fine,Long> {
     List<Fine> findByUserUserId(String userId);
+
+    //dashboard
+    Long countByStatus(Fine.Status status);
 }

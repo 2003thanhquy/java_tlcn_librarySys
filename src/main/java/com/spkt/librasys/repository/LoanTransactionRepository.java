@@ -12,4 +12,8 @@ import java.util.List;
 
 public interface LoanTransactionRepository extends JpaRepository<LoanTransaction, Long>, JpaSpecificationExecutor<LoanTransaction> {
     List<LoanTransaction> findAllByStatusAndCreatedAtBefore(LoanTransactionStatus status, LocalDateTime dateTime);
+
+    //dashboard
+    //@Query("SELECT COUNT(l) FROM LoanTransaction l WHERE l.returnDate IS NULL")
+    Long countByReturnDateIsNull();
 }

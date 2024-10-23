@@ -1,5 +1,6 @@
 package com.spkt.librasys.dto.request.loanTransaction;
 
+import com.spkt.librasys.entity.Fine;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -29,5 +30,5 @@ public class LoanTransactionReturnRequest {
     String fineReason;  // Lý do bị phạt (nếu có phạt)
 
     @NotBlank(message = "Fine status must be provided if there is a fine")
-    String fineStatus;  // Trạng thái của khoản phạt (Paid, Unpaid, etc.)
+    Fine.Status status;  // Trạng thái của khoản phạt (Paid, Unpaid, etc.)
 }

@@ -20,9 +20,10 @@ public class DocumentType {
     @Column(name = "document_type_id")
     Long documentTypeId;
 
-    @Column(name = "type_name", nullable = false)
+    @Column(name = "type_name", nullable = false,unique = true)
     String typeName;
-
+    @Column(name = "description", nullable = false)
+    String description;
     // Một document type có thể chứa nhiều document
     @OneToMany(mappedBy = "documentType", cascade = CascadeType.ALL)
     List<Document> documents;

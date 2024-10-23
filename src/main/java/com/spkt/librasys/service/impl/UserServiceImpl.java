@@ -9,7 +9,7 @@ import com.spkt.librasys.entity.User;
 import com.spkt.librasys.exception.AppException;
 import com.spkt.librasys.exception.ErrorCode;
 import com.spkt.librasys.mapper.UserMapper;
-import com.spkt.librasys.repository.access.RoleRepository;
+import com.spkt.librasys.repository.RoleRepository;
 import com.spkt.librasys.repository.access.UserRepository;
 import com.spkt.librasys.service.AuthenticationService;
 import com.spkt.librasys.service.UserService;

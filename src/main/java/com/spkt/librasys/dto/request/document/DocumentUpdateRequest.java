@@ -37,7 +37,7 @@ public class DocumentUpdateRequest {
 
     String documentLink;
 
-    Long documentTypeId;  // Có thể không cung cấp nếu không muốn thay đổi loại tài liệu
+ //   Long documentTypeId;  // Có thể không cung cấp nếu không muốn thay đổi loại tài liệu - su dung trong classify
 
     DocumentStatus status;  // Có thể bỏ trống nếu không muốn thay đổi trạng thái
 }

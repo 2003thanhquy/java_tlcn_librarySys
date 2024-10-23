@@ -79,9 +79,9 @@ public class Document {
     @ToString.Exclude
     DocumentType documentType; // Loại tài liệu (ví dụ: sách, tạp chí, luận văn)
 
-    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
-    @ToString.Exclude
-    List<LoanTransaction> loanTransactions; // Các giao dịch mượn liên quan đến tài liệu
+//    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
+//    @ToString.Exclude
+//    List<LoanTransaction> loanTransactions; // Các giao dịch mượn liên quan đến tài liệu
 
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude

@@ -3,7 +3,7 @@ package com.spkt.librasys.config;
 import com.spkt.librasys.constant.PredefinedRole;
 import com.spkt.librasys.entity.Role;
 import com.spkt.librasys.entity.User;
-import com.spkt.librasys.repository.access.RoleRepository;
+import com.spkt.librasys.repository.RoleRepository;
 import com.spkt.librasys.repository.access.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

@@ -18,20 +18,21 @@ public class Fine {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "fine_id")
-    long fineId;
+    Long fineId;
 
     @Column(name = "amount", nullable = false)
     Double amount;  // Số tiền phạt
 
     @Column(name = "status", nullable = false)
-    String status;  // Trạng thái của khoản phạt (VD: Paid, Unpaid)
+    Status status;  // Trạng thái của khoản phạt (VD: Paid, Unpaid)
 
     @Column(name = "issued_date", nullable = false)
     LocalDateTime issuedDate;  // Ngày phát sinh phạt
 
     @Column(name = "reason")
     String reason;  // Lý do bị phạt
-
+    @Column(name = "processed_by")
+    String processedBy;  // Thêm trường lưu thông tin người xử lý khoản phạt
     // Mối quan hệ một-một với LoanTransaction
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "loan_transaction_id", nullable = false)
@@ -42,4 +43,8 @@ public class Fine {
     @JoinColumn(name = "user_id", nullable = false)
     @ToString.Exclude
     User user;
+    public enum Status{
+        PAID, UNPAID
+    }
+
 }

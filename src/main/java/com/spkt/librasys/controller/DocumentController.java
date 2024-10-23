@@ -84,4 +84,49 @@ public class DocumentController {
                 .result(pageDTO)
                 .build();
     }
+    @PostMapping("/{id}/classify")
+    public ApiResponse<Void> classifyDocument(@PathVariable Long id, @RequestParam String newTypeName) {
+        documentService.classifyDocument(id, newTypeName);
+        return ApiResponse.<Void>builder()
+                .message("Document classified successfully")
+                .build();
+    }
+    @PostMapping("/{id}/favorite")
+    public ApiResponse<Void> favoriteDocument(@PathVariable Long id) {
+        documentService.favoriteDocument(id);
+        return ApiResponse.<Void>builder()
+                .message("Document marked as favorite successfully")
+                .build();
+    }
+    @GetMapping("/favorites")
+    public ApiResponse<PageDTO<DocumentResponse>> getFavoriteDocuments(Pageable pageable) {
+        Page<DocumentResponse> responseList = documentService.getFavoriteDocuments(pageable);
+        PageDTO<DocumentResponse> pageDTO = new PageDTO<>(responseList);
+        return ApiResponse.<PageDTO<DocumentResponse>>builder()
+                .message("Favorite documents retrieved successfully")
+                .result(pageDTO)
+                .build();
+    }
+    //@GetMapping("/{id}/download")
+    //public ApiResponse<Void> downloadDocument(@PathVariable Long id, @RequestParam Long userId) {
+    //    documentService.downloadDocument(id, userId);
+    //    return ApiResponse.<Void>builder()
+    //            .message("Document downloaded successfully")
+    //            .build();
+    //}
+    @DeleteMapping("/{id}/favorite")
+    public ApiResponse<Void> unFavoriteDocument(@PathVariable Long id) {
+        documentService.unFavoriteDocument(id);
+        return ApiResponse.<Void>builder()
+                .message("Document removed from favorites successfully")
+                .build();
+    }
+    @GetMapping("/{id}/is-favorite")
+    public ApiResponse<Boolean> isFavoriteDocument(@PathVariable Long id) {
+        boolean isFavorite = documentService.isFavoriteDocument(id);
+        return ApiResponse.<Boolean>builder()
+                .message("Favorite status retrieved successfully")
+                .result(isFavorite)
+                .build();
+    }
 }

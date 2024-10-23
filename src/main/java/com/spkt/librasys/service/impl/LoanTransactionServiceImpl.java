@@ -230,7 +230,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
             // Nếu sách bị hư hỏng, áp dụng khoản phạt và không cập nhật availableCount
             Fine fine = Fine.builder()
                     .amount(request.getFineAmount())
-                    .status(request.getFineStatus())
+                    .status(request.getStatus())
                     .issuedDate(LocalDateTime.now())
                     .reason(request.getFineReason())
                     .transactionLoan(loanTransaction)
@@ -248,7 +248,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
             if (request.getFineAmount() > 0) {
                 Fine fine = Fine.builder()
                         .amount(request.getFineAmount())
-                        .status(request.getFineStatus())
+                        .status(request.getStatus())
                         .issuedDate(LocalDateTime.now())
                         .reason(request.getFineReason())
                         .transactionLoan(loanTransaction)

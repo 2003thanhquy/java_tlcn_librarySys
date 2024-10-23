@@ -39,11 +39,13 @@ public enum ErrorCode {
     FILE_TOO_LARGE(4005, "File is too large", HttpStatus.PAYLOAD_TOO_LARGE),
     FILE_FORMAT_UNSUPPORTED(4006, "File format is not supported", HttpStatus.UNSUPPORTED_MEDIA_TYPE),
     DOCUMENT_TYPE_NOT_FOUND(4007,"Documnet type id not found", HttpStatus.NOT_FOUND),
+    DOCUMENT_ALREADY_FAVORITE(4008,"Document already marked as favorite", HttpStatus.CONFLICT),
     // Nhóm lỗi cơ sở dữ liệu
     DATABASE_ERROR(5001, "Database error occurred", HttpStatus.INTERNAL_SERVER_ERROR),
     DATA_INTEGRITY_VIOLATION(5002, "Data integrity violation", HttpStatus.CONFLICT),
     TRANSACTION_FAILED(5003, "Database transaction failed", HttpStatus.INTERNAL_SERVER_ERROR),
     TRANSACTION_NOT_FOUND(5004, "Loan transaction not found", HttpStatus.NOT_FOUND), // Thêm dòng này
+    FINE_NOT_FOUND(5005, "Fine not found", HttpStatus.NOT_FOUND),
 
     // Nhóm lỗi hệ thống
     SERVER_ERROR(6001, "Internal server error", HttpStatus.INTERNAL_SERVER_ERROR),
