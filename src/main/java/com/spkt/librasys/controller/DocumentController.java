@@ -13,7 +13,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -60,7 +62,11 @@ public class DocumentController {
                 .build();
     }
     @GetMapping
-    public ApiResponse<PageDTO<DocumentResponse>> getAllDocuments(Pageable pageable){
+    public ApiResponse<PageDTO<DocumentResponse>> getAllDocuments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "documentName,asc") String[] sort){
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
         Page<DocumentResponse> responseList = documentService.getAllDocuments(pageable);
         PageDTO<DocumentResponse> pageDTO = new PageDTO<>(responseList);
         return ApiResponse.<PageDTO<DocumentResponse>>builder()

@@ -24,7 +24,7 @@ import org.springframework.web.filter.CorsFilter;
 public class SecurityConfig {
     private final String[] PUBLIC_GET_ENDPOINTS = {
             "/api/v1/documents",        // Cho phép truy cập tài liệu công khai
-            "/api/v1/documents/**"    // Cho phép xem chi tiết tài liệu mà không cần xác thực
+            "/api/v1/documents/**" ,   // Cho phép xem chi tiết tài liệu mà không cần xác thực
     };
     private final String[] PUBLIC_POST_ENDPOINTS = {
             "/api/v1/users",
@@ -44,18 +44,20 @@ public class SecurityConfig {
         httpSecurity.authorizeHttpRequests(request->
                 request.requestMatchers(HttpMethod.POST,PUBLIC_POST_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
-//                        .requestMatchers(HttpMethod.POST,PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers( "/swagger-ui/**", "/swagger-ui.html","/api-docs", "/api-docs/**").permitAll() // Cho phép truy cập các endpoint của Swagger
+
+
                         //.hasAuthority("SCOPE_ADMIN")
                        // .hasRole(Role.ADMIN.name())
                 .anyRequest().authenticated())
-                .oauth2Login(oauth2Login ->
-                        oauth2Login
-                                .loginPage("/api/v1/auth/login-google")  // Endpoint đăng nhập Google
-                                .defaultSuccessUrl("/api/v1/auth/oauth2/success", true)
-                                .failureUrl("/api/v1/auth/oauth2/failure")
-//                                .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
-//                                        .userService(customOAuth2UserService()))  // Service lấy thông tin người dùngs
-                )
+//                .oauth2Login(oauth2Login ->
+//                        oauth2Login
+//                                .loginPage("/api/v1/auth/login-google")  // Endpoint đăng nhập Google
+//                                .defaultSuccessUrl("/api/v1/auth/oauth2/success", true)
+//                                .failureUrl("/api/v1/auth/oauth2/failure")
+////                                .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig
+////                                        .userService(customOAuth2UserService()))  // Service lấy thông tin người dùngs
+//                )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwtConfigurer -> jwtConfigurer
                                 .decoder(customJwtDecode)
