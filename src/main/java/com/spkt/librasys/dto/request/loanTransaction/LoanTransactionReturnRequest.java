@@ -30,5 +30,5 @@ public class LoanTransactionReturnRequest {
     String fineReason;  // Lý do bị phạt (nếu có phạt)
 
     @NotNull(message = "Fine status must be provided if there is a fine")
-    Fine.Status status;  // Trạng thái của khoản phạt (Paid, Unpaid, etc.)
+    Fine.Status status;  // Trạng thái của khoản phạt (PAID,UNPAID, etc.)
 }

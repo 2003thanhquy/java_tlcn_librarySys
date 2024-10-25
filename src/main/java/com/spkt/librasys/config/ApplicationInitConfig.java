@@ -62,6 +62,7 @@ public class ApplicationInitConfig {
                         .username(ADMIN_USER_NAME)
                         .password(passwordEncoder.encode(ADMIN_PASSWORD))
                         .roles(roles)
+                        .isActive(User.Status.ACTIVE)
                         .build();
 //                User user1 = User.builder()
 //                        .username("quy@gmail.com")

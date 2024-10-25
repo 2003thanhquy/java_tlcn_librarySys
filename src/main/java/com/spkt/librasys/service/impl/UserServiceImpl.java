@@ -12,10 +12,7 @@ import com.spkt.librasys.exception.ErrorCode;
 import com.spkt.librasys.mapper.UserMapper;
 import com.spkt.librasys.repository.RoleRepository;
 import com.spkt.librasys.repository.access.UserRepository;
-import com.spkt.librasys.service.AuthenticationService;
-import com.spkt.librasys.service.RoleService;
-import com.spkt.librasys.service.SecurityContextService;
-import com.spkt.librasys.service.UserService;
+import com.spkt.librasys.service.*;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -44,9 +41,9 @@ public class UserServiceImpl implements UserService {
     UserMapper userMapper;
     PasswordEncoder passwordEncoder;
     RoleRepository roleRepository;
-    AuthenticationService authenticationService;
     SecurityContextService securityContextService;
     RoleService roleService;
+    VerificationService verificationService;
     @Override
     public UserResponse getMyInfo() {
         var context = SecurityContextHolder.getContext();
@@ -77,6 +74,7 @@ public class UserServiceImpl implements UserService {
         } catch (DataIntegrityViolationException exception) {
             throw new AppException(ErrorCode.DUPLICATE_USER);
         }
+        verificationService.verificationCode(user.getUsername());
         return userMapper.toUserResponse(user);
     }
 

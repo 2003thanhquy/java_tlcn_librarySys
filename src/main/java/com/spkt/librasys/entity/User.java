@@ -82,7 +82,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "is_active", nullable = false)
     @Builder.Default
-    Status isActive = Status.ACTIVE;
+    Status isActive = Status.PENDING;
     // Một người dùng có nhiều lịch sử truy cập
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     List<AccessHistory> accessHistories;
@@ -104,6 +104,7 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Notification> notifications;
     public enum Status {
+        PENDING,     // Đăng ký nhưng chưa được xác minh
         ACTIVE,       // Tài khoản đang hoạt động
         DEACTIVATED,  // Tài khoản đã bị vô hiệu hóa
         LOCKED,       // Tài khoản bị khóa (do vi phạm, bảo mật, hoặc các lý do khác)

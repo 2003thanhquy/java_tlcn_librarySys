@@ -72,6 +72,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         // Kiểm tra trạng thái tài khoản
         switch (user.getIsActive()) {
+            case PENDING:
+                throw new AppException(ErrorCode.USER_PENDING, "Tài khoản đang chờ xác thuật. ");
             case DEACTIVATED:
                 throw new AppException(ErrorCode.USER_DEACTIVATED, "Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.");
             case LOCKED:
@@ -121,6 +123,23 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         try {
             verifyToken(token, false);
+            SignedJWT signedJWT = SignedJWT.parse(token);
+            String username = signedJWT.getJWTClaimsSet().getSubject();
+            // Tìm kiếm người dùng theo tên người dùng
+            Optional<User> userOptional = userRepository.findByUsername(username);
+            if (!userOptional.isPresent()) {
+                isValid = false;
+            } else {
+                User user = userOptional.get();
+                isValid = user.getIsActive().equals(User.Status.ACTIVE);
+            }
+            if(!isValid) {
+                var jit = signedJWT.getJWTClaimsSet().getJWTID();
+                var expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+                InvalidatedToken invalidatedToken =
+                        InvalidatedToken.builder().id(jit).expiryTime(expiryTime).build();
+                invalidatedTokenRepository.save(invalidatedToken);
+            }
         } catch (AppException | JOSEException | ParseException e) {
             isValid = false;
         }

@@ -1,12 +1,14 @@
 package com.spkt.librasys.controller;
 
 import com.spkt.librasys.dto.PageDTO;
+import com.spkt.librasys.dto.request.VerificationRequest;
 import com.spkt.librasys.dto.request.user.ChangePasswordRequest;
 import com.spkt.librasys.dto.request.user.UserCreateRequest;
 import com.spkt.librasys.dto.request.user.UserUpdateRequest;
 import com.spkt.librasys.dto.response.ApiResponse;
 import com.spkt.librasys.dto.response.user.UserResponse;
 import com.spkt.librasys.service.UserService;
+import com.spkt.librasys.service.VerificationService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     UserService userService;
+    VerificationService verificationService;
 
     @GetMapping ("/{userId}")
     public  ApiResponse<UserResponse> getUser(@PathVariable String userId){
@@ -108,6 +111,23 @@ public class UserController {
         return ApiResponse.<String>builder()
                 .result("User has been unlocked successfully")
                 .build();
+    }
+
+    @PostMapping("/verify-account")
+    public ApiResponse<Void> verifyAccount(@RequestBody VerificationRequest request) {
+        boolean isVerified = verificationService.verifyAccount(request);
+        return ApiResponse.<Void>builder()
+                .message(isVerified?"Account verified successfully":"Invalid or expired verification code")
+                .build();
+    }
+    @PostMapping("/resend-verification")
+    public ApiResponse<Void> resendVerificationCode(@RequestParam String email) {
+        boolean isResent = verificationService.resendVerificationCode(email);
+
+        return ApiResponse.<Void>builder()
+                    .message(isResent?"Verification code resent successfully":"Failed to resend verification code. Please try again later.")
+                    .build();
+
     }
 
 }

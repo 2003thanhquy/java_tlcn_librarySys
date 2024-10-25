@@ -12,6 +12,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -20,6 +21,8 @@ public class EmailServiceImpl implements EmailService {
     private static String EMAIL_HOST = "quy2003@wuy.id.vn";
     @Autowired
     private JavaMailSender mailSender;
+    @Autowired
+    EmailRepository emailRepository;
 
     @Override
     @Async
@@ -60,5 +63,28 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public String sendAttachmentsEmail(Email email) {
         return "";
+    }
+    @Async
+    public CompletableFuture<Boolean> sendVerificationCodeAsync(String toEmail, String verificationCode) {
+        // Tạo email để lưu vào database
+        Email email = Email.builder()
+                .toEmail(toEmail)
+                .subject("Xác minh tài khoản của bạn")
+                .body("Chào bạn,\n\nĐây là mã xác minh của bạn: " + verificationCode +
+                        "\nMã này sẽ hết hạn sau 10 phút.\n\nTrân trọng,\nĐội ngũ hỗ trợ.")
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                sendHtmlEmail(email); // Gửi email qua service
+                email.setStatus("SUCCESS"); // Đánh dấu trạng thái gửi thành công
+            } catch (Exception e) {
+                email.setStatus("FAILED"); // Đánh dấu trạng thái thất bại
+            }
+            // Lưu email vào database
+            emailRepository.save(email);
+            return email.getStatus().equals("SUCCESS");
+        });
     }
 }

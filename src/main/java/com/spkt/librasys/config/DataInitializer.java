@@ -73,38 +73,38 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("Documents already exist in the database. Skipping data initialization.");
         }
 
-        // Kiểm tra và tạo dữ liệu giả cho User nếu chưa có dữ liệu
-        if (userRepository.count() <2) {
-            // Tạo các role giả nếu chưa tồn tại
-            Role adminRole = roleRepository.findById("ADMIN").orElseGet(() -> {
-                Role role = Role.builder().name("ADMIN").build();
-                return roleRepository.save(role);
-            });
-            Role userRole = roleRepository.findById("USER").orElseGet(() -> {
-                Role role = Role.builder().name("USER").build();
-                return roleRepository.save(role);
-            });
-
-            for (int i = 0; i < 100; i++) {
-                User user = User.builder()
-                        .username(faker.internet().emailAddress())
-                        .password(faker.internet().password())
-                        .firstName(faker.name().firstName())
-                        .lastName(faker.name().lastName())
-                        .dob(LocalDate.now().minusYears(random.nextInt(60) + 18)) // Giả lập tuổi từ 18 đến 78
-                        .phoneNumber(faker.phoneNumber().cellPhone())
-                        .address(faker.address().fullAddress())
-                        .registrationDate(LocalDate.now().minusDays(random.nextInt(365))) // Đăng ký từ 1 năm trước
-                        .expirationDate(LocalDate.now().plusYears(1)) // Hạn sử dụng là 1 năm sau
-                        .roles(new HashSet<>(Set.of(userRole))) // Gán role cho user
-                        .build();
-
-                userRepository.save(user);
-            }
-
-            System.out.println("10 users have been inserted into the database.");
-        } else {
-            System.out.println("Users already exist in the database. Skipping user data initialization.");
-        }
+//        // Kiểm tra và tạo dữ liệu giả cho User nếu chưa có dữ liệu
+//        if (userRepository.count() <2) {
+//            // Tạo các role giả nếu chưa tồn tại
+//            Role adminRole = roleRepository.findById("ADMIN").orElseGet(() -> {
+//                Role role = Role.builder().name("ADMIN").build();
+//                return roleRepository.save(role);
+//            });
+//            Role userRole = roleRepository.findById("USER").orElseGet(() -> {
+//                Role role = Role.builder().name("USER").build();
+//                return roleRepository.save(role);
+//            });
+//
+//            for (int i = 0; i < 100; i++) {
+//                User user = User.builder()
+//                        .username(faker.internet().emailAddress())
+//                        .password(faker.internet().password())
+//                        .firstName(faker.name().firstName())
+//                        .lastName(faker.name().lastName())
+//                        .dob(LocalDate.now().minusYears(random.nextInt(60) + 18)) // Giả lập tuổi từ 18 đến 78
+//                        .phoneNumber(faker.phoneNumber().cellPhone())
+//                        .address(faker.address().fullAddress())
+//                        .registrationDate(LocalDate.now().minusDays(random.nextInt(365))) // Đăng ký từ 1 năm trước
+//                        .expirationDate(LocalDate.now().plusYears(1)) // Hạn sử dụng là 1 năm sau
+//                        .roles(new HashSet<>(Set.of(userRole))) // Gán role cho user
+//                        .build();
+//
+//                userRepository.save(user);
+//            }
+//
+//            System.out.println("10 users have been inserted into the database.");
+//        } else {
+//            System.out.println("Users already exist in the database. Skipping user data initialization.");
+//        }
     }
 }
