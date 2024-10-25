@@ -44,18 +44,25 @@ public class User {
     @Column(name = "address")
     String address;
 
-    @Column(name = "registration_date")//, nullable = false)
-    LocalDate registrationDate;
+    @Column(name = "registration_date")
+    //@Builder.Default
+    LocalDate registrationDate = LocalDate.now(); // Giá trị mặc định là ngày hiện tại
 
     @Column(name = "expiration_date")
-    LocalDate expirationDate;  // Ngày hết hạn tài khoản (membership expiration)
-//    @Column(name = "google_refresh_token")
-//    String googleRefreshToken;
+    LocalDate expirationDate;
+
     @Column(name = "current_borrowed_count", nullable = false)
-    int currentBorrowedCount; // Số lượng sách đã mượn hiện tại của người dùng
+    @Builder.Default
+    int currentBorrowedCount = 0; // Giá trị mặc định là 0
 
     @Column(name = "max_borrow_limit", nullable = false)
-    int maxBorrowLimit = 5; // Giới hạn số lượng sách tối đa mà người dùng có thể mượn
+    @Builder.Default
+    int maxBorrowLimit = 5; // Giá trị mặc định là 5
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "is_active", nullable = false)
+    @Builder.Default
+    Status is_active = Status.ACTIVE;
     // Một người dùng có nhiều lịch sử truy cập
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     List<AccessHistory> accessHistories;
@@ -76,7 +83,6 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Notification> notifications;
-    Status is_active = Status.ACTIVE;
     public enum Status {
         ACTIVE,DELETE,BLOCK,
     }

@@ -112,6 +112,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
 
         // Cập nhật trạng thái giao dịch
         loanTransaction.setStatus(LoanTransaction.Status.APPROVED);
+        loanTransaction.setUpdatedAt(LocalDateTime.now());
 
         // Cập nhật số sách đã mượn của người dùng
         User user = loanTransaction.getUser();

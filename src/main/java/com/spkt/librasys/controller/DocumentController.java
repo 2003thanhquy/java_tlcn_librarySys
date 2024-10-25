@@ -65,8 +65,22 @@ public class DocumentController {
     public ApiResponse<PageDTO<DocumentResponse>> getAllDocuments(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "documentName,asc") String[] sort){
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
+            @RequestParam(defaultValue = "documentName") String sort,
+            @RequestParam(defaultValue = "desc") String direction
+            ){
+        Sort sortBy;
+        try {
+            // Thiết lập hướng sắp xếp dựa vào tham số `direction`
+            Sort.Direction sortDirection = Sort.Direction.fromString(direction);
+            sortBy = Sort.by(sortDirection, sort);
+        } catch (IllegalArgumentException e) {
+            // Trường hợp hướng sắp xếp không hợp lệ, trả về phản hồi lỗi
+            return ApiResponse.<PageDTO<DocumentResponse>>builder()
+                    .message("Invalid sort direction. Use 'asc' or 'desc'.")
+                    .result(null)
+                    .build();
+        }
+        Pageable pageable = PageRequest.of(page, size, sortBy);
         Page<DocumentResponse> responseList = documentService.getAllDocuments(pageable);
         PageDTO<DocumentResponse> pageDTO = new PageDTO<>(responseList);
         return ApiResponse.<PageDTO<DocumentResponse>>builder()
