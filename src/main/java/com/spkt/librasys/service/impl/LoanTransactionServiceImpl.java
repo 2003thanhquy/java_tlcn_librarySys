@@ -118,7 +118,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         user.setCurrentBorrowedCount(user.getCurrentBorrowedCount() + 1);
         userRepository.save(user);
 
-        loanTransactionRepository.save(loanTransaction);
+        loanTransaction =  loanTransactionRepository.save(loanTransaction);
 
         // Gửi thông báo
         LocalDateTime expiryTime = loanTransaction.getUpdatedAt().plusDays(2).withHour(0).withMinute(0).withSecond(0).withNano(0);
