@@ -16,5 +16,10 @@ public interface UserService {
     void deleteUser(String id);
 
     void changePassword(ChangePasswordRequest request);
+    void deactivateUser(String userId, String reason);
+    void reactivateUser(String userId);
+    void lockUser(String userId, String reason);
+    void unlockUser(String userId);
+
 
 }

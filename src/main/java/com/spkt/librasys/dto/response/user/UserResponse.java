@@ -1,6 +1,7 @@
 package com.spkt.librasys.dto.response.user;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.spkt.librasys.entity.Role;
@@ -30,4 +31,13 @@ public class UserResponse {
     int maxBorrowLimit;
     User.Status is_active;
     List<Role> roles;
+
+    // Các trường trạng thái của tài khoản
+    User.Status isActive; // Trạng thái tài khoản: ACTIVE, DEACTIVATED, LOCKED
+    LocalDateTime lockedAt; // Ngày tài khoản bị khóa
+    LocalDateTime deactivatedAt; // Ngày tài khoản bị vô hiệu hóa
+    LocalDateTime reactivatedAt; // Ngày tài khoản được kích hoạt lại
+    String deactivationReason; // Lý do vô hiệu hóa tài khoản
+    String lockReason; // Lý do tài khoản bị khóa
+    int lockCount; // Số lần tài khoản bị khóa
 }

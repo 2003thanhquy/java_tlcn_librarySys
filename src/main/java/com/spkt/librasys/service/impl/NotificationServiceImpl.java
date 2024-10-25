@@ -12,6 +12,7 @@ import com.spkt.librasys.repository.NotificationRepository;
 import com.spkt.librasys.repository.access.UserRepository;
 import com.spkt.librasys.service.AuthenticationService;
 import com.spkt.librasys.service.NotificationService;
+import com.spkt.librasys.service.SecurityContextService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -32,6 +33,7 @@ public class NotificationServiceImpl implements NotificationService {
     UserRepository userRepository;
     AuthenticationService authenticationService;
     NotificationMapper notificationMapper;
+    SecurityContextService  securityContextService;
 
     @Override
     @Transactional
@@ -53,7 +55,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional(readOnly = true)
     public Page<NotificationResponse> getNotificationsForCurrentUser(Pageable pageable) {
-        User currentUser = authenticationService.getCurrentUser();
+        User currentUser =  securityContextService.getCurrentUser();
         Page<Notification> notifications = notificationRepository.findAllByUser(currentUser, pageable);
         return notifications.map(notificationMapper::toNotificationResponse);
     }
@@ -71,7 +73,7 @@ public class NotificationServiceImpl implements NotificationService {
     public NotificationResponse markAsRead(Long notificationId) {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_FOUND));
-        User user = authenticationService.getCurrentUser();
+        User user =  securityContextService.getCurrentUser();
         if(user == null)
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         if(!user.equals(notification.getUser()))
@@ -84,7 +86,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void markAllRead() {
-        User user = authenticationService.getCurrentUser();
+        User user =  securityContextService.getCurrentUser();
         if(user == null) throw new AppException(ErrorCode.USER_NOT_FOUND);
 
        //Notification notification = notificationRepository.findAllByUser(user);

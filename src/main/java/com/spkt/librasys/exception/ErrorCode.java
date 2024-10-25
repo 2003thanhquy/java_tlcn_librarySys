@@ -16,7 +16,9 @@ public enum ErrorCode {
     USER_ACCOUNT_LOCKED(1007, "User account is locked", HttpStatus.FORBIDDEN),
     USER_ACCOUNT_DISABLED(1008, "User account is disabled", HttpStatus.FORBIDDEN),
     PASSWORD_EXPIRED(1009, "Password has expired", HttpStatus.UNAUTHORIZED),
-
+    USER_DEACTIVATED(1010, "User account has been deactivated", HttpStatus.FORBIDDEN),
+    USER_LOCKED(1011, "User account is locked", HttpStatus.FORBIDDEN),
+    USER_ALREADY_DELETED(1012, "User account has already been deleted", HttpStatus.GONE),
     // Nhóm lỗi xác thực
     TOKEN_EXPIRED(2001, "Token has expired", HttpStatus.UNAUTHORIZED),
     TOKEN_INVALID(2002, "Token is invalid", HttpStatus.UNAUTHORIZED),

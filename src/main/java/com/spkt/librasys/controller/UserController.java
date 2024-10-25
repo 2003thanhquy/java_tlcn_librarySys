@@ -74,5 +74,40 @@ public class UserController {
                 .result("Password has been changed successfully")
                 .build();
     }
+    // Vô hiệu hóa tài khoản người dùng
+    @PatchMapping("/{userId}/deactivate")
+    public ApiResponse<String> deactivateUser(@PathVariable String userId, @RequestParam(required = false) String reason) {
+        userService.deactivateUser(userId, reason);
+        return ApiResponse.<String>builder()
+                .result("User has been deactivated successfully")
+                .build();
+    }
+
+    // Kích hoạt lại tài khoản người dùng
+    @PatchMapping("/{userId}/reactivate")
+    public ApiResponse<String> reactivateUser(@PathVariable String userId) {
+        userService.reactivateUser(userId);
+        return ApiResponse.<String>builder()
+                .result("User has been reactivated successfully")
+                .build();
+    }
+
+    // Khóa tài khoản người dùng
+    @PatchMapping("/{userId}/lock")
+    public ApiResponse<String> lockUser(@PathVariable String userId, @RequestParam(required = false) String reason) {
+        userService.lockUser(userId, reason);
+        return ApiResponse.<String>builder()
+                .result("User has been locked successfully")
+                .build();
+    }
+
+    // Mở khóa tài khoản người dùng
+    @PatchMapping("/{userId}/unlock")
+    public ApiResponse<String> unlockUser(@PathVariable String userId) {
+        userService.unlockUser(userId);
+        return ApiResponse.<String>builder()
+                .result("User has been unlocked successfully")
+                .build();
+    }
 
 }

@@ -51,7 +51,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     UserRepository userRepository;
     RoleRepository roleRepository;
     InvalidatedTokenRepository invalidatedTokenRepository;
-    private final PasswordEncoder passwordEncoder;
 
     @NonFinal
     @Value("${jwt.signer-key}")
@@ -66,29 +65,23 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     protected long REFRESHABLE_DURATION;
 
     @Override
-    public User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
-            return null;
-        }
-        String username = authentication.getName();
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-    }
-
-    // Thêm phương thức isAdmin()
-    @Override
-    public Boolean isAdmin(User user) {
-        return user.getRoles().stream()
-                .anyMatch(role -> role.getName().equals("ADMIN"));
-    }
-
-
-    @Override
     public AuthenticationResponse login(AuthenticationRequest request) {
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        // Kiểm tra trạng thái tài khoản
+        switch (user.getIsActive()) {
+            case DEACTIVATED:
+                throw new AppException(ErrorCode.USER_DEACTIVATED, "Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.");
+            case LOCKED:
+                throw new AppException(ErrorCode.USER_LOCKED, "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.");
+            case DELETED:
+                throw new AppException(ErrorCode.USER_ALREADY_DELETED, "Tài khoản này đã bị xóa.");
+            default:
+                // Nếu trạng thái là ACTIVE thì tiếp tục quá trình đăng nhập
+                break;
+        }
 
         boolean authenticated = passwordEncoder.matches(request.getPassword(), user.getPassword());
         if (!authenticated) {
@@ -114,15 +107,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                     InvalidatedToken.builder().id(jit).expiryTime(expiryTime).build();
 
             invalidatedTokenRepository.save(invalidatedToken);
-            // thu hoai token google tu user neu user login bang google
-//            String username = signToken.getJWTClaimsSet().getSubject();
-//            User user = userRepository.findByUsername(username)
-//                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-//            if (user.getGoogleRefreshToken() != null) {
-//                revokeGoogleToken(user.getGoogleRefreshToken());
-//                user.setGoogleRefreshToken(null);
-//                userRepository.save(user);
-//            }
 
         } catch (AppException exception) {
             log.info("Token already expired");
@@ -178,7 +162,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 //        log.info("refreshToken"+refreshToken);
         HashSet<Role> roles = new HashSet<>();
         roleRepository.findById(PredefinedRole.USER_ROLE).ifPresent(roles::add);
-
+        PasswordEncoder passwordEncoder  = new BCryptPasswordEncoder(10);
         User user = userRepository.findByUsername(email)
                 .orElseGet(() -> {
                     User newUser = User.builder()
@@ -187,7 +171,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                             .firstName(givenName)
                             .lastName(familyName)
                             .roles(roles)
-//                            .googleRefreshToken(refreshToken)
                             .build();
                     return userRepository.save(newUser);
                 });
@@ -221,6 +204,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID()))
             throw new AppException(ErrorCode.TOKEN_INVALID);
+
+
 
         return signedJWT;
     }

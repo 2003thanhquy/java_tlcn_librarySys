@@ -3,6 +3,7 @@ package com.spkt.librasys.service.impl;
 import com.spkt.librasys.dto.request.role.RoleCreateRequest;
 import com.spkt.librasys.dto.response.role.RoleResponse;
 import com.spkt.librasys.entity.Role;
+import com.spkt.librasys.entity.User;
 import com.spkt.librasys.mapper.RoleMapper;
 import com.spkt.librasys.repository.RoleRepository;
 import com.spkt.librasys.service.RoleService;
@@ -64,5 +65,11 @@ public class RoleServiceImpl implements RoleService {
         Role role = roleRepository.findByName(roleName)
                 .orElseThrow(() -> new RuntimeException("Role not found"));
         roleRepository.delete(role);
+    }
+
+    @Override
+    public Boolean isAdmin(User user) {
+        return user.getRoles().stream()
+                .anyMatch(role -> role.getName().equals("ADMIN"));
     }
 }

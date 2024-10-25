@@ -1,11 +1,9 @@
 package com.spkt.librasys.config;
 
 import com.github.javafaker.Faker;
-import com.spkt.librasys.entity.Document;
-import com.spkt.librasys.entity.DocumentType;
-import com.spkt.librasys.entity.Role;
-import com.spkt.librasys.entity.User;
+import com.spkt.librasys.entity.*;
 import com.spkt.librasys.entity.enums.DocumentStatus;
+import com.spkt.librasys.repository.LoanPolicyRepository;
 import com.spkt.librasys.repository.RoleRepository;
 import com.spkt.librasys.repository.access.UserRepository;
 import com.spkt.librasys.repository.document.DocumentRepository;
@@ -29,6 +27,7 @@ public class DataInitializer implements CommandLineRunner {
     private final DocumentTypeRepository documentTypeRepository;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final LoanPolicyRepository loanPolicyRepository;
 
     @Override
     public void run(String... args) {
@@ -41,7 +40,13 @@ public class DataInitializer implements CommandLineRunner {
                     .typeName("General Knowledge")
                     .description("Description")
                     .build();
-            documentTypeRepository.save(documentType);
+            documentType  =  documentTypeRepository.save(documentType);
+            LoanPolicy loanPolicy = LoanPolicy.builder()
+                    .documentType(documentType)
+                    .maxLoanDays(30)
+                    .maxRenewals(2)
+                    .build();
+            loanPolicyRepository.save(loanPolicy);
 
             for (int i = 0; i < 100; i++) {
                 Document document = Document.builder()

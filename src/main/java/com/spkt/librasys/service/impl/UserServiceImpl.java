@@ -13,12 +13,15 @@ import com.spkt.librasys.mapper.UserMapper;
 import com.spkt.librasys.repository.RoleRepository;
 import com.spkt.librasys.repository.access.UserRepository;
 import com.spkt.librasys.service.AuthenticationService;
+import com.spkt.librasys.service.RoleService;
+import com.spkt.librasys.service.SecurityContextService;
 import com.spkt.librasys.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springdoc.core.service.SecurityService;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +32,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 
 @Service
@@ -41,6 +45,8 @@ public class UserServiceImpl implements UserService {
     PasswordEncoder passwordEncoder;
     RoleRepository roleRepository;
     AuthenticationService authenticationService;
+    SecurityContextService securityContextService;
+    RoleService roleService;
     @Override
     public UserResponse getMyInfo() {
         var context = SecurityContextHolder.getContext();
@@ -92,7 +98,7 @@ public class UserServiceImpl implements UserService {
     @Override
 //    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public UserResponse updateUser(String id, UserUpdateRequest request) {
-        User currentUser = authenticationService.getCurrentUser(); // Lấy thông tin người dùng hiện tại từ SecurityContextHolder
+        User currentUser =  securityContextService.getCurrentUser(); // Lấy thông tin người dùng hiện tại từ SecurityContextHolder
         if(currentUser == null)  throw new AppException(ErrorCode.UNAUTHORIZED);
         // Tìm kiếm người dùng cần cập nhật thông qua ID
         User user = userRepository.findById(id)
@@ -101,7 +107,7 @@ public class UserServiceImpl implements UserService {
             System.out.println("name Role :" + role.getName());
         });
         // Kiểm tra quyền và xác định hành động cần thực hiện dựa trên vai trò
-        if (authenticationService.isAdmin(currentUser)) {
+        if (roleService.isAdmin(currentUser)) {
             // Quản trị viên có thể cập nhật mọi thông tin, bao gồm cả vai trò của người dùng
             if (request.getRoles() != null && !request.getRoles().isEmpty()) {
                 var roles = roleRepository.findAllById(request.getRoles());
@@ -123,13 +129,21 @@ public class UserServiceImpl implements UserService {
 
 
     @PreAuthorize("hasRole('ADMIN')")
-    public void deleteUser(String id) {
-        //userRepository.deleteById(id);
+    public void deleteUser(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.getIsActive() == User.Status.DELETED) {
+            throw new AppException(ErrorCode.USER_ALREADY_DELETED);
+        }
+
+        user.setIsActive(User.Status.DELETED);
+        userRepository.save(user);
     }
     @Override
     public void changePassword(ChangePasswordRequest request) {
         // Lấy thông tin người dùng hiện tại
-        User currentUser = authenticationService.getCurrentUser();
+        User currentUser =  securityContextService.getCurrentUser();
         if(currentUser == null)  throw new AppException(ErrorCode.UNAUTHORIZED);
 
         // Kiểm tra mật khẩu cũ
@@ -145,6 +159,55 @@ public class UserServiceImpl implements UserService {
         // Cập nhật mật khẩu mới
         currentUser.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(currentUser);
+    }
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    public void deactivateUser(String userId, String reason) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        user.setIsActive(User.Status.DEACTIVATED);
+        user.setDeactivatedAt(LocalDateTime.now());
+        user.setDeactivationReason(reason);
+        userRepository.save(user);
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    public void reactivateUser(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        if (user.getIsActive() != User.Status.DEACTIVATED) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "User is not in a deactivated state.");
+        }
+        user.setIsActive(User.Status.ACTIVE);
+        user.setReactivatedAt(LocalDateTime.now());
+        userRepository.save(user);
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    public void lockUser(String userId, String reason) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        user.setIsActive(User.Status.LOCKED);
+        user.setLockedAt(LocalDateTime.now());
+        user.setLockReason(reason);
+        user.setLockCount(user.getLockCount() + 1);
+        userRepository.save(user);
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    public void unlockUser(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        if (user.getIsActive() != User.Status.LOCKED) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "User is not in a locked state.");
+        }
+        user.setIsActive(User.Status.ACTIVE);
+        user.setLockedAt(null);
+        user.setLockReason(null);
+        userRepository.save(user);
     }
 
 }

@@ -17,6 +17,7 @@ import com.spkt.librasys.repository.specification.LoanTransactionSpecification;
 import com.spkt.librasys.service.AuthenticationService;
 import com.spkt.librasys.service.LoanTransactionService;
 import com.spkt.librasys.service.NotificationService;
+import com.spkt.librasys.service.SecurityContextService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -43,7 +44,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
     DocumentRepository documentRepository;
     UserRepository userRepository;
     LoanTransactionMapper loanTransactionMapper;
-    AuthenticationService authenticationService;
+    SecurityContextService securityContextService;
     FineRepository fineRepository;
     NotificationService notificationService;
     LoanPolicyRepository loanPolicyRepository;
@@ -52,7 +53,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
     @Override
     @Transactional
     public LoanTransactionResponse createLoanTransaction(LoanTransactionRequest request) {
-        User user = authenticationService.getCurrentUser();
+        User user =  securityContextService.getCurrentUser();
         if (user == null) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
@@ -161,11 +162,12 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
     }
     @Override
     @Transactional
+    @PreAuthorize("hasRole('USER')")
     public LoanTransactionResponse receiveDocument(Long transactionId) {
         LoanTransaction loanTransaction = loanTransactionRepository.findById(transactionId)
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
 
-        User currentUser = authenticationService.getCurrentUser();
+        User currentUser =  securityContextService.getCurrentUser();
 
         // Kiểm tra xem người dùng có phải là người đã thực hiện giao dịch không
         if (!loanTransaction.getUser().getUserId().equals(currentUser.getUserId())) {
@@ -210,7 +212,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         LoanTransaction loanTransaction = loanTransactionRepository.findById(transactionId)
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
 
-        User currentUser = authenticationService.getCurrentUser();
+        User currentUser =  securityContextService.getCurrentUser();
 
         if (!loanTransaction.getUser().getUserId().equals(currentUser.getUserId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Bạn không có quyền trả sách này.");
@@ -311,7 +313,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         LoanTransaction loanTransaction = loanTransactionRepository.findById(transactionId)
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
 
-        User currentUser = authenticationService.getCurrentUser();
+        User currentUser =  securityContextService.getCurrentUser();
         if (!loanTransaction.getUser().getUserId().equals(currentUser.getUserId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Bạn không có quyền gia hạn sách này.");
         }
@@ -371,7 +373,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         LoanTransaction loanTransaction = loanTransactionRepository.findById(transactionId)
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
 
-        User currentUser = authenticationService.getCurrentUser();
+        User currentUser =  securityContextService.getCurrentUser();
         if (!loanTransaction.getUser().getUserId().equals(currentUser.getUserId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Bạn không có quyền hủy giao dịch này.");
         }

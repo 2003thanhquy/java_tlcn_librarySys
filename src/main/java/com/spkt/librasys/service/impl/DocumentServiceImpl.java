@@ -20,6 +20,7 @@ import com.spkt.librasys.repository.access.UserRepository;
 import com.spkt.librasys.service.AuthenticationService;
 import com.spkt.librasys.service.DocumentService;
 import com.spkt.librasys.repository.specification.DocumentSpecification;
+import com.spkt.librasys.service.SecurityContextService;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import lombok.AccessLevel;
@@ -42,8 +43,7 @@ public class DocumentServiceImpl implements DocumentService {
     DocumentTypeRepository documentTypeRepository;
     UserRepository userRepository;
     DocumentMapper documentMapper;
-    AccessHistoryServiceImpl accessHistoryService;
-    AuthenticationService authenticationService;
+    SecurityContextService securityContextService;
     FavoriteDocumentRepository favoriteDocumentRepository;
 
     @Override
@@ -117,7 +117,7 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public Page<DocumentResponse> getAllDocuments(Pageable pageable) {
         Specification<Document> spec = Specification.where(null);
-        User userCurrent = authenticationService.getCurrentUser();
+        User userCurrent =  securityContextService.getCurrentUser();
         if (userCurrent == null || userHasRole(userCurrent, PredefinedRole.USER_ROLE)) {
             spec = spec.and((root, query, builder) -> builder.equal(root.get("status"), DocumentStatus.AVAILABLE));
         }
@@ -156,7 +156,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public void favoriteDocument(Long documentId) {
-        User user = authenticationService.getCurrentUser();
+        User user =  securityContextService.getCurrentUser();
         if(user == null)
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         Document document = documentRepository.findById(documentId)
@@ -176,7 +176,7 @@ public class DocumentServiceImpl implements DocumentService {
     }
     @Override
     public Page<DocumentResponse> getFavoriteDocuments( Pageable pageable) {
-        User user = authenticationService.getCurrentUser();
+        User user =  securityContextService.getCurrentUser();
         if(user == null)
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         return favoriteDocumentRepository.findAllByUser(user, pageable)
@@ -185,7 +185,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public void unFavoriteDocument(Long documentId) {
-        User user = authenticationService.getCurrentUser();
+        User user =  securityContextService.getCurrentUser();
         if (user == null) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
@@ -202,7 +202,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public boolean isFavoriteDocument(Long documentId) {
-        User user = authenticationService.getCurrentUser();
+        User user =  securityContextService.getCurrentUser();
         if (user == null) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }

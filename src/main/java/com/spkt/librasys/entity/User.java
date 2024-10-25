@@ -6,6 +6,7 @@ import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -58,11 +59,30 @@ public class User {
     @Column(name = "max_borrow_limit", nullable = false)
     @Builder.Default
     int maxBorrowLimit = 5; // Giá trị mặc định là 5
+    @Column(name = "locked_at")
+    LocalDateTime lockedAt; // Ngày tài khoản bị khóa
+
+    @Column(name = "deactivated_at")
+    LocalDateTime deactivatedAt; // Ngày tài khoản bị vô hiệu hóa
+
+    @Column(name = "reactivated_at")
+    LocalDateTime reactivatedAt; // Ngày tài khoản được kích hoạt lại
+
+    @Column(name = "deactivation_reason")
+    String deactivationReason; // Lý do vô hiệu hóa tài khoản
+
+    @Column(name = "lock_reason")
+    String lockReason; // Lý do tài khoản bị khóa
+
+    @Column(name = "lock_count", nullable = false)
+    int lockCount = 0; // Số lần tài khoản bị khóa
+
+
 
     @Enumerated(EnumType.STRING)
     @Column(name = "is_active", nullable = false)
     @Builder.Default
-    Status is_active = Status.ACTIVE;
+    Status isActive = Status.ACTIVE;
     // Một người dùng có nhiều lịch sử truy cập
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     List<AccessHistory> accessHistories;
@@ -84,7 +104,10 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     List<Notification> notifications;
     public enum Status {
-        ACTIVE,DELETE,BLOCK,
+        ACTIVE,       // Tài khoản đang hoạt động
+        DEACTIVATED,  // Tài khoản đã bị vô hiệu hóa
+        LOCKED,       // Tài khoản bị khóa (do vi phạm, bảo mật, hoặc các lý do khác)
+        DELETED       // Tài khoản đã bị xóa (đánh dấu là không còn hoạt động)
     }
 
 
@@ -97,8 +120,8 @@ public class User {
         if (this.maxBorrowLimit == 0) {
             this.maxBorrowLimit = 5;
         }
-        if (this.is_active == null) {
-            this.is_active = Status.ACTIVE;
+        if (this.isActive == null) {
+            this.isActive = Status.ACTIVE;
         }
     }
 }

@@ -13,8 +13,6 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import java.text.ParseException;
 
 public interface AuthenticationService {
-    User getCurrentUser();
-    Boolean isAdmin(User user);
     AuthenticationResponse login(AuthenticationRequest request);
     void logout(LogoutRequest request) throws ParseException, JOSEException;
     IntrospectResponse introspect(IntrospectRequest request);
