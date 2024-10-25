@@ -86,4 +86,19 @@ public class User {
     public enum Status {
         ACTIVE,DELETE,BLOCK,
     }
+
+
+    @PrePersist
+    protected void onCreate() {
+        // Đảm bảo rằng các trường mặc định được gán giá trị khi entity được lưu lần đầu
+        if (this.currentBorrowedCount == 0) {
+            this.currentBorrowedCount = 0;
+        }
+        if (this.maxBorrowLimit == 0) {
+            this.maxBorrowLimit = 5;
+        }
+        if (this.is_active == null) {
+            this.is_active = Status.ACTIVE;
+        }
+    }
 }
