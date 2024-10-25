@@ -17,11 +17,12 @@ public class LoanPolicy {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long policyId;
 
-    @Column(name = "user_role", nullable = false)
-    String userRole;  // Ví dụ: Sinh viên, Giảng viên
+//    @Column(name = "user_role", nullable = false)
+//    String userRole;  // Ví dụ: Sinh viên, Giảng viên
 
-    @Column(name = "document_type", nullable = false)
-    Long documentTypeId;  // Ví dụ: Sách, Tạp chí
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "document_type_id", nullable = false)
+    DocumentType documentType;  // Quan hệ ManyToOne với DocumentType
 
     @Column(name = "max_loan_days", nullable = false)
     int maxLoanDays;  // Số ngày tối đa có thể mượn

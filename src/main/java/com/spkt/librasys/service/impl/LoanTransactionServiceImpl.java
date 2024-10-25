@@ -176,10 +176,10 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Giao dịch chưa được phê duyệt.");
         }
         // Thiết lập ngày mượn sách và ngày dự kiến trả dựa trên maxLoanDays của tài liệu
-        String role = String.valueOf(currentUser.getRoles().stream()
-                .map(Role::getName)
-                .findFirst());
-        LoanPolicy loanPolicy = loanPolicyRepository.findByUserRoleAndDocumentTypeId(role, loanTransaction.getDocument().getDocumentType().getDocumentTypeId())
+//        String role = String.valueOf(currentUser.getRoles().stream()
+//                .map(Role::getName)
+//                .findFirst());
+        LoanPolicy loanPolicy = loanPolicyRepository.findByDocumentType( loanTransaction.getDocument().getDocumentType())
                 .orElseThrow(() -> new AppException(ErrorCode.POLICY_NOT_FOUND));
 
 
@@ -333,7 +333,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         String role = String.valueOf(currentUser.getRoles().stream()
                 .map(Role::getName)
                 .findFirst());
-        LoanPolicy loanPolicy = loanPolicyRepository.findByUserRoleAndDocumentTypeId(role, document.getDocumentType().getDocumentTypeId())
+        LoanPolicy loanPolicy = loanPolicyRepository.findByDocumentType(document.getDocumentType())
                 .orElseThrow(() -> new AppException(ErrorCode.POLICY_NOT_FOUND));
         if (renewalHistories.size() >= loanPolicy.getMaxRenewals()) {
             throw new AppException(ErrorCode.RESOURCE_CONFLICT, "Bạn đã đạt số lần gia hạn tối đa.");
@@ -474,11 +474,11 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
     }
     //
     private int getMaxLoanDays(User user, Document document) {
-        String role= String.valueOf(user.getRoles().stream()
-                .map(Role::getName)
-                .findFirst());
-        LoanPolicy loanPolicy = loanPolicyRepository.findByUserRoleAndDocumentTypeId(role,
-                        document.getDocumentType().getDocumentTypeId())
+//        String role= String.valueOf(user.getRoles().stream()
+//                .map(Role::getName)
+//                .findFirst());
+        LoanPolicy loanPolicy = loanPolicyRepository.findByDocumentType(
+                        document.getDocumentType())
                 .orElseThrow(() -> new AppException(ErrorCode.POLICY_NOT_FOUND));
         return loanPolicy.getMaxLoanDays();
     }
