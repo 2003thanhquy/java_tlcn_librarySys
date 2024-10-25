@@ -22,7 +22,7 @@ public class DocumentType {
 
     @Column(name = "type_name", nullable = false,unique = true)
     String typeName;
-    @Column(name = "description", nullable = false)
+    @Column(name = "description")
     String description;
     // Một document type có thể chứa nhiều document
     @OneToMany(mappedBy = "documentType", cascade = CascadeType.ALL)

@@ -39,6 +39,7 @@ public class DataInitializer implements CommandLineRunner {
         if (documentRepository.count() == 0) {
             DocumentType documentType = DocumentType.builder()
                     .typeName("General Knowledge")
+                    .description("Description")
                     .build();
             documentTypeRepository.save(documentType);
 
