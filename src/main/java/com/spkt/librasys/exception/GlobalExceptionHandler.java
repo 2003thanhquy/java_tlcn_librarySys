@@ -1,6 +1,7 @@
 package com.spkt.librasys.exception;
 
 import com.spkt.librasys.dto.response.ApiResponse;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -15,7 +16,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 @ControllerAdvice
 @Slf4j
@@ -23,29 +23,37 @@ public class GlobalExceptionHandler {
 
     private static final String MIN_ATTRIBUTE = "min";
 
-    @ExceptionHandler(value = Exception.class )
-    ResponseEntity<ApiResponse> handlingRuntimeException(RuntimeException exception) {
+    /**
+     * Xử lý ngoại lệ chung (RuntimeException)
+     */
+    @ExceptionHandler(value = RuntimeException.class)
+    public ResponseEntity<ApiResponse> handlingRuntimeException(RuntimeException exception) {
         log.error("Exception: ", exception);
         ApiResponse apiResponse = new ApiResponse();
 
         apiResponse.setCode(ErrorCode.UNKNOWN_ERROR.getCode());
         apiResponse.setMessage(ErrorCode.UNKNOWN_ERROR.getMessage());
 
-        return ResponseEntity.badRequest().body(apiResponse);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiResponse);
     }
 
+    /**
+     * Xử lý ngoại lệ khi JSON không đúng format (HttpMessageNotReadableException)
+     */
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiResponse> handleIllegalArgumentException(HttpMessageNotReadableException ex) {
-        // Trả về thông báo lỗi khi gặp IllegalArgumentException
+    public ResponseEntity<ApiResponse> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
         ApiResponse apiResponse = new ApiResponse();
 
         apiResponse.setCode(ErrorCode.INVALID_REQUEST.getCode());
-        apiResponse.setMessage("Chuyen doi json khong dung format");  // Đưa thông báo chi tiết từ IllegalArgumentException vào message
+        apiResponse.setMessage("Chuyển đổi JSON không đúng format.");
         return ResponseEntity.badRequest().body(apiResponse);
     }
 
+    /**
+     * Xử lý ngoại lệ ứng dụng (AppException)
+     */
     @ExceptionHandler(value = AppException.class)
-    ResponseEntity<ApiResponse> handlingAppException(AppException exception) {
+    public ResponseEntity<ApiResponse> handlingAppException(AppException exception) {
         ErrorCode errorCode = exception.getErrorCode();
         ApiResponse apiResponse = new ApiResponse();
 
@@ -60,8 +68,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(errorCode.getStatusCode()).body(apiResponse);
     }
 
+    /**
+     * Xử lý ngoại lệ khi không đủ quyền truy cập (AccessDeniedException)
+     */
     @ExceptionHandler(value = AccessDeniedException.class)
-    ResponseEntity<ApiResponse> handlingAccessDeniedException(AccessDeniedException exception) {
+    public ResponseEntity<ApiResponse> handlingAccessDeniedException(AccessDeniedException exception) {
         ErrorCode errorCode = ErrorCode.UNAUTHORIZED;
 
         return ResponseEntity.status(errorCode.getStatusCode())
@@ -70,6 +81,10 @@ public class GlobalExceptionHandler {
                         .message(errorCode.getMessage())
                         .build());
     }
+
+    /**
+     * Xử lý lỗi xác thực trong request (MethodArgumentNotValidException)
+     */
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handlingValidation(MethodArgumentNotValidException exception) {
         // Khởi tạo mã lỗi mặc định
@@ -97,9 +112,36 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(apiResponse);
     }
 
+    /**
+     * Hàm hỗ trợ để thay thế thuộc tính trong thông báo lỗi
+     */
     private String mapAttribute(String message, Map<String, Object> attributes) {
         String minValue = String.valueOf(attributes.get(MIN_ATTRIBUTE));
-
         return message.replace("{" + MIN_ATTRIBUTE + "}", minValue);
     }
+
+    /**
+     * Xử lý ngoại lệ cho lỗi không tìm thấy dữ liệu (EntityNotFoundException)
+     */
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ApiResponse> handleEntityNotFoundException(EntityNotFoundException ex) {
+        ApiResponse apiResponse = new ApiResponse();
+
+        apiResponse.setCode(ErrorCode.RESOURCE_NOT_FOUND.getCode());
+        apiResponse.setMessage(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiResponse);
+    }
+
+    /**
+     * Xử lý ngoại lệ liên quan đến dữ liệu (IllegalArgumentException)
+     */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
+        ApiResponse apiResponse = new ApiResponse();
+
+        apiResponse.setCode(ErrorCode.INVALID_REQUEST.getCode());
+        apiResponse.setMessage("Dữ liệu không hợp lệ: " + ex.getMessage());
+        return ResponseEntity.badRequest().body(apiResponse);
+    }
+
 }

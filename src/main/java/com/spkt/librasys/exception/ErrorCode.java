@@ -32,7 +32,7 @@ public enum ErrorCode {
     DATA_FORMAT_ERROR(3003, "Invalid data format", HttpStatus.BAD_REQUEST),
     UNSUPPORTED_MEDIA_TYPE(3004, "Unsupported media type", HttpStatus.UNSUPPORTED_MEDIA_TYPE),
     RESOURCE_CONFLICT(3005, "Resource conflict", HttpStatus.CONFLICT),
-
+    RESOURCE_NOT_FOUND(3006,"RESOURCE_NOT_FOUND",HttpStatus.NOT_FOUND),
     // Nhóm lỗi tài liệu và tệp
     DOCUMENT_NOT_FOUND(4001, "Document not found", HttpStatus.NOT_FOUND),
     DUPLICATE_DOCUMENT(4002, "Document already exists", HttpStatus.BAD_REQUEST),

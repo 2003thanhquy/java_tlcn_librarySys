@@ -45,6 +45,11 @@ public class LoanTransaction {
     @Column(name = "updated_at")
     LocalDateTime updatedAt;
 
+    @Column(name = "return_condition", length = 20)
+    @Enumerated(EnumType.STRING)
+    Condition returnCondition; // Trạng thái của sách khi trả lại
+
+
 //    @Column(name = "max_renewals", nullable = false)
 //    int maxRenewals = 2; // Số lần gia hạn tối đa cho người dùng
 
@@ -76,5 +81,9 @@ public class LoanTransaction {
     }
     public enum Status {
         PENDING,RECEIVED,RETURN_REQUESTED, RETURNED, CANCELLED_BY_USER,CANCELLED_AUTO, APPROVED,REJECTED
+    }
+    public enum Condition {
+        NORMAL, // Sách trong tình trạng bình thường
+        DAMAGED // Sách bị hư hỏng
     }
 }

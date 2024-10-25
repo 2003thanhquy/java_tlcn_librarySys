@@ -261,10 +261,12 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         // Cập nhật trạng thái trả sách và ngày trả sách
         loanTransaction.setStatus(LoanTransaction.Status.RETURNED);
         loanTransaction.setReturnDate(LocalDateTime.now());
+        loanTransaction.setReturnCondition(LoanTransaction.Condition.NORMAL);
 
         // Xử lý nếu sách bị hư hỏng hoặc áp dụng khoản phạt
         if (request.getIsBookDamaged()) {
             // Nếu sách bị hư hỏng, áp dụng khoản phạt và không cập nhật availableCount
+            loanTransaction.setReturnCondition(LoanTransaction.Condition.DAMAGED);
             Fine fine = Fine.builder()
                     .amount(request.getFineAmount())
                     .status(request.getStatus())

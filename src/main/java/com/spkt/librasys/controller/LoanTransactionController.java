@@ -68,7 +68,7 @@ public class LoanTransactionController {
                 .build();
     }
     @PatchMapping("/confirm-return")
-    public ApiResponse<LoanTransactionResponse> confirmReturnDocument(@RequestBody LoanTransactionReturnRequest request) {
+    public ApiResponse<LoanTransactionResponse> confirmReturnDocument(@Valid@RequestBody LoanTransactionReturnRequest request) {
         LoanTransactionResponse response = loanTransactionService.confirmReturnDocument(request);
         return ApiResponse.<LoanTransactionResponse>builder()
                 .message("Xác nhận trả sách thành công")
