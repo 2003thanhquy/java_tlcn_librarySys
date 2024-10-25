@@ -223,7 +223,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         }
 
         // Cập nhật trạng thái giao dịch và số lượng sách khả dụng
-        loanTransaction.setStatus(LoanTransaction.Status.RETURNED);
+        loanTransaction.setStatus(LoanTransaction.Status.RETURN_REQUESTED);
         loanTransaction.setReturnDate(LocalDateTime.now());
 
         Document document = loanTransaction.getDocument();
