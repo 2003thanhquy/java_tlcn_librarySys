@@ -15,9 +15,13 @@ public interface DocumentRepository extends JpaRepository<Document, Long> , JpaS
 //    Page<Document> findAll(Pageable pageable);
 //    List<Document> findByDocumentNameContainingOrAuthorContaining(String documentName, String author);
     //dashboard
-    @Query("SELECT d.documentName FROM documents_001 d JOIN loan_transaction_001 lt ON lt.document.documentId = d.documentId " +
-            "GROUP BY d.documentId ORDER BY COUNT(lt) DESC")
-    List<String> findTopBorrowedDocuments();
+//    @Query("SELECT d FROM documents_001 d JOIN loan_transaction_001 lt ON lt.document.documentId = d.documentId " +
+//            "GROUP BY d.documentId ORDER BY COUNT(lt) DESC")
+//    Page<Document> findTopBorrowedDocuments(Pageable pageable);
 
+    @Query("SELECT d.documentName, COUNT(lt) as borrowCount " +
+            "FROM documents_001 d JOIN loan_transaction_001 lt ON lt.document.documentId = d.documentId " +
+            "GROUP BY d.documentId ORDER BY COUNT(lt) DESC")
+    Page<Object[]> findTopBorrowedDocuments(Pageable pageable);
 
 }

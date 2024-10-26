@@ -10,6 +10,6 @@ import java.util.List;
 public interface DocumentTypeService {
     Page<DocumentTypeResponse> getAllDocumentTypes(Pageable pageable);
     DocumentTypeResponse createDocumentType(DocumentTypeCreateRequest request);
-    DocumentTypeResponse updateDocumentType(String typeName, DocumentTypeCreateRequest request);
-    void deleteDocumentType(String typeName);
+    DocumentTypeResponse updateDocumentType(Long id, DocumentTypeCreateRequest request);
+    void deleteDocumentType(Long id);
 }

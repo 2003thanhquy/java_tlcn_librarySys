@@ -101,16 +101,13 @@ public class UserServiceImpl implements UserService {
         // Tìm kiếm người dùng cần cập nhật thông qua ID
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-        currentUser.getRoles().forEach(role -> {
-            System.out.println("name Role :" + role.getName());
-        });
         // Kiểm tra quyền và xác định hành động cần thực hiện dựa trên vai trò
         if (roleService.isAdmin(currentUser)) {
             // Quản trị viên có thể cập nhật mọi thông tin, bao gồm cả vai trò của người dùng
-            if (request.getRoles() != null && !request.getRoles().isEmpty()) {
-                var roles = roleRepository.findAllById(request.getRoles());
-                user.setRoles(new HashSet<>(roles));
-            }
+//            if (request.getRoles() != null && !request.getRoles().isEmpty()) {
+//                var roles = roleRepository.findAllById(request.getRoles());
+//                user.setRoles(new HashSet<>(roles));
+//            }
         } else if (!currentUser.getUserId().equals(id)) {
             // Nếu không phải là quản trị viên và không phải chính người dùng, ném ngoại lệ
             throw new AppException(ErrorCode.UNAUTHORIZED);

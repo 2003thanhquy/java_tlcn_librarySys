@@ -23,5 +23,4 @@ public interface UserRepository extends JpaRepository<User, String> {
 
     @Query("SELECT COUNT(a) FROM access_histories_001 a WHERE a.accessTime BETWEEN :start AND :end")
     Long countActiveUsersInCurrentMonth(@Param("start") LocalDate start, @Param("end") LocalDate end);
-
 }

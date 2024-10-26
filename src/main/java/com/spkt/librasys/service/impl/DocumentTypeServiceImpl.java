@@ -44,8 +44,8 @@ public class DocumentTypeServiceImpl implements DocumentTypeService {
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public DocumentTypeResponse updateDocumentType(String typeName, DocumentTypeCreateRequest request) {
-        DocumentType documentType = documentTypeRepository.findByTypeName(typeName)
+    public DocumentTypeResponse updateDocumentType(Long id, DocumentTypeCreateRequest request) {
+        DocumentType documentType = documentTypeRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_TYPE_NOT_FOUND));
         documentType.setTypeName(request.getTypeName());
         DocumentType updatedDocumentType = documentTypeRepository.save(documentType);
@@ -55,8 +55,8 @@ public class DocumentTypeServiceImpl implements DocumentTypeService {
     @Override
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional
-    public void deleteDocumentType(String typeName) {
-        DocumentType documentType = documentTypeRepository.findByTypeName(typeName)
+    public void deleteDocumentType(Long id) {
+        DocumentType documentType = documentTypeRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_TYPE_NOT_FOUND));
         documentTypeRepository.delete(documentType);
     }

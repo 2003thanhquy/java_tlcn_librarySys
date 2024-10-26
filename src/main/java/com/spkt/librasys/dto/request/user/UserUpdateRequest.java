@@ -36,7 +36,7 @@ public class UserUpdateRequest {
     LocalDate registrationDate;
     LocalDate expirationDate;
 
-    // Danh sách vai trò người dùng
-    List<String> roles;
+//    // Danh sách vai trò người dùng
+//    List<String> roles;
 
 }

@@ -10,5 +10,6 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 public class DashboardTopBorrowedDocumentsResponse {
-    private List<String> topBorrowedDocuments; // Có thể là danh sách tên tài liệu hoặc đối tượng chứa thông tin tài liệu
+    private String documentName;
+    private long borrowCount;
 }

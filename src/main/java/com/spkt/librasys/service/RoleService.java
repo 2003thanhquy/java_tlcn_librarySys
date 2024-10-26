@@ -13,4 +13,6 @@ public interface RoleService {
     RoleResponse updateRole(String roleName, RoleCreateRequest request);
     void deleteRole(String roleName);
     Boolean isAdmin(User user);
+    void assignRoleToUser(String userId, String roleName);
+
 }

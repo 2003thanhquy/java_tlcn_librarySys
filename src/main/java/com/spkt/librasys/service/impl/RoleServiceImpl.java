@@ -4,8 +4,11 @@ import com.spkt.librasys.dto.request.role.RoleCreateRequest;
 import com.spkt.librasys.dto.response.role.RoleResponse;
 import com.spkt.librasys.entity.Role;
 import com.spkt.librasys.entity.User;
+import com.spkt.librasys.exception.AppException;
+import com.spkt.librasys.exception.ErrorCode;
 import com.spkt.librasys.mapper.RoleMapper;
 import com.spkt.librasys.repository.RoleRepository;
+import com.spkt.librasys.repository.access.UserRepository;
 import com.spkt.librasys.service.RoleService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -17,19 +20,22 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class RoleServiceImpl implements RoleService {
 
+    UserRepository userRepository;
     RoleRepository roleRepository;
     RoleMapper roleMapper;
 
     @Override
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     public boolean hasRole(String userId, String roleName) {
-        return roleRepository.existsByNameAndUsers_UserId(userId, roleName);
+        return roleRepository.existsByNameAndUsersUserId(roleName,userId);
     }
 
     @Override
@@ -71,5 +77,22 @@ public class RoleServiceImpl implements RoleService {
     public Boolean isAdmin(User user) {
         return user.getRoles().stream()
                 .anyMatch(role -> role.getName().equals("ADMIN"));
+    }
+    @Transactional
+    public void assignRoleToUser(String userId, String roleName) {
+        // Tìm người dùng
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        // Tìm vai trò
+        Role role = roleRepository.findByName(roleName)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND,"Role not found"));
+
+        // Gán vai trò cho người dùng
+
+        var roles = new HashSet<Role>();
+        roles.add(role);
+        user.setRoles(roles);
+        userRepository.save(user);
     }
 }
