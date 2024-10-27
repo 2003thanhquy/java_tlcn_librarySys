@@ -18,6 +18,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -128,6 +130,14 @@ public class UserController {
                     .message(isResent?"Verification code resent successfully":"Failed to resend verification code. Please try again later.")
                     .build();
 
+    }
+    // Phương thức xóa nhiều người dùng
+    @DeleteMapping("/batch")
+    public ApiResponse<Void> deleteUsers(@RequestBody List<String> userIds) {
+        userService.deleteUsersByIds(userIds);
+        return ApiResponse.<Void>builder()
+                .message("Users have been deleted successfully")
+                .build();
     }
 
 }

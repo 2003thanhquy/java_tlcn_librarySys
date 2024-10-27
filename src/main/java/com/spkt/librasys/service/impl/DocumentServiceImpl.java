@@ -5,10 +5,7 @@ import com.spkt.librasys.dto.request.document.DocumentCreateRequest;
 import com.spkt.librasys.dto.request.document.DocumentSearchRequest;
 import com.spkt.librasys.dto.request.document.DocumentUpdateRequest;
 import com.spkt.librasys.dto.response.document.DocumentResponse;
-import com.spkt.librasys.entity.Document;
-import com.spkt.librasys.entity.DocumentType;
-import com.spkt.librasys.entity.FavoriteDocument;
-import com.spkt.librasys.entity.User;
+import com.spkt.librasys.entity.*;
 import com.spkt.librasys.entity.enums.DocumentStatus;
 import com.spkt.librasys.exception.AppException;
 import com.spkt.librasys.exception.ErrorCode;
@@ -17,12 +14,14 @@ import com.spkt.librasys.repository.FavoriteDocumentRepository;
 import com.spkt.librasys.repository.document.DocumentRepository;
 import com.spkt.librasys.repository.document.DocumentTypeRepository;
 import com.spkt.librasys.repository.access.UserRepository;
+import com.spkt.librasys.service.AccessHistoryService;
 import com.spkt.librasys.service.AuthenticationService;
 import com.spkt.librasys.service.DocumentService;
 import com.spkt.librasys.repository.specification.DocumentSpecification;
 import com.spkt.librasys.service.SecurityContextService;
 import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -30,8 +29,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -42,9 +45,11 @@ public class DocumentServiceImpl implements DocumentService {
     DocumentRepository documentRepository;
     DocumentTypeRepository documentTypeRepository;
     UserRepository userRepository;
+    AccessHistoryService accessHistoryService;
     DocumentMapper documentMapper;
     SecurityContextService securityContextService;
     FavoriteDocumentRepository favoriteDocumentRepository;
+
 
     @Override
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
@@ -84,6 +89,8 @@ public class DocumentServiceImpl implements DocumentService {
     public DocumentResponse getDocumentById(Long id) {
         Document document = documentRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND));
+        User user = securityContextService.getCurrentUser();
+        accessHistoryService.recordAccess(user,document,AccessHistory.Activity.VIEWED);
         return documentMapper.toDocumentResponse(document);
     }
 
@@ -137,11 +144,23 @@ public class DocumentServiceImpl implements DocumentService {
                 .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND));
         document.setStatus(DocumentStatus.UNAVAILABLE);
         documentRepository.save(document);
-        //documentRepository.delete(document);
 
         // Ghi lại lịch sử xóa tài liệu
-//        User currentUser = getCurrentUser();
-//        accessHistoryService.recordAccess(currentUser, document, "Deleted Document");
+        User currentUser = securityContextService.getCurrentUser();
+        accessHistoryService.recordAccess(currentUser, document, AccessHistory.Activity.DOC_UNAVAILABLE);
+    }
+    @Override
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    @Transactional
+    public void deleteDocumentsByIds(List<Long> documentIds){
+        List<Document> documents = documentRepository.findAllById(documentIds);
+        User currentUser = securityContextService.getCurrentUser();
+        documents.forEach(document -> {
+            document.setStatus(DocumentStatus.UNAVAILABLE);
+            accessHistoryService.recordAccess(currentUser, document, AccessHistory.Activity.DOC_UNAVAILABLE);
+        });
+        documentRepository.saveAll(documents);
+
     }
     @Override
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")

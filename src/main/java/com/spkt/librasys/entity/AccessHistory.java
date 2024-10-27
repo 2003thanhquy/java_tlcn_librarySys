@@ -24,15 +24,24 @@ public class AccessHistory {
     LocalDateTime accessTime;  // Thời gian truy cập
 
     @Column(name = "activity", nullable = false)
-    String activity;  // Hoạt động thực hiện (VD: Downloaded, Read Online)
+    Activity activity;  // Hoạt động thực hiện (VD: Downloaded, Read Online)
 
     // Mối quan hệ nhiều-một với User (người truy cập)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = true)
     User user;
 
     // Mối quan hệ nhiều-một với Document (tài liệu được truy cập)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "document_id", nullable = false)
     Document document;
+    public enum Activity {
+        DOWNLOADED,
+        READ_ONLINE,
+        UPLOADED,
+        VIEWED,
+        DOC_UNAVAILABLE,
+        // Thêm các hoạt động khác nếu cần
+    }
+
 }

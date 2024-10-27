@@ -18,6 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -147,6 +149,13 @@ public class DocumentController {
         return ApiResponse.<Boolean>builder()
                 .message("Favorite status retrieved successfully")
                 .result(isFavorite)
+                .build();
+    }
+    @DeleteMapping("/batch")
+    public ApiResponse<Void> deleteDocumentsByIds(@RequestBody List<Long> documentIds) {
+        documentService.deleteDocumentsByIds(documentIds);
+        return ApiResponse.<Void>builder()
+                .message("Documents marked as unavailable successfully")
                 .build();
     }
 }

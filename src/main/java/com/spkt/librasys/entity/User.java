@@ -84,8 +84,8 @@ public class User {
     @Builder.Default
     Status isActive = Status.PENDING;
     // Một người dùng có nhiều lịch sử truy cập
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    List<AccessHistory> accessHistories;
+//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+//    List<AccessHistory> accessHistories;
 
     // Mối quan hệ nhiều-nhiều với các vai trò
     @ManyToMany(fetch = FetchType.EAGER)

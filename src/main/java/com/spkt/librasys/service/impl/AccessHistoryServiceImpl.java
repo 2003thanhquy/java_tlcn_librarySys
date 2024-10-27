@@ -17,10 +17,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
@@ -31,8 +33,9 @@ public class AccessHistoryServiceImpl implements AccessHistoryService {
     AccessHistoryRepository accessHistoryRepository;
     AccessHistoryMapper accessHistoryMapper;
     @Override
-    public void recordAccess(User user, Document document, String activity) {
-        if (user == null || document == null || activity == null || activity.isEmpty()) {
+    @Async
+    public void recordAccess(User user, Document document, AccessHistory.Activity activity) {
+        if (document == null || activity == null) {
             throw new AppException(ErrorCode.INVALID_REQUEST);
         }
         AccessHistory accessHistory = AccessHistory.builder()

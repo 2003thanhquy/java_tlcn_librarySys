@@ -6,6 +6,10 @@ import com.spkt.librasys.dto.request.user.UserUpdateRequest;
 import com.spkt.librasys.dto.response.user.UserResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.access.prepost.PreAuthorize;
+
+import java.util.List;
 
 public interface UserService {
     UserResponse getMyInfo();
@@ -21,5 +25,6 @@ public interface UserService {
     void lockUser(String userId, String reason);
     void unlockUser(String userId);
 
+    void deleteUsersByIds(List<String> userIds);
 
 }

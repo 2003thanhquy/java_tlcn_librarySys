@@ -41,7 +41,7 @@ public class AccessHistoryServiceTest {
         AccessHistory accessHistory = AccessHistory.builder()
                 .accessId(1L)
                 .accessTime(LocalDateTime.now())
-                .activity("READ")
+                .activity(AccessHistory.Activity.READ_ONLINE)
                 .user(new User())
                 .document(new Document())
                 .build();
@@ -60,14 +60,14 @@ public class AccessHistoryServiceTest {
     public void testCreateAccessHistory() {
         AccessHistory accessHistory = AccessHistory.builder()
                 .accessTime(LocalDateTime.now())
-                .activity("DOWNLOAD")
+                .activity(AccessHistory.Activity.DOWNLOADED)
                 .user(new User())
                 .document(new Document())
                 .build();
 
         when(accessHistoryRepository.save(any(AccessHistory.class))).thenReturn(accessHistory);
 
-        accessHistoryService.recordAccess(new User(), new Document(), "DOWNLOAD");
+        accessHistoryService.recordAccess(new User(), new Document(),AccessHistory.Activity.DOWNLOADED );
 
         verify(accessHistoryRepository, times(1)).save(any(AccessHistory.class));
     }

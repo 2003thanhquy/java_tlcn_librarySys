@@ -22,6 +22,7 @@ import org.springdoc.core.service.SecurityService;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,6 +32,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -203,6 +205,19 @@ public class UserServiceImpl implements UserService {
         user.setLockedAt(null);
         user.setLockReason(null);
         userRepository.save(user);
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ADMIN')")
+    @Transactional
+    public void deleteUsersByIds(List<String> userIds) {
+        List<User> users = userRepository.findAllById(userIds);
+
+        // Cập nhật trạng thái DELETED cho tất cả các user
+        users.forEach(user -> user.setIsActive(User.Status.DELETED));
+
+        // Lưu lại danh sách đã cập nhật
+        userRepository.saveAll(users);
     }
 
 }

@@ -6,6 +6,8 @@ import com.spkt.librasys.dto.response.document.DocumentResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface DocumentService {
     DocumentResponse createDocument(DocumentCreateRequest request);
     DocumentResponse updateDocument(Long id, DocumentUpdateRequest request);
@@ -20,5 +22,6 @@ public interface DocumentService {
    // void downloadDocument(Long id);
     void unFavoriteDocument(Long documentId);
    boolean isFavoriteDocument(Long documentId);
+    void deleteDocumentsByIds(List<Long> documentIds);
 
 }
