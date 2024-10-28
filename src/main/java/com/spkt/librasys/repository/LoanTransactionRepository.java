@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 public interface LoanTransactionRepository extends JpaRepository<LoanTransaction, Long>, JpaSpecificationExecutor<LoanTransaction> {
@@ -26,4 +27,6 @@ public interface LoanTransactionRepository extends JpaRepository<LoanTransaction
     Long countByUserAndStatus(User user, LoanTransaction.Status status);
 
     Long countByDocumentAndStatus(Document document, LoanTransaction.Status status);
+
+    boolean existsByUserAndDocumentAndStatusIn(User user, Document document, Collection<LoanTransaction.Status> statuses);
 }
