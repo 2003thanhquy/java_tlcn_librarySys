@@ -24,6 +24,7 @@ public class AccessHistory {
     LocalDateTime accessTime;  // Thời gian truy cập
 
     @Column(name = "activity", nullable = false)
+    @Enumerated(EnumType.STRING)
     Activity activity;  // Hoạt động thực hiện (VD: Downloaded, Read Online)
 
     // Mối quan hệ nhiều-một với User (người truy cập)

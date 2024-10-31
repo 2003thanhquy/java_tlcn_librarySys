@@ -97,8 +97,8 @@ public class SecurityConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> {
-            web.ignoring().requestMatchers(PUBLIC_GET_ENDPOINTS).requestMatchers(PUBLIC_POST_ENDPOINTS)
-                    .requestMatchers(PUBLIC_GET_ENDPOINTS).requestMatchers(PUBLIC_GET_ENDPOINTS);
+            web.ignoring().requestMatchers(PUBLIC_GET_ENDPOINTS)
+                    .requestMatchers(PUBLIC_POST_ENDPOINTS);
 
         };
     }
