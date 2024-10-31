@@ -236,6 +236,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
                 .subject(user.getUsername())
                 .issuer("managementlibrary.com")
                 .issueTime(new Date())
+                .claim("fullName",user.getFirstName() + user.getLastName())
                 .expirationTime(new Date(
                         Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()))
                 .jwtID(UUID.randomUUID().toString())
