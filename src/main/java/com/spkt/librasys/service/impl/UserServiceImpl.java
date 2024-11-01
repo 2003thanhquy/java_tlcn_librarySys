@@ -48,11 +48,10 @@ public class UserServiceImpl implements UserService {
     VerificationService verificationService;
     @Override
     public UserResponse getMyInfo() {
-        var context = SecurityContextHolder.getContext();
-        String name = context.getAuthentication().getName();
-        User user = userRepository.findByUsername(name).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        User currentUser =  securityContextService.getCurrentUser(); // Lấy thông tin người dùng hiện tại từ SecurityContextHolder
+        if(currentUser == null)  throw new AppException(ErrorCode.UNAUTHORIZED);
 
-        return userMapper.toUserResponse(user);
+        return userMapper.toUserResponse(currentUser);
     }
     @PreAuthorize("hasRole('ROLE_' + @roleProvider.ADMIN_ROLE)")
     @Override

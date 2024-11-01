@@ -231,16 +231,17 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
     private String generationToken(User user) {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
-
+        String fullName = (user.getFirstName() != null ? user.getFirstName() : "")
+                + (user.getLastName() != null ? " " + user.getLastName() : "");
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getUsername())
                 .issuer("managementlibrary.com")
                 .issueTime(new Date())
-                .claim("fullName",user.getFirstName() + user.getLastName())
                 .expirationTime(new Date(
                         Instant.now().plus(VALID_DURATION, ChronoUnit.SECONDS).toEpochMilli()))
                 .jwtID(UUID.randomUUID().toString())
                 .claim("scope", buildScope(user))
+                .claim("fullName",fullName.trim())
                 .build();
 
         Payload payload = new Payload(jwtClaimsSet.toJSONObject());
