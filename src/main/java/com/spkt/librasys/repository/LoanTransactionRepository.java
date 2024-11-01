@@ -29,4 +29,8 @@ public interface LoanTransactionRepository extends JpaRepository<LoanTransaction
     Long countByDocumentAndStatus(Document document, LoanTransaction.Status status);
 
     boolean existsByUserAndDocumentAndStatusIn(User user, Document document, Collection<LoanTransaction.Status> statuses);
+
+    boolean existsByUserAndDocumentAndStatusNotIn(User user, Document document, Collection<LoanTransaction.Status> excludedStatuses);
+
+
 }

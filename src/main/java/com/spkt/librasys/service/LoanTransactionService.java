@@ -88,4 +88,12 @@ public interface LoanTransactionService {
      * @return Page<LoanTransactionResponse> chứa danh sách giao dịch mượn sách.
      */
     Page<LoanTransactionResponse> getAllLoanTransactions(LoanTransactionSearchRequest request, Pageable pageable);
+
+    /**
+     * Kiểm tra xem người dùng có đang mượn cuốn sách cụ thể hay không.
+     *
+     * @param documentId ID của cuốn sách cần kiểm tra.
+     * @return true nếu người dùng đang mượn cuốn sách, false nếu không.
+     */
+    boolean isUserBorrowingDocument( Long documentId);
 }

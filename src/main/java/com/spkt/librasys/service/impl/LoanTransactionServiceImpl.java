@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 
 @Service
@@ -476,6 +477,19 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         Page<LoanTransaction> transactions = loanTransactionRepository.findAll(spec, pageable);
         return transactions.map(loanTransactionMapper::toLoanTransactionResponse);
     }
+
+    @Override
+    public boolean isUserBorrowingDocument(Long documentId) {
+        User user = securityContextService.getCurrentUser();
+        if(user == null)
+           throw  new AppException(ErrorCode.USER_NOT_FOUND);
+        Document document = documentRepository.findById(documentId).orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND));
+        // Kiểm tra xem có giao dịch nào với documentId và trạng thái không phải RETURNED hoặc REJECTED
+        Collection<LoanTransaction.Status> excludedStatuses = List.of(LoanTransaction.Status.RETURNED, LoanTransaction.Status.REJECTED);
+        return loanTransactionRepository.existsByUserAndDocumentAndStatusNotIn(user, document, excludedStatuses);
+
+    }
+
     //
     private int getMaxLoanDays(User user, Document document) {
 //        String role= String.valueOf(user.getRoles().stream()
