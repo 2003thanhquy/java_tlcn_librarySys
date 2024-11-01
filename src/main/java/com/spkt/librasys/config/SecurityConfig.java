@@ -31,6 +31,7 @@ public class SecurityConfig {
             "/api/v1/users",
             "/api/v1/users/**",
             "/api/v1/auth/**",
+            "/api/v1/auth/login",
             "/api/v1/token",
             "/api/v1/auth/login-google",
             "/oauth2/**"
@@ -44,7 +45,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request->
-                request.requestMatchers(HttpMethod.POST,PUBLIC_POST_ENDPOINTS).permitAll()
+                request.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Cho phép tất cả các yêu cầu OPTIONS
+                        .requestMatchers(HttpMethod.POST,PUBLIC_POST_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
                         .requestMatchers( "/swagger-ui/**", "/swagger-ui.html","/api-docs", "/api-docs/**").permitAll() // Cho phép truy cập các endpoint của Swagger
 
@@ -97,8 +99,8 @@ public class SecurityConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return (web) -> {
-           // web.ignoring().requestMatchers(PUBLIC_GET_ENDPOINTS);
-                   // .requestMatchers(PUBLIC_POST_ENDPOINTS);
+//            web.ignoring().requestMatchers(PUBLIC_GET_ENDPOINTS)
+//                    .requestMatchers(PUBLIC_POST_ENDPOINTS);
 
         };
     }
