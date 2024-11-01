@@ -490,6 +490,19 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
 
     }
 
+    @Override
+    public Page<LoanTransactionResponse> getUserBorrowedBooks(Pageable pageable) {
+        User user = securityContextService.getCurrentUser();
+        if (user == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        // Tìm tất cả các giao dịch của người dùng và phân trang
+        Page<LoanTransaction> transactions = loanTransactionRepository.findByUser(user, pageable);
+
+        // Chuyển đổi từ Page<LoanTransaction> sang Page<LoanTransactionResponse>
+        return transactions.map(loanTransactionMapper::toLoanTransactionResponse);
+    }
+
     //
     private int getMaxLoanDays(User user, Document document) {
 //        String role= String.valueOf(user.getRoles().stream()
