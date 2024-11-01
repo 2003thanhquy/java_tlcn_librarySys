@@ -44,22 +44,21 @@ public class SecurityConfig {
     @Autowired
     private CustomJwtDecode customJwtDecode;
 
-    @Bean
-    @Order(1) // Đảm bảo filter chain này được ưu tiên xử lý trước
-    public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
-        http
-                .securityMatcher(PUBLIC_GET_ENDPOINTS) // Áp dụng filter chain này cho các endpoint công khai
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(Customizer.withDefaults())
-                .authorizeHttpRequests(authorize -> authorize
-                        .anyRequest().permitAll()
-                );
-        return http.build();
-    }
+//    @Bean
+//    @Order(1) // Đảm bảo filter chain này được ưu tiên xử lý trước
+//    public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
+//        http
+//                .securityMatcher(PUBLIC_GET_ENDPOINTS) // Áp dụng filter chain này cho các endpoint công khai
+//                .csrf(AbstractHttpConfigurer::disable)
+//                .cors(Customizer.withDefaults())
+//                .authorizeHttpRequests(authorize -> authorize
+//                        .anyRequest().permitAll()
+//                );
+//        return http.build();
+//    }
 
 
     @Bean
-    @Order(2) // Đảm bảo filter chain này được ưu tiên xử lý trước
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request->
                 request.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Cho phép tất cả các yêu cầu OPTIONS
