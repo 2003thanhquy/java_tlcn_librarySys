@@ -3,6 +3,8 @@ package com.spkt.librasys.repository;
 import com.spkt.librasys.entity.Document;
 import com.spkt.librasys.entity.LoanTransaction;
 import com.spkt.librasys.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -32,5 +34,6 @@ public interface LoanTransactionRepository extends JpaRepository<LoanTransaction
 
     boolean existsByUserAndDocumentAndStatusNotIn(User user, Document document, Collection<LoanTransaction.Status> excludedStatuses);
 
+    Page<LoanTransaction> findByUser(User user, Pageable pageable);
 
 }

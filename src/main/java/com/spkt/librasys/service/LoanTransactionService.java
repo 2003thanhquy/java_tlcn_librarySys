@@ -96,4 +96,11 @@ public interface LoanTransactionService {
      * @return true nếu người dùng đang mượn cuốn sách, false nếu không.
      */
     boolean isUserBorrowingDocument( Long documentId);
+
+    /**
+     * Lấy danh sách các sách mà người dùng đang mượn với phân trang.
+     * @param pageable thông tin phân trang.
+     * @return PageDTO chứa danh sách LoanTransactionResponse của các sách đang được mượn.
+     */
+    Page<LoanTransactionResponse> getUserBorrowedBooks(Pageable pageable);
 }
