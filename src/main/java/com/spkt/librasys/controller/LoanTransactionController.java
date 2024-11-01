@@ -112,12 +112,21 @@ public class LoanTransactionController {
                 .message("Đã kiểm tra và huỷ các yêu cầu mượn sách quá hạn 24 giờ mà chưa nhận sách")
                 .build();
     }
-    @GetMapping("/check-user-borrowing/{documentId}")
+    @GetMapping("/user/check-user-borrowing/{documentId}")
     public ApiResponse<Boolean> checkUserBorrowingDocument(@PathVariable Long documentId) {
         boolean isBorrowing = loanTransactionService.isUserBorrowingDocument( documentId);
         return ApiResponse.<Boolean>builder()
                 .message(isBorrowing ? "Người dùng đang mượn cuốn sách này" : "Người dùng không mượn cuốn sách này")
                 .result(isBorrowing)
+                .build();
+    }
+    @GetMapping("/user/borrowed-books")
+    public ApiResponse<PageDTO<LoanTransactionResponse>> getUserBorrowedBooks(Pageable pageable) {
+        Page<LoanTransactionResponse> borrowedBooks = loanTransactionService.getUserBorrowedBooks(pageable);
+        PageDTO<LoanTransactionResponse> response = new PageDTO<>(borrowedBooks);
+        return ApiResponse.<PageDTO<LoanTransactionResponse>>builder()
+                .message("Danh sách các sách đang mượn của người dùng")
+                .result(response)
                 .build();
     }
 }
