@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public interface DocumentMoveService {
-    void moveDocument(DocumentMoveRequest request);
+    void moveDocumentRack(DocumentMoveRequest request);
     void moveDocumentToWarehouse(DocumentMoveRequest request);
     DocumentLocation approveAndMoveDocument(Long documentId, int quantity);
 }

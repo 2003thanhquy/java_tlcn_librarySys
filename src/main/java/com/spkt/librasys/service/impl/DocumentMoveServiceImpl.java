@@ -34,7 +34,7 @@ public class DocumentMoveServiceImpl implements DocumentMoveService {
     @Override
     @Transactional
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
-    public void moveDocument(DocumentMoveRequest request) {
+    public void moveDocumentRack(DocumentMoveRequest request) {
         // 1. Lấy thông tin tài liệu từ Document ID
         Document document = documentRepository.findById(request.getDocumentId())
                 .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND, "Document not found"));
@@ -71,11 +71,7 @@ public class DocumentMoveServiceImpl implements DocumentMoveService {
 
         // 6. Cập nhật số lượng trong kho
         int remainingQuantity = warehouseLocation.getQuantity() - request.getQuantity();
-        if (remainingQuantity == 0) {
-            document.getLocations().remove(warehouseLocation);
-        } else {
-            warehouseLocation.setQuantity(remainingQuantity);
-        }
+        warehouseLocation.setQuantity(remainingQuantity);
 
         // 7. Tìm hoặc tạo DocumentLocation cho Rack
         DocumentLocation rackLocation = document.getLocations().stream()

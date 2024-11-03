@@ -19,7 +19,7 @@ public class DocumentMoveController {
 
     @PostMapping("/move-to-rack")
     public ApiResponse<Void> moveDocument(@RequestBody @Valid DocumentMoveRequest request) {
-        documentMoveService.moveDocument(request);
+        documentMoveService.moveDocumentRack(request);
         return ApiResponse.<Void>builder()
                 .message("Document moved successfully")
                 .build();
