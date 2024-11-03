@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -11,8 +13,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class NotificationCreateRequest {
 
-    @NotNull(message = "User ID cannot be null")
-    String userId;
+    @NotNull(message = "User IDs cannot be null")
+    List<String> userIds;
 
     @NotNull(message = "Title cannot be null")
     String title;

@@ -13,7 +13,7 @@ import com.spkt.librasys.mapper.ReviewMapper;
 import com.spkt.librasys.repository.LoanTransactionRepository;
 import com.spkt.librasys.repository.ReviewRepository;
 import com.spkt.librasys.repository.access.UserRepository;
-import com.spkt.librasys.repository.document.DocumentRepository;
+import com.spkt.librasys.repository.DocumentRepository;
 import com.spkt.librasys.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.AccessLevel;

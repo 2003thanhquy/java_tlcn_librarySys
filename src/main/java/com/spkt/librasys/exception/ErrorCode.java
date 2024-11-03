@@ -37,6 +37,7 @@ public enum ErrorCode {
     RESOURCE_NOT_FOUND(3006, "Resource not found", HttpStatus.NOT_FOUND),
 
     // Document and File Errors
+    INVALID_LOCATION_TYPE(4000, "Invalid location type", HttpStatus.BAD_REQUEST),
     DOCUMENT_NOT_FOUND(4001, "Document not found", HttpStatus.NOT_FOUND),
     DUPLICATE_DOCUMENT(4002, "Document already exists", HttpStatus.BAD_REQUEST),
     FILE_UPLOAD_FAILED(4003, "File upload failed", HttpStatus.INTERNAL_SERVER_ERROR),
@@ -45,7 +46,12 @@ public enum ErrorCode {
     FILE_FORMAT_UNSUPPORTED(4006, "File format is not supported", HttpStatus.UNSUPPORTED_MEDIA_TYPE),
     DOCUMENT_TYPE_NOT_FOUND(4007, "Document type not found", HttpStatus.NOT_FOUND),
     DOCUMENT_ALREADY_FAVORITE(4008, "Document already marked as favorite", HttpStatus.CONFLICT),
-
+    // Warehouse Errors
+    WAREHOUSE_NOT_FOUND(4009, "Warehouse not found", HttpStatus.NOT_FOUND),
+    INVALID_QUANTITY(4010, "Quantity cannot be negative", HttpStatus.BAD_REQUEST),
+    RACK_NOT_FOUND(4011, "Rack not found", HttpStatus.NOT_FOUND),
+    LOCATION_NOT_FOUND(4012, "Document location in rack not found", HttpStatus.NOT_FOUND),
+    RACK_CAPACITY_EXCEEDED(4013, "Rack does not have enough capacity", HttpStatus.BAD_REQUEST),
     // Database Errors
     DATABASE_ERROR(5001, "Database error occurred", HttpStatus.INTERNAL_SERVER_ERROR),
     DATA_INTEGRITY_VIOLATION(5002, "Data integrity violation", HttpStatus.CONFLICT),

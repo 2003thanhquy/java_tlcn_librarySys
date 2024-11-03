@@ -1,4 +1,4 @@
-package com.spkt.librasys.repository.document;
+package com.spkt.librasys.repository;
 
 import com.spkt.librasys.entity.DocumentType;
 import org.springframework.data.jpa.repository.JpaRepository;

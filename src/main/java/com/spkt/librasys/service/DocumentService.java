@@ -1,5 +1,6 @@
 package com.spkt.librasys.service;
 import com.spkt.librasys.dto.request.document.DocumentCreateRequest;
+import com.spkt.librasys.dto.request.document.DocumentQuantityUpdateRequest;
 import com.spkt.librasys.dto.request.document.DocumentSearchRequest;
 import com.spkt.librasys.dto.request.document.DocumentUpdateRequest;
 import com.spkt.librasys.dto.response.document.DocumentResponse;
@@ -23,5 +24,7 @@ public interface DocumentService {
     void unFavoriteDocument(Long documentId);
    boolean isFavoriteDocument(Long documentId);
     void deleteDocumentsByIds(List<Long> documentIds);
+
+    void updateQuantity(DocumentQuantityUpdateRequest request);
 
 }

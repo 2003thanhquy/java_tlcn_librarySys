@@ -1,5 +1,6 @@
 package com.spkt.librasys.service.impl;
 
+import com.spkt.librasys.constant.PredefinedRole;
 import com.spkt.librasys.dto.request.loanTransaction.*;
 import com.spkt.librasys.dto.request.notification.NotificationCreateRequest;
 import com.spkt.librasys.dto.response.LoanTransactionResponse;
@@ -7,14 +8,10 @@ import com.spkt.librasys.entity.*;
 import com.spkt.librasys.exception.AppException;
 import com.spkt.librasys.exception.ErrorCode;
 import com.spkt.librasys.mapper.LoanTransactionMapper;
-import com.spkt.librasys.repository.FineRepository;
-import com.spkt.librasys.repository.LoanPolicyRepository;
-import com.spkt.librasys.repository.LoanTransactionRepository;
-import com.spkt.librasys.repository.RenewalHistoryRepository;
-import com.spkt.librasys.repository.document.DocumentRepository;
+import com.spkt.librasys.repository.*;
 import com.spkt.librasys.repository.access.UserRepository;
 import com.spkt.librasys.repository.specification.LoanTransactionSpecification;
-import com.spkt.librasys.service.AuthenticationService;
+import com.spkt.librasys.service.DocumentMoveService;
 import com.spkt.librasys.service.LoanTransactionService;
 import com.spkt.librasys.service.NotificationService;
 import com.spkt.librasys.service.SecurityContextService;
@@ -33,7 +30,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -50,6 +50,9 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
     NotificationService notificationService;
     LoanPolicyRepository loanPolicyRepository;
     RenewalHistoryRepository renewalHistoryRepository;
+    DocumentMoveService documentMoveService;
+    RackRepository rackRepository;
+    WarehouseRepository warehouseRepository;
 
     @Override
     @Transactional
@@ -79,11 +82,11 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
 
         // Tạo thông báo cho người dùng
         NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
-                .userId(user.getUserId())
+                .userIds(List.of(user.getUserId()))
                 .title("Yêu cầu mượn sách được tạo")
                 .content(String.format("Yêu cầu mượn sách '%s' của bạn đã được tạo và đang chờ phê duyệt.", document.getDocumentName()))
                 .build();
-        notificationService.createNotification(notificationCreateRequest);
+        notificationService.createNotifications(notificationCreateRequest);
 
         // Lưu giao dịch vào cơ sở dữ liệu
         LoanTransaction savedTransaction = loanTransactionRepository.save(loanTransaction);
@@ -120,19 +123,47 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         User user = loanTransaction.getUser();
         user.setCurrentBorrowedCount(user.getCurrentBorrowedCount() + 1);
         userRepository.save(user);
+        // thuc hien lay sach tu Rack , WareHouse
+        DocumentLocation location = documentMoveService.approveAndMoveDocument(document.getDocumentId(),1);
+        if(location.getRackId() != null){
+            loanTransaction.setOriginalRackId(location.getRackId());
+        }else loanTransaction.setOriginalWarehouseId(location.getWarehouseId());
+        // 12. Gửi thông báo cho người duyệt (Manager/Admin) về vị trí lấy sách
+        User userCurrent = securityContextService.getCurrentUser();
+        String locationDetails = "";
+        if (loanTransaction.getOriginalRackId() != null) {
+            Rack rack = rackRepository.findById(loanTransaction.getOriginalRackId())
+                    .orElseThrow(() -> new AppException(ErrorCode.RACK_NOT_FOUND, "Rack gốc không tồn tại"));
+            locationDetails = String.format("Kệ ID: %d, Số kệ: %s", rack.getRackId(), rack.getRackNumber());
+        } else if (loanTransaction.getOriginalWarehouseId() != null) {
+            Warehouse warehouse = warehouseRepository.findById(loanTransaction.getOriginalWarehouseId())
+                    .orElseThrow(() -> new AppException(ErrorCode.WAREHOUSE_NOT_FOUND, "Kho gốc không tồn tại"));
+            locationDetails = String.format("Kho ID: %d, Địa điểm: %s", warehouse.getWarehouseId(), warehouse.getLocation());
+        }
+        String managerMessage = String.format("Bạn đã phê duyệt yêu cầu mượn sách '%s'. Vị trí lấy sách: %s. Vui lòng chuẩn bị sách để giao cho người dùng.",
+                document.getDocumentName(), locationDetails);
 
         loanTransaction =  loanTransactionRepository.save(loanTransaction);
 
-        // Gửi thông báo
+        NotificationCreateRequest managerNotification = NotificationCreateRequest.builder()
+                .userIds(List.of(userCurrent.getUserId()))
+                .title("Phê duyệt yêu cầu mượn sách")
+                .content(managerMessage)
+                .build();
+        notificationService.createNotifications(managerNotification);
+
+
+        // Gửi thông báo User
         LocalDateTime expiryTime = loanTransaction.getUpdatedAt().plusDays(2).withHour(0).withMinute(0).withSecond(0).withNano(0);
         NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
-                .userId(user.getUserId())
+                .userIds(List.of(user.getUserId()))
                 .title("Yêu cầu mượn sách được phê duyệt")
                 .content(String.format("Yêu cầu mượn sách '%s' của bạn đã được phê duyệt. " +
                         "Bạn có 48 giờ để nhận sách. Nếu không nhận trong thời gian này, yêu cầu sẽ bị hủy tự động vào lúc 00:00 ngày %s.",
                         loanTransaction.getDocument().getDocumentName(), expiryTime.toLocalDate()))
                 .build();
-        notificationService.createNotification(notificationCreateRequest);
+        notificationService.createNotifications(notificationCreateRequest);
+
         return loanTransactionMapper.toLoanTransactionResponse(loanTransaction);
     }
 
@@ -153,11 +184,11 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         LoanTransaction updatedTransaction = loanTransactionRepository.save(loanTransaction);
         // Gửi thông báo từ chối giao dịch
         NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
-                .userId(loanTransaction.getUser().getUserId())
+                .userIds(List.of( loanTransaction.getUser().getUserId()))
                 .title("Yêu cầu mượn sách bị từ chối")
                 .content(String.format("Yêu cầu mượn sách '%s' của bạn đã bị từ chối.", loanTransaction.getDocument().getDocumentName()))
                 .build();
-        notificationService.createNotification(notificationCreateRequest);
+        notificationService.createNotifications(notificationCreateRequest);
 
         return loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
     }
@@ -179,11 +210,17 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Giao dịch chưa được phê duyệt.");
         }
         // Thiết lập ngày mượn sách và ngày dự kiến trả dựa trên maxLoanDays của tài liệu
-//        String role = String.valueOf(currentUser.getRoles().stream()
-//                .map(Role::getName)
-//                .findFirst());
-        LoanPolicy loanPolicy = loanPolicyRepository.findByDocumentType( loanTransaction.getDocument().getDocumentType())
-                .orElseThrow(() -> new AppException(ErrorCode.POLICY_NOT_FOUND));
+
+        // Lấy các DocumentType của Document
+        Document document = loanTransaction.getDocument();
+        Set<DocumentType> documentTypes = document.getDocumentTypes();
+
+        // Lấy tất cả LoanPolicy cho các DocumentType này và chọn cái có maxLoanDays thấp nhất
+        LoanPolicy loanPolicy = loanPolicyRepository.findByDocumentTypeIn(documentTypes)
+                .stream()
+                .min(Comparator.comparingInt(LoanPolicy::getMaxLoanDays))
+                .orElseThrow(() -> new AppException(ErrorCode.POLICY_NOT_FOUND, "Không tìm thấy chính sách phù hợp"));
+
 
 
         LocalDateTime currentDate = LocalDateTime.now();
@@ -198,11 +235,11 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
 
         // Gửi thông báo nhận sách
         NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
-                .userId(currentUser.getUserId())
+                .userIds(List.of(currentUser.getUserId()))
                 .title("Sách đã được nhận")
                 .content(String.format("Bạn đã nhận sách '%s' thành công.", loanTransaction.getDocument().getDocumentName()))
                 .build();
-        notificationService.createNotification(notificationCreateRequest);
+        notificationService.createNotifications(notificationCreateRequest);
 
         return loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
     }
@@ -240,17 +277,18 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
 
         // Gửi thông báo xác nhận trả sách
         NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
-                .userId(user.getUserId())
+                .userIds(List.of(user.getUserId()))
                 .title("Sách đã được trả")
                 .content(String.format("Bạn đã trả sách '%s' thành công.", loanTransaction.getDocument().getDocumentName()))
                 .build();
-        notificationService.createNotification(notificationCreateRequest);
+        notificationService.createNotifications(notificationCreateRequest);
 
         return loanTransactionMapper.toLoanTransactionResponse(loanTransaction);
     }
 
     @Override
     @Transactional
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public LoanTransactionResponse confirmReturnDocument(LoanTransactionReturnRequest request) {
         LoanTransaction loanTransaction = loanTransactionRepository.findById(request.getTransactionId())
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
@@ -262,54 +300,133 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         // Cập nhật trạng thái trả sách và ngày trả sách
         loanTransaction.setStatus(LoanTransaction.Status.RETURNED);
         loanTransaction.setReturnDate(LocalDateTime.now());
-        loanTransaction.setReturnCondition(LoanTransaction.Condition.NORMAL);
+        loanTransaction.setReturnCondition(request.getIsBookDamaged() ? LoanTransaction.Condition.DAMAGED : LoanTransaction.Condition.NORMAL);
 
-        // Xử lý nếu sách bị hư hỏng hoặc áp dụng khoản phạt
-        if (request.getIsBookDamaged()) {
-            // Nếu sách bị hư hỏng, áp dụng khoản phạt và không cập nhật availableCount
-            loanTransaction.setReturnCondition(LoanTransaction.Condition.DAMAGED);
+        Document document = loanTransaction.getDocument();
+        boolean isDocumentDamaged = request.getIsBookDamaged();
+
+        if (isDocumentDamaged) {
+            // Xử lý sách bị hư hỏng
             Fine fine = Fine.builder()
                     .amount(request.getFineAmount())
-                    .status(request.getStatus())
+                    .status(Fine.Status.UNPAID)
                     .issuedDate(LocalDateTime.now())
                     .reason(request.getFineReason())
                     .transactionLoan(loanTransaction)
                     .user(loanTransaction.getUser())
                     .build();
-
             fineRepository.save(fine);
         } else {
-            // Cập nhật số lượng sách có sẵn nếu sách không bị hư hỏng
-            Document document = loanTransaction.getDocument();
+            // Cập nhật số lượng sách có sẵn
             document.setAvailableCount(document.getAvailableCount() + 1);
+
+            boolean returnedToOriginalLocation = false;
+            User userCurrent = securityContextService.getCurrentUser();
+            String title = "";
+            String message = "";
+            if (loanTransaction.getOriginalRackId() != null) {
+                // Trả sách về kệ gốc
+                Rack originalRack = rackRepository.findById(loanTransaction.getOriginalRackId())
+                        .orElseThrow(() -> new AppException(ErrorCode.RACK_NOT_FOUND, "Kệ gốc không tồn tại."));
+
+                double currentRackSize = document.getLocations().stream()
+                        .filter(loc -> loc.getRackId() != null && loc.getRackId().equals(originalRack.getRackId()))
+                        .mapToDouble(loc -> loc.getSize().getSizeValue() * loc.getQuantity())
+                        .sum();
+                double documentSize = document.getSize().getSizeValue();
+
+                if (currentRackSize + documentSize <= originalRack.getCapacity()) {
+                    // Có đủ chỗ, trả sách về kệ
+                    DocumentLocation rackLocation = document.getLocations().stream()
+                            .filter(loc -> loc.getRackId() != null && loc.getRackId().equals(originalRack.getRackId()))
+                            .findFirst()
+                            .orElseGet(() -> {
+                                DocumentLocation newLocation = DocumentLocation.builder()
+                                        .rackId(originalRack.getRackId())
+                                        .quantity(0)
+                                        .size(document.getSize())
+                                        .build();
+                                document.getLocations().add(newLocation);
+                                return newLocation;
+                            });
+                    rackLocation.setQuantity(rackLocation.getQuantity() + 1);
+                    rackLocation.updateTotalSize();
+                    returnedToOriginalLocation = true;
+                    // Thiết lập tiêu đề và nội dung thông báo khi trả sách về kệ gốc
+                    title = "Sách được trả về kệ";
+                    message = String.format("Sách '%s' đã được trả về kệ '%s'.", document.getDocumentName(), originalRack.getRackNumber());
+
+                }
+            }
+
+            if (!returnedToOriginalLocation) {
+                // Trả sách vào kho
+                Long warehouseId = loanTransaction.getOriginalWarehouseId();
+                if (warehouseId == null) {
+                    // Nếu không có kho gốc, chọn kho mặc định
+                    Warehouse defaultWarehouse = warehouseRepository.findAll().stream().findFirst()
+                            .orElseThrow(() -> new AppException(ErrorCode.WAREHOUSE_NOT_FOUND, "Không tìm thấy kho lưu trữ."));
+                    warehouseId = defaultWarehouse.getWarehouseId();
+                }
+
+                Warehouse warehouse = warehouseRepository.findById(warehouseId)
+                        .orElseThrow(() -> new AppException(ErrorCode.WAREHOUSE_NOT_FOUND, "Kho không tồn tại."));
+
+                DocumentLocation warehouseLocation = document.getLocations().stream()
+                        .filter(loc -> loc.getWarehouseId() != null && loc.getWarehouseId().equals(warehouse.getWarehouseId()))
+                        .findFirst()
+                        .orElseGet(() -> {
+                            DocumentLocation newLocation = DocumentLocation.builder()
+                                    .warehouseId(warehouse.getWarehouseId())
+                                    .quantity(0)
+                                    .size(document.getSize())
+                                    .build();
+                            document.getLocations().add(newLocation);
+                            return newLocation;
+                        });
+                warehouseLocation.setQuantity(warehouseLocation.getQuantity() + 1);
+                warehouseLocation.updateTotalSize();
+                // Gửi thông báo cho quản lý
+               message = String.format("Sách '%s' đã được trả về kho '%s' vì kệ gốc đã đầy.",
+                        document.getDocumentName(), warehouse.getWarehouseName());
+               title = "Sách trả về kho";
+            }
             documentRepository.save(document);
 
-            // Xử lý nếu có khoản phạt nhưng sách không hư hỏng (ví dụ: phạt trả muộn)
+            NotificationCreateRequest managerNotification = NotificationCreateRequest.builder()
+                    .userIds(List.of(userCurrent.getUserId()))
+                    .title(title)
+                    .content(message)
+                    .build();
+            notificationService.createNotifications(managerNotification);
+
+            // Xử lý phạt trả muộn nếu có
             if (request.getFineAmount() > 0) {
                 Fine fine = Fine.builder()
                         .amount(request.getFineAmount())
-                        .status(request.getStatus())
+                        .status(Fine.Status.UNPAID)
                         .issuedDate(LocalDateTime.now())
                         .reason(request.getFineReason())
                         .transactionLoan(loanTransaction)
                         .user(loanTransaction.getUser())
                         .build();
-
                 fineRepository.save(fine);
             }
         }
 
         LoanTransaction updatedTransaction = loanTransactionRepository.save(loanTransaction);
-        // Gửi thông báo xác nhận trả sách
-        NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
-                .userId(loanTransaction.getUser().getUserId())
+
+        // Gửi thông báo xác nhận trả sách cho người dùng
+        NotificationCreateRequest userNotification = NotificationCreateRequest.builder()
+                .userIds(List.of(loanTransaction.getUser().getUserId()))
                 .title("Xác nhận trả sách")
-                .content(String.format("Sách '%s' đã được trả và xác nhận thành công.", loanTransaction.getDocument().getDocumentName()))
+                .content(String.format("Sách '%s' đã được trả và xác nhận thành công.", document.getDocumentName()))
                 .build();
-        notificationService.createNotification(notificationCreateRequest);
+        notificationService.createNotifications(userNotification);
 
         return loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
     }
+
     @Override
     @Transactional
     public LoanTransactionResponse renewLoanTransaction(Long transactionId) {
@@ -338,8 +455,15 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         String role = String.valueOf(currentUser.getRoles().stream()
                 .map(Role::getName)
                 .findFirst());
-        LoanPolicy loanPolicy = loanPolicyRepository.findByDocumentType(document.getDocumentType())
-                .orElseThrow(() -> new AppException(ErrorCode.POLICY_NOT_FOUND));
+        Set<DocumentType> documentTypes = document.getDocumentTypes();
+
+        // Lấy tất cả LoanPolicy cho các DocumentType này và chọn cái có maxLoanDays thấp nhất
+        LoanPolicy loanPolicy = loanPolicyRepository.findByDocumentTypeIn(documentTypes)
+                .stream()
+                .min(Comparator.comparingInt(LoanPolicy::getMaxLoanDays))
+                .orElseThrow(() -> new AppException(ErrorCode.POLICY_NOT_FOUND, "Không tìm thấy chính sách phù hợp"));
+
+
         if (renewalHistories.size() >= loanPolicy.getMaxRenewals()) {
             throw new AppException(ErrorCode.RESOURCE_CONFLICT, "Bạn đã đạt số lần gia hạn tối đa.");
         }
@@ -361,11 +485,11 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
 
         // Gửi thông báo gia hạn thành công
         NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
-                .userId(loanTransaction.getUser().getUserId())
+                .userIds(List.of(loanTransaction.getUser().getUserId()))
                 .title("Gia hạn sách thành công")
                 .content(String.format("Yêu cầu gia hạn sách '%s' đã thành công. Ngày trả mới là: %s", document.getDocumentName(), newDueDate))
                 .build();
-        notificationService.createNotification(notificationCreateRequest);
+        notificationService.createNotifications(notificationCreateRequest);
 
         return loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
     }
@@ -376,7 +500,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         LoanTransaction loanTransaction = loanTransactionRepository.findById(transactionId)
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
 
-        User currentUser =  securityContextService.getCurrentUser();
+        User currentUser = securityContextService.getCurrentUser();
         if (!loanTransaction.getUser().getUserId().equals(currentUser.getUserId())) {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Bạn không có quyền hủy giao dịch này.");
         }
@@ -385,30 +509,121 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         if (loanTransaction.getStatus() == LoanTransaction.Status.PENDING ||
                 (loanTransaction.getStatus() == LoanTransaction.Status.APPROVED &&
                         loanTransaction.getUpdatedAt().isAfter(LocalDateTime.now().minusHours(24)))) {
+
+            boolean wasApproved = loanTransaction.getStatus() == LoanTransaction.Status.APPROVED;
             loanTransaction.setStatus(LoanTransaction.Status.CANCELLED_BY_USER);
 
-            // Tăng lại số lượng sách có sẵn nếu giao dịch đã được duyệt
-            if (loanTransaction.getStatus() == LoanTransaction.Status.APPROVED) {
-                Document document = loanTransaction.getDocument();
+            Document document = loanTransaction.getDocument();
+
+            if (wasApproved) {
+                // Tăng lại số lượng sách có sẵn
                 document.setAvailableCount(document.getAvailableCount() + 1);
+
+                // Trả sách về vị trí cũ
+                boolean returnedToOriginalLocation = false;
+                String title = "";
+                String message = "";
+                User managerUser = securityContextService.getCurrentUser(); // Lấy thông tin người quản lý hiện tại
+
+                if (loanTransaction.getOriginalRackId() != null) {
+                    // Trả sách về kệ gốc
+                    Rack originalRack = rackRepository.findById(loanTransaction.getOriginalRackId())
+                            .orElseThrow(() -> new AppException(ErrorCode.RACK_NOT_FOUND, "Kệ gốc không tồn tại."));
+
+                    double currentRackSize = document.getLocations().stream()
+                            .filter(loc -> loc.getRackId() != null && loc.getRackId().equals(originalRack.getRackId()))
+                            .mapToDouble(loc -> loc.getSize().getSizeValue() * loc.getQuantity())
+                            .sum();
+                    double documentSize = document.getSize().getSizeValue();
+
+                    if (currentRackSize + documentSize <= originalRack.getCapacity()) {
+                        // Có đủ chỗ, trả sách về kệ
+                        DocumentLocation rackLocation = document.getLocations().stream()
+                                .filter(loc -> loc.getRackId() != null && loc.getRackId().equals(originalRack.getRackId()))
+                                .findFirst()
+                                .orElseGet(() -> {
+                                    DocumentLocation newLocation = DocumentLocation.builder()
+                                            .rackId(originalRack.getRackId())
+                                            .quantity(0)
+                                            .size(document.getSize())
+                                            .build();
+                                    document.getLocations().add(newLocation);
+                                    return newLocation;
+                                });
+                        rackLocation.setQuantity(rackLocation.getQuantity() + 1);
+                        rackLocation.updateTotalSize(); // Cập nhật tổng kích thước
+
+                        returnedToOriginalLocation = true;
+
+                        // Thiết lập thông báo
+                        title = "Sách được trả về kệ";
+                        message = String.format("Sách '%s' đã được trả về kệ '%s'.", document.getDocumentName(), originalRack.getRackNumber());
+                    }
+                }
+
+                if (!returnedToOriginalLocation) {
+                    // Trả sách vào kho
+                    Long warehouseId = loanTransaction.getOriginalWarehouseId();
+                    if (warehouseId == null) {
+                        // Nếu không có kho gốc, chọn kho mặc định
+                        Warehouse defaultWarehouse = warehouseRepository.findAll().stream().findFirst()
+                                .orElseThrow(() -> new AppException(ErrorCode.WAREHOUSE_NOT_FOUND, "Không tìm thấy kho lưu trữ."));
+                        warehouseId = defaultWarehouse.getWarehouseId();
+                    }
+
+                    Warehouse warehouse = warehouseRepository.findById(warehouseId)
+                            .orElseThrow(() -> new AppException(ErrorCode.WAREHOUSE_NOT_FOUND, "Kho không tồn tại."));
+
+                    DocumentLocation warehouseLocation = document.getLocations().stream()
+                            .filter(loc -> loc.getWarehouseId() != null && loc.getWarehouseId().equals(warehouse.getWarehouseId()))
+                            .findFirst()
+                            .orElseGet(() -> {
+                                DocumentLocation newLocation = DocumentLocation.builder()
+                                        .warehouseId(warehouse.getWarehouseId())
+                                        .quantity(0)
+                                        .size(document.getSize())
+                                        .build();
+                                document.getLocations().add(newLocation);
+                                return newLocation;
+                            });
+                    warehouseLocation.setQuantity(warehouseLocation.getQuantity() + 1);
+                    warehouseLocation.updateTotalSize(); // Cập nhật tổng kích thước
+
+                    // Gửi thông báo cho quản lý
+                    title = "Sách trả về kho";
+                    message = String.format("Sách '%s' đã được trả về kho '%s' do kệ gốc đã đầy.", document.getDocumentName(), warehouse.getWarehouseName());
+                }
+
+                // Lưu lại tài liệu
                 documentRepository.save(document);
+
+                // Gửi thông báo cho quản lý
+                List<String> managerUserIds = getManagerUserIds();
+                NotificationCreateRequest managerNotification = NotificationCreateRequest.builder()
+                        .userIds(managerUserIds)
+                        .title(title)
+                        .content(message)
+                        .build();
+                notificationService.createNotifications(managerNotification);
             }
 
+            // Lưu lại giao dịch
             LoanTransaction updatedTransaction = loanTransactionRepository.save(loanTransaction);
 
-            // Gửi thông báo hủy yêu cầu
-            NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
-                    .userId(loanTransaction.getUser().getUserId())
+            // Gửi thông báo hủy yêu cầu cho người dùng
+            NotificationCreateRequest userNotification = NotificationCreateRequest.builder()
+                    .userIds(List.of(loanTransaction.getUser().getUserId()))
                     .title("Yêu cầu mượn sách bị hủy")
-                    .content(String.format("Yêu cầu mượn sách '%s' của bạn đã bị hủy.", loanTransaction.getDocument().getDocumentName()))
+                    .content(String.format("Yêu cầu mượn sách '%s' của bạn đã bị hủy.", document.getDocumentName()))
                     .build();
-            notificationService.createNotification(notificationCreateRequest);
+            notificationService.createNotifications(userNotification);
 
             return loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
         } else {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Chỉ có thể hủy yêu cầu ở trạng thái PENDING hoặc APPROVED trong vòng 24 giờ.");
         }
     }
+
 
     @Override
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
@@ -431,8 +646,84 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                 transaction.setStatus(LoanTransaction.Status.CANCELLED_AUTO);
                 Document document = transaction.getDocument();
                 document.setAvailableCount(document.getAvailableCount() + 1);
+
+                // Bắt đầu xử lý trả sách về kệ hoặc kho
+                boolean returnedToOriginalLocation = false;
+                String title = "";
+                String message = "";
+
+                if (transaction.getOriginalRackId() != null) {
+                    // Trả sách về kệ gốc
+                    Rack originalRack = rackRepository.findById(transaction.getOriginalRackId())
+                            .orElseThrow(() -> new AppException(ErrorCode.RACK_NOT_FOUND, "Kệ gốc không tồn tại."));
+
+                    double currentRackSize = document.getLocations().stream()
+                            .filter(loc -> loc.getRackId() != null && loc.getRackId().equals(originalRack.getRackId()))
+                            .mapToDouble(loc -> loc.getSize().getSizeValue() * loc.getQuantity())
+                            .sum();
+                    double documentSize = document.getSize().getSizeValue();
+
+                    if (currentRackSize + documentSize <= originalRack.getCapacity()) {
+                        // Có đủ chỗ, trả sách về kệ
+                        DocumentLocation rackLocation = document.getLocations().stream()
+                                .filter(loc -> loc.getRackId() != null && loc.getRackId().equals(originalRack.getRackId()))
+                                .findFirst()
+                                .orElseGet(() -> {
+                                    DocumentLocation newLocation = DocumentLocation.builder()
+                                            .rackId(originalRack.getRackId())
+                                            .quantity(0)
+                                            .size(document.getSize())
+                                            .build();
+                                    document.getLocations().add(newLocation);
+                                    return newLocation;
+                                });
+                        rackLocation.setQuantity(rackLocation.getQuantity() + 1);
+                        rackLocation.updateTotalSize();
+                        returnedToOriginalLocation = true;
+
+                        // Thiết lập thông báo
+                        title = "Sách được trả về kệ";
+                        message = String.format("Sách '%s' đã được trả về kệ '%s' sau khi hủy yêu cầu mượn sách.", document.getDocumentName(), originalRack.getRackNumber());
+                    }
+                }
+
+                if (!returnedToOriginalLocation) {
+                    // Trả sách vào kho
+                    Long warehouseId = transaction.getOriginalWarehouseId();
+                    if (warehouseId == null) {
+                        // Nếu không có kho gốc, chọn kho mặc định
+                        Warehouse defaultWarehouse = warehouseRepository.findAll().stream().findFirst()
+                                .orElseThrow(() -> new AppException(ErrorCode.WAREHOUSE_NOT_FOUND, "Không tìm thấy kho lưu trữ."));
+                        warehouseId = defaultWarehouse.getWarehouseId();
+                    }
+
+                    Warehouse warehouse = warehouseRepository.findById(warehouseId)
+                            .orElseThrow(() -> new AppException(ErrorCode.WAREHOUSE_NOT_FOUND, "Kho không tồn tại."));
+
+                    DocumentLocation warehouseLocation = document.getLocations().stream()
+                            .filter(loc -> loc.getWarehouseId() != null && loc.getWarehouseId().equals(warehouse.getWarehouseId()))
+                            .findFirst()
+                            .orElseGet(() -> {
+                                DocumentLocation newLocation = DocumentLocation.builder()
+                                        .warehouseId(warehouse.getWarehouseId())
+                                        .quantity(0)
+                                        .size(document.getSize())
+                                        .build();
+                                document.getLocations().add(newLocation);
+                                return newLocation;
+                            });
+                    warehouseLocation.setQuantity(warehouseLocation.getQuantity() + 1);
+                    warehouseLocation.updateTotalSize();
+
+                    // Thiết lập thông báo
+                    title = "Sách trả về kho";
+                    message = String.format("Sách '%s' đã được trả về kho '%s' do kệ gốc đã đầy.", document.getDocumentName(), warehouse.getWarehouseName());
+                }
+
+                // Lưu lại tài liệu và giao dịch
                 documentRepository.save(document);
                 loanTransactionRepository.save(transaction);
+
                 // Xử lý khoản phạt khi người dùng không nhận sách
                 Fine fine = Fine.builder()
                         .amount(10.0) // Ví dụ: Số tiền phạt cố định 10 đơn vị tiền tệ
@@ -444,18 +735,27 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                         .build();
                 fineRepository.save(fine);
 
-
-                // Send notification to user about the cancellation
-                NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
-                        .userId(transaction.getUser().getUserId())
+                // Gửi thông báo cho người dùng về việc hủy yêu cầu
+                NotificationCreateRequest userNotification = NotificationCreateRequest.builder()
+                        .userIds(List.of(transaction.getUser().getUserId()))
                         .title("Yêu cầu mượn sách đã bị hủy tự động")
                         .content(String.format("Yêu cầu mượn sách '%s' của bạn đã bị hủy do không nhận sách trong thời hạn quy định. Hạn cuối để nhận sách là 00:00 ngày %s. Bạn đã bị phạt với số tiền là 10 đơn vị tiền tệ.",
                                 document.getDocumentName(), cutoffTime.toLocalDate()))
                         .build();
-                notificationService.createNotification(notificationCreateRequest);
+                notificationService.createNotifications(userNotification);
+
+                // Gửi thông báo cho quản lý về vị trí sách
+                List<String> managerUserIds = getManagerUserIds();
+                NotificationCreateRequest managerNotification = NotificationCreateRequest.builder()
+                        .userIds(managerUserIds)
+                        .title(title)
+                        .content(message)
+                        .build();
+                notificationService.createNotifications(managerNotification);
             }
         }
     }
+
 
     @Override
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
@@ -503,15 +803,13 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         return transactions.map(loanTransactionMapper::toLoanTransactionResponse);
     }
 
-    //
-    private int getMaxLoanDays(User user, Document document) {
-//        String role= String.valueOf(user.getRoles().stream()
-//                .map(Role::getName)
-//                .findFirst());
-        LoanPolicy loanPolicy = loanPolicyRepository.findByDocumentType(
-                        document.getDocumentType())
-                .orElseThrow(() -> new AppException(ErrorCode.POLICY_NOT_FOUND));
-        return loanPolicy.getMaxLoanDays();
+    // Phương thức lấy danh sách ID của các người dùng có vai trò là MANAGER
+    private List<String> getManagerUserIds() {
+        return userRepository.findAll().stream()
+                .filter(user -> user.getRoles().stream()
+                        .anyMatch(role -> PredefinedRole.MANAGER_ROLE.equals(role.getName())))
+                .map(User::getUserId)
+                .collect(Collectors.toList());
     }
 
 

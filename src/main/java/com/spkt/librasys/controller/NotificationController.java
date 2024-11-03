@@ -49,9 +49,10 @@ public class NotificationController {
     }
 
     @PostMapping
-    public ApiResponse<NotificationResponse> createNotification(@RequestBody @Valid NotificationCreateRequest request) {
-        return ApiResponse.<NotificationResponse>builder()
-                .result(notificationService.createNotification(request))
+    public ApiResponse<Void> createNotification(@RequestBody @Valid NotificationCreateRequest request) {
+        notificationService.createNotifications(request);
+        return ApiResponse.<Void>builder()
+                .message("Send message success")
                 .build();
     }
 

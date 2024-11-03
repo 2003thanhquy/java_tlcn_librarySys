@@ -2,6 +2,7 @@ package com.spkt.librasys.service.impl;
 
 import com.spkt.librasys.constant.PredefinedRole;
 import com.spkt.librasys.dto.request.document.DocumentCreateRequest;
+import com.spkt.librasys.dto.request.document.DocumentQuantityUpdateRequest;
 import com.spkt.librasys.dto.request.document.DocumentSearchRequest;
 import com.spkt.librasys.dto.request.document.DocumentUpdateRequest;
 import com.spkt.librasys.dto.response.document.DocumentResponse;
@@ -10,17 +11,12 @@ import com.spkt.librasys.entity.enums.DocumentStatus;
 import com.spkt.librasys.exception.AppException;
 import com.spkt.librasys.exception.ErrorCode;
 import com.spkt.librasys.mapper.DocumentMapper;
-import com.spkt.librasys.repository.FavoriteDocumentRepository;
-import com.spkt.librasys.repository.document.DocumentRepository;
-import com.spkt.librasys.repository.document.DocumentTypeRepository;
+import com.spkt.librasys.repository.*;
 import com.spkt.librasys.repository.access.UserRepository;
 import com.spkt.librasys.service.AccessHistoryService;
-import com.spkt.librasys.service.AuthenticationService;
 import com.spkt.librasys.service.DocumentService;
 import com.spkt.librasys.repository.specification.DocumentSpecification;
 import com.spkt.librasys.service.SecurityContextService;
-import jakarta.annotation.security.PermitAll;
-import jakarta.annotation.security.RolesAllowed;
 import jakarta.transaction.Transactional;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -29,12 +25,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -49,39 +47,94 @@ public class DocumentServiceImpl implements DocumentService {
     DocumentMapper documentMapper;
     SecurityContextService securityContextService;
     FavoriteDocumentRepository favoriteDocumentRepository;
-
+    WarehouseRepository warehouseRepository;
+    DocumentHistoryRepository documentHistoryRepository;
+    RackRepository rackRepository;
 
     @Override
+    @Transactional
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public DocumentResponse createDocument(DocumentCreateRequest request) {
-        DocumentType documentType = documentTypeRepository.findById(request.getDocumentTypeId())
-                .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND));
+        // 1. Kiểm tra và lấy các DocumentType
+        Set<DocumentType> documentTypes = getDocumentTypes(request.getDocumentTypeIds());
 
+        // 2. Kiểm tra và lấy Warehouse
+        Warehouse warehouse = getWarehouse(request.getWarehouseId());
+
+        // 3. Ánh xạ DocumentCreateRequest sang Document
         Document document = documentMapper.toDocument(request);
-        document.setDocumentType(documentType);
-        document.setStatus(DocumentStatus.AVAILABLE);  // Thiết lập trạng thái mặc định là "AVAILABLE"
-        document.setAvailableCount(request.getAvailableCount()); // Thiết lập số lượng sách có sẵn bằng tổng số lượng nhập vào
+        document.setDocumentTypes(documentTypes);
 
+        // 4. Tạo DocumentLocation và gán vào Document
+        DocumentLocation location = createDocumentLocation(warehouse, request.getQuantity(), request.getSize());
+        document.getLocations().add(location);
+        // 5. Lưu Document
         Document savedDocument = documentRepository.save(document);
+
+        // 6. Lưu DocumentHistory
+        saveDocumentHistory(savedDocument, location, request.getQuantity(), DocumentHistory.Action.ADD);
+
+        // 7. Trả về DocumentResponse
         return documentMapper.toDocumentResponse(savedDocument);
     }
+
+    private Set<DocumentType> getDocumentTypes(Set<Long> documentTypeIds) {
+        Set<DocumentType> documentTypes = new HashSet<>(documentTypeRepository.findAllById(documentTypeIds));
+        if (documentTypes.size() != documentTypeIds.size()) {
+            throw new AppException(ErrorCode.DOCUMENT_TYPE_NOT_FOUND, "One or more DocumentTypeIds are invalid");
+        }
+        return documentTypes;
+    }
+
+    private Warehouse getWarehouse(Long warehouseId) {
+        return warehouseRepository.findById(warehouseId)
+                .orElseThrow(() -> new AppException(ErrorCode.WAREHOUSE_NOT_FOUND));
+    }
+
+    private DocumentLocation createDocumentLocation(Warehouse warehouse, int quantity, com.spkt.librasys.entity.enums.DocumentSize size) {
+        DocumentLocation location = DocumentLocation.builder()
+                .warehouseId(warehouse.getWarehouseId())
+                .rackId(null) // Không gán rack cụ thể lúc tạo
+                .quantity(quantity)
+                .size(size)
+                .build();
+        location.updateTotalSize();
+        return location;
+    }
+
+    private void saveDocumentHistory(Document document, DocumentLocation location, int quantityChange, DocumentHistory.Action action) {
+        DocumentHistory history = DocumentHistory.builder()
+                .document(document)
+                .location(location)
+                .changeTime(LocalDateTime.now())
+                .action(action)
+                .quantityChange(quantityChange)
+                .build();
+        documentHistoryRepository.save(history);
+    }
+
+    //
 
     @Override
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public DocumentResponse updateDocument(Long id, DocumentUpdateRequest request) {
+        // 1. Tìm Document dựa trên ID
         Document document = documentRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND));
 
-//        if (request.getDocumentTypeId() != null) {
-//            DocumentType documentType = documentTypeRepository.findById(request.getDocumentTypeId())
-//                    .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_TYPE_NOT_FOUND));
-//            document.setDocumentType(documentType);
-//        }
-
-
+        // 2. Cập nhật Document bằng mapper mà không thay đổi quantity
         documentMapper.updateDocument(document, request);
 
+        // 3. Cập nhật DocumentType nếu có thay đổi trong request
+        if (request.getDocumentTypeIds() != null && !request.getDocumentTypeIds().isEmpty()) {
+            Set<DocumentType> documentTypes = getDocumentTypes(request.getDocumentTypeIds());
+            document.setDocumentTypes(documentTypes);
+        }
+
+        // 4. Lưu Document đã cập nhật
         Document updatedDocument = documentRepository.save(document);
+
+        // 5. Trả về DocumentResponse
         return documentMapper.toDocumentResponse(updatedDocument);
     }
 
@@ -169,7 +222,7 @@ public class DocumentServiceImpl implements DocumentService {
                 .orElseThrow(() -> new RuntimeException("Document not found"));
         DocumentType newType = documentTypeRepository.findByTypeName(newTypeName)
                 .orElseThrow(() -> new RuntimeException("Document type not found"));
-        document.setDocumentType(newType);
+       // document.setDocumentType(newType);
         documentRepository.save(document);
     }
 
@@ -233,6 +286,91 @@ public class DocumentServiceImpl implements DocumentService {
         return favoriteDocumentRepository.existsByUserAndDocument(user, document);
     }
 
+    @Override
+    @Transactional
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public void updateQuantity(DocumentQuantityUpdateRequest request) {
+        Document document = documentRepository.findById(request.getDocumentId())
+                .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND, "Document not found"));
+
+        switch (request.getLocationType()) {
+            case WAREHOUSE:
+                updateQuantityInWarehouse(document, request.getLocationId(), request.getQuantityChange());
+                break;
+            case RACK:
+                updateQuantityInRack(document, request.getLocationId(), request.getQuantityChange());
+                break;
+            default:
+                throw new AppException(ErrorCode.INVALID_LOCATION_TYPE, "Invalid location type");
+        }
+    }
+    private void updateQuantityInWarehouse(Document document, Long warehouseId, int newQuantity) {
+        // Kiểm tra Warehouse tồn tại
+        warehouseRepository.findById(warehouseId)
+                .orElseThrow(() -> new AppException(ErrorCode.WAREHOUSE_NOT_FOUND, "Warehouse not found"));
+
+        // Tìm DocumentLocation cho Warehouse
+        DocumentLocation location = document.getLocations().stream()
+                .filter(loc -> loc.getWarehouseId().equals(warehouseId) && loc.getRackId() == null)
+                .findFirst()
+                .orElseThrow(() -> new AppException(ErrorCode.LOCATION_NOT_FOUND, "Document location in warehouse not found"));
+
+        if (newQuantity < 0) {
+            throw new AppException(ErrorCode.INVALID_QUANTITY, "Quantity cannot be negative");
+        }
+
+        // Cập nhật số lượng mới cho location
+        int previousQuantity = location.getQuantity();
+        location.setQuantity(newQuantity);
+
+        // Cập nhật tổng số lượng trong Document
+        int documentQuantityChange = newQuantity - previousQuantity;
+        int avai =  document.getAvailableCount() + documentQuantityChange;
+        if(avai <0){
+            throw new AppException(ErrorCode.INVALID_QUANTITY, "Document Available cannot be negative");
+        }
+        document.setQuantity(document.getQuantity() + documentQuantityChange);
+        document.setAvailableCount(avai);
+        DocumentHistory.Action action = DocumentHistory.Action.UPDATE;
+        // Lưu lại lịch sử cập nhật nếu có thay đổi
+        if (documentQuantityChange != 0) {
+            saveDocumentHistory(document, location, documentQuantityChange, action);
+        }
+    }
+
+    private void updateQuantityInRack(Document document, Long rackId, int newQuantity) {
+        // Kiểm tra Rack tồn tại
+        rackRepository.findById(rackId)
+                .orElseThrow(() -> new AppException(ErrorCode.RACK_NOT_FOUND, "Rack not found"));
+
+        // Tìm DocumentLocation cho Rack
+        DocumentLocation location = document.getLocations().stream()
+                .filter(loc -> rackId.equals(loc.getRackId()))
+                .findFirst()
+                .orElseThrow(() -> new AppException(ErrorCode.LOCATION_NOT_FOUND, "Document location in rack not found"));
+
+        if (newQuantity < 0) {
+            throw new AppException(ErrorCode.INVALID_QUANTITY, "Quantity cannot be negative");
+        }
+
+        // Cập nhật số lượng mới cho location
+        int previousQuantity = location.getQuantity();
+        location.setQuantity(newQuantity);
+
+        // Cập nhật tổng số lượng trong Document
+        int documentQuantityChange = newQuantity - previousQuantity;
+        int avai =  document.getAvailableCount() + documentQuantityChange;
+        if(avai <0){
+            throw new AppException(ErrorCode.INVALID_QUANTITY, "Document Available cannot be negative");
+        }
+        document.setQuantity(document.getQuantity() + documentQuantityChange);
+        document.setAvailableCount(avai);
+        // Lưu lại lịch sử cập nhật nếu có thay đổi
+        if (documentQuantityChange != 0) {
+            DocumentHistory.Action action = DocumentHistory.Action.UPDATE;
+            saveDocumentHistory(document, location, documentQuantityChange,action);
+        }
+    }
 
 
 }

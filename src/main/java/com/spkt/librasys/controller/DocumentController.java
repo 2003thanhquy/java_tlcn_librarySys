@@ -2,6 +2,7 @@ package com.spkt.librasys.controller;
 
 import com.spkt.librasys.dto.PageDTO;
 import com.spkt.librasys.dto.request.document.DocumentCreateRequest;
+import com.spkt.librasys.dto.request.document.DocumentQuantityUpdateRequest;
 import com.spkt.librasys.dto.request.document.DocumentSearchRequest;
 import com.spkt.librasys.dto.request.document.DocumentUpdateRequest;
 import com.spkt.librasys.dto.response.ApiResponse;
@@ -156,6 +157,15 @@ public class DocumentController {
         documentService.deleteDocumentsByIds(documentIds);
         return ApiResponse.<Void>builder()
                 .message("Documents marked as unavailable successfully")
+                .build();
+    }
+    // Phương thức cập nhật số lượng trong Warehouse hoặc Rack
+    @PostMapping("/update-quantity")
+    public ApiResponse<Void> updateDocumentQuantity(
+            @RequestBody @Valid DocumentQuantityUpdateRequest request) {
+        documentService.updateQuantity(request);
+        return ApiResponse.<Void>builder()
+                .message("Document quantity updated successfully")
                 .build();
     }
 }

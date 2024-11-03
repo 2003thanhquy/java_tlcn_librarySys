@@ -6,7 +6,9 @@ import com.spkt.librasys.entity.LoanPolicy;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface LoanPolicyRepository extends JpaRepository<LoanPolicy, Long> {
@@ -17,4 +19,6 @@ public interface LoanPolicyRepository extends JpaRepository<LoanPolicy, Long> {
      * @return Optional LoanPolicy
      */
     Optional<LoanPolicy> findByDocumentType(DocumentType documentTypeId);
+    // Tìm tất cả các LoanPolicy liên quan đến một tập hợp các DocumentType
+    List<LoanPolicy> findByDocumentTypeIn(Set<DocumentType> documentTypes);
 }
