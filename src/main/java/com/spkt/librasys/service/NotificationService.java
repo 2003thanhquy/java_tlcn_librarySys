@@ -8,7 +8,7 @@ import org.springframework.data.domain.Pageable;
 public interface NotificationService {
 
     // Tạo thông báo mới
-    NotificationResponse createNotification(NotificationCreateRequest request);
+    void createNotifications(NotificationCreateRequest request);
 
     // Lấy tất cả thông báo cho người dùng hiện tại (pagination)
     Page<NotificationResponse> getNotificationsForCurrentUser(Pageable pageable);

@@ -23,6 +23,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -37,19 +40,27 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
-    public NotificationResponse createNotification(NotificationCreateRequest request) {
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+    public void createNotifications(NotificationCreateRequest request) {
+        List<String> userIds = request.getUserIds();
+        if (userIds == null || userIds.isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Danh sách User IDs không được để trống.");
+        }
 
-        Notification notification = Notification.builder()
-                .user(user)
-                .title(request.getTitle())
-                .content(request.getContent())
-                .status(Notification.NotificationStatus.UNREAD)
-                .build();
+        List<User> users = userRepository.findAllById(userIds);
+        if (users.isEmpty()) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND, "Không tìm thấy người dùng để gửi thông báo.");
+        }
 
-        notificationRepository.save(notification);
-        return notificationMapper.toNotificationResponse(notification);
+        List<Notification> notifications = users.stream()
+                .map(user -> Notification.builder()
+                        .user(user)
+                        .title(request.getTitle())
+                        .content(request.getContent())
+                        .status(Notification.NotificationStatus.UNREAD)
+                        .build())
+                .collect(Collectors.toList());
+
+        notificationRepository.saveAll(notifications);
     }
 
     @Override
@@ -62,7 +73,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional(readOnly = true)
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public Page<NotificationResponse> getAllNotifications(Pageable pageable) {
         Page<Notification> notifications = notificationRepository.findAll(pageable);
         return notifications.map(notificationMapper::toNotificationResponse);

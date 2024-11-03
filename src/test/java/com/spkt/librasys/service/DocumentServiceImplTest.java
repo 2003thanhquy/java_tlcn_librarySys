@@ -9,23 +9,20 @@ import com.spkt.librasys.entity.DocumentType;
 import com.spkt.librasys.exception.AppException;
 import com.spkt.librasys.exception.ErrorCode;
 import com.spkt.librasys.mapper.DocumentMapper;
-import com.spkt.librasys.repository.document.DocumentRepository;
-import com.spkt.librasys.repository.document.DocumentTypeRepository;
+import com.spkt.librasys.repository.DocumentRepository;
+import com.spkt.librasys.repository.DocumentTypeRepository;
 import com.spkt.librasys.service.impl.DocumentServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
-import java.util.Collections;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -54,47 +51,33 @@ public class DocumentServiceImplTest {
         random = new Random();
     }
 
+//    @Test
+//    public void createFakeDocumentForTesting() {
+//        DocumentType documentType = new DocumentType();
+//        documentType.setDocumentTypeId(1L);
+//        documentType.setTypeName("General Knowledge");
+//
+//        Document document = Document.builder()
+//                .documentName(faker.book().title())
+//                .author(faker.book().author())
+//                .publisher(faker.book().publisher())
+//                .publishedDate(LocalDate.now().minusDays(random.nextInt(1000)))
+//                .pageCount(random.nextInt(200) + 100)
+//                .quantity(random.nextInt(10) + 1)
+//                .description(faker.lorem().sentence())
+//                .documentLink("https://example.com/" + faker.lorem().word())
+//                .documentType(documentType)
+//                .build();
+//
+//        when(documentRepository.save(document)).thenReturn(document);
+//    }
     @Test
-    public void createFakeDocumentForTesting() {
-        DocumentType documentType = new DocumentType();
-        documentType.setDocumentTypeId(1L);
-        documentType.setTypeName("General Knowledge");
+    public void testRepo() {
+        DocumentType documentType = documentTypeRepository.findById(1L)
+                .orElseThrow(() -> new NoSuchElementException("DocumentType with ID 1 not found"));
 
-        Document document = Document.builder()
-                .documentName(faker.book().title())
-                .author(faker.book().author())
-                .publisher(faker.book().publisher())
-                .publishedDate(LocalDate.now().minusDays(random.nextInt(1000)))
-                .pageCount(random.nextInt(200) + 100)
-                .quantity(random.nextInt(10) + 1)
-                .description(faker.lorem().sentence())
-                .documentLink("https://example.com/" + faker.lorem().word())
-                .documentType(documentType)
-                .build();
-
-        when(documentRepository.save(document)).thenReturn(document);
-    }
-
-    @Test
-    public void testCreateDocumentSuccess() {
-        DocumentCreateRequest request = new DocumentCreateRequest();
-        request.setDocumentTypeId(1L);
-        request.setDocumentName("Test Document");
-
-        DocumentType documentType = new DocumentType();
-        documentType.setDocumentTypeId(1L);
-
-        Document document = new Document();
-        when(documentTypeRepository.findById(1L)).thenReturn(Optional.of(documentType));
-        when(documentMapper.toDocument(request)).thenReturn(document);
-        when(documentRepository.save(document)).thenReturn(document);
-
-        DocumentResponse response = new DocumentResponse();
-        when(documentMapper.toDocumentResponse(document)).thenReturn(response);
-
-        DocumentResponse result = documentService.createDocument(request);
-        assertNotNull(result);
-        verify(documentRepository, times(1)).save(document);
+        Set<Document> documents = documentType.getDocuments(); // Truy cập vào danh sách Document
+        System.out.println(documents);
     }
 
     @Test

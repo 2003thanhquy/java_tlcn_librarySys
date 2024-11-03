@@ -1,64 +1,71 @@
 package com.spkt.librasys.dto.request.document;
 
+import com.spkt.librasys.entity.enums.DocumentSize;
 import com.spkt.librasys.entity.enums.DocumentStatus;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import jakarta.validation.constraints.Min;
 import lombok.*;
-import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Set;
 
-@Data
+@Getter
+@Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-@FieldDefaults(level = AccessLevel.PRIVATE)
 public class DocumentCreateRequest {
 
-    @NotBlank(message = "Document name cannot be blank")
-    String documentName;
+    @NotBlank(message = "ISBN is required")
+    private String isbn;
 
-    @NotBlank(message = "ISBN cannot be blank")
-    String isbn;
+    @NotBlank(message = "Document name is required")
+    private String documentName;
 
-    @NotBlank(message = "Author cannot be blank")
-    String author;
+    @NotBlank(message = "Author is required")
+    private String author;
 
-    @NotBlank(message = "Publisher cannot be blank")
-    String publisher;
+    private String publisher;
 
-    @NotNull(message = "Published date cannot be null")
-    LocalDate publishedDate;
+    private LocalDate publishedDate;
 
-    @Min(value = 1, message = "Page count must be greater than 0")
-    int pageCount;
+    @Min(value = 1, message = "Page count must be at least 1")
+    private int pageCount;
 
-    @NotBlank(message = "Language cannot be blank")
-    String language;
+    private String language;
 
-    @Min(value = 1, message = "Quantity must be greater than 0")
-    int quantity;
-    @Min(value = 0, message = "Quantity must be greater than 0")
-    int availableCount;
+    @Min(value = 1, message = "Quantity must be at least 1")
+    private int quantity;
 
+    // Số lượng sách có sẵn để mượn
+    @Min(value = 0, message = "Available count cannot be negative")
+    private int availableCount;
 
-    @NotBlank(message = "Location code cannot be blank")
-    String locationCode; // Mã vị trí trong thư viện
+    // Trạng thái của sách (AVAILABLE, CHECKED_OUT, etc.)
+    @NotNull(message = "Status is required")
+    private DocumentStatus status;
 
-    String description;  // Mô tả tài liệu (có thể không bắt buộc)
+    // Mô tả ngắn về tài liệu
+    private String description;
 
-    String coverImage;    // Đường dẫn ảnh bìa
+    // Đường dẫn tới ảnh bìa của tài liệu
+    private String coverImage;
 
-    String documentLink;  // Đường dẫn tới tài liệu điện tử (nếu có)
-    BigDecimal price;
-    int maxLoanDays;;
+    // Đường dẫn tới tài liệu điện tử (nếu có)
+    private String documentLink;
 
-    @NotNull(message = "Document type ID cannot be null")
-    Long documentTypeId;
+    // Giá của tài liệu
+    private BigDecimal price;
 
-    @NotNull(message = "Status cannot be null")
-    DocumentStatus status;
+    // Thuộc tính kích thước của tài liệu
+    @NotNull(message = "Size is required")
+    private DocumentSize size;
+
+    @NotNull(message = "Document type IDs are required")
+    private Set<Long> documentTypeIds;
+
+    @NotNull(message = "Warehouse ID is required")
+    private Long warehouseId;
 }

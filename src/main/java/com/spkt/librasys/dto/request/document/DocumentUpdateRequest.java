@@ -1,11 +1,15 @@
 package com.spkt.librasys.dto.request.document;
 
+import com.spkt.librasys.entity.enums.DocumentSize;
 import com.spkt.librasys.entity.enums.DocumentStatus;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -14,30 +18,38 @@ import java.time.LocalDate;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class DocumentUpdateRequest {
 
-    // Các trường có thể là null nếu không được cung cấp từ phía client
+    @NotBlank(message = "Document name is required")
     String documentName;
 
+    @NotBlank(message = "ISBN is required")
     String isbn;
 
+    @NotBlank(message = "Author is required")
     String author;
 
     String publisher;
 
     LocalDate publishedDate;
 
-    Integer pageCount;  // Dùng Integer để hỗ trợ null
+    @NotNull(message = "Page count is required")
+    Integer pageCount;
 
     String language;
 
-    Integer quantity;  // Dùng Integer để hỗ trợ null
-
     BigDecimal price;
 
-//    String description;
+    String description;
 
     String documentLink;
 
- //   Long documentTypeId;  // Có thể không cung cấp nếu không muốn thay đổi loại tài liệu - su dung trong classify
+    String coverImage;
 
-    DocumentStatus status;  // Có thể bỏ trống nếu không muốn thay đổi trạng thái
+    @NotNull(message = "Size is required")
+    DocumentSize size;
+
+    @NotNull(message = "Status is required")
+    DocumentStatus status;
+
+    @NotNull(message = "Document type IDs are required")
+    Set<Long> documentTypeIds; // Sử dụng Set để tránh trùng lặp
 }

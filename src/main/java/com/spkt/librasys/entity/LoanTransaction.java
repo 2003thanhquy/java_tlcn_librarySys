@@ -67,6 +67,13 @@ public class LoanTransaction {
     @JoinColumn(name = "user_id", nullable = false)
     User user;
 
+    // Thêm các trường mới để lưu trữ vị trí gốc
+    @Column(name = "original_rack_id")
+    Long originalRackId;
+
+    @Column(name = "original_warehouse_id")
+    Long originalWarehouseId;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

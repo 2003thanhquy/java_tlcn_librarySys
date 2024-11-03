@@ -6,7 +6,7 @@ import com.spkt.librasys.entity.DocumentType;
 import com.spkt.librasys.exception.AppException;
 import com.spkt.librasys.exception.ErrorCode;
 import com.spkt.librasys.mapper.DocumentTypeMapper;
-import com.spkt.librasys.repository.document.DocumentTypeRepository;
+import com.spkt.librasys.repository.DocumentTypeRepository;
 import com.spkt.librasys.service.DocumentTypeService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

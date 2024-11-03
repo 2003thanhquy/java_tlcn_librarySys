@@ -1,5 +1,6 @@
 package com.spkt.librasys.entity;
 
+import com.spkt.librasys.entity.enums.DocumentSize;
 import com.spkt.librasys.entity.enums.DocumentStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -7,7 +8,10 @@ import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -54,10 +58,8 @@ public class Document {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
+    @Builder.Default
     DocumentStatus status  = DocumentStatus.AVAILABLE; // Trạng thái của sách
-
-    @Column(name = "location_code")
-    String locationCode; // Mã vị trí trong thư viện
 
     // Thông tin bổ sung
     @Column(name = "description", length = 1000)
@@ -71,13 +73,20 @@ public class Document {
 
     @Column(name = "price", precision = 19, scale = 2)
     BigDecimal price;
-//    @Column(name = "max_loan_days", nullable = false)
-//    int maxLoanDays; // Số ngày tối đa có thể mượn tài liệu
-    // Quan hệ với các thực thể khác
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "document_type_id", nullable = false) // Khóa ngoại
-    @ToString.Exclude
-    DocumentType documentType; // Loại tài liệu (ví dụ: sách, tạp chí, luận văn)
+
+    // Thuộc tính kích thước của tài liệu
+    @Enumerated(EnumType.STRING)
+    @Column(name = "size", nullable = false)
+    private DocumentSize size; // Kích thước của sách
+
+    // Quan hệ Many-to-Many với DocumentType
+    @ManyToMany
+    @JoinTable(
+            name = "document_document_types", // Tên bảng liên kết
+            joinColumns = @JoinColumn(name = "document_id"),
+            inverseJoinColumns = @JoinColumn(name = "document_type_id")
+    )
+    Set<DocumentType> documentTypes = new HashSet<>();
 
 //    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
 //    @ToString.Exclude
@@ -86,4 +95,14 @@ public class Document {
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     List<AccessHistory> accessHistories; // Lịch sử truy cập của tài liệu
+
+    // Element collection cho danh sách các vị trí lưu trữ và số lượng tại mỗi vị trí
+    @ElementCollection
+    @CollectionTable(name = "document_locations", joinColumns = @JoinColumn(name = "document_id"))
+    @Builder.Default
+    private List<DocumentLocation> locations = new ArrayList<>();
+
+    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    List<DocumentHistory> documentHistories = new ArrayList<>();
 }

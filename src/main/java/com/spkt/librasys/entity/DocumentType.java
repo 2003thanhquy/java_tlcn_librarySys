@@ -1,11 +1,14 @@
 package com.spkt.librasys.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -24,8 +27,9 @@ public class DocumentType {
     String typeName;
     @Column(name = "description")
     String description;
-    // Một document type có thể chứa nhiều document
-    @OneToMany(mappedBy = "documentType", cascade = CascadeType.ALL)
-    List<Document> documents;
+    // Một DocumentType có thể chứa nhiều Document và ngược lại
+    @ManyToMany(mappedBy = "documentTypes")
+    @JsonIgnore
+    Set<Document> documents = new HashSet<>();
 
 }

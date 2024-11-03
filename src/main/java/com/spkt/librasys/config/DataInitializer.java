@@ -1,110 +1,108 @@
-package com.spkt.librasys.config;
-
-import com.github.javafaker.Faker;
-import com.spkt.librasys.entity.*;
-import com.spkt.librasys.entity.enums.DocumentStatus;
-import com.spkt.librasys.repository.LoanPolicyRepository;
-import com.spkt.librasys.repository.RoleRepository;
-import com.spkt.librasys.repository.access.UserRepository;
-import com.spkt.librasys.repository.document.DocumentRepository;
-import com.spkt.librasys.repository.document.DocumentTypeRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
-import java.util.UUID;
-
-@Component
-@RequiredArgsConstructor
-public class DataInitializer implements CommandLineRunner {
-
-    private final DocumentRepository documentRepository;
-    private final DocumentTypeRepository documentTypeRepository;
-    private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final LoanPolicyRepository loanPolicyRepository;
-
-    @Override
-    public void run(String... args) {
-        Faker faker = new Faker();
-        Random random = new Random();
-
-        // Kiểm tra và tạo dữ liệu giả cho Document nếu chưa có dữ liệu
-        if (documentRepository.count() == 0) {
-            DocumentType documentType = DocumentType.builder()
-                    .typeName("General Knowledge")
-                    .description("Description")
-                    .build();
-            documentType  =  documentTypeRepository.save(documentType);
-            LoanPolicy loanPolicy = LoanPolicy.builder()
-                    .documentType(documentType)
-                    .maxLoanDays(30)
-                    .maxRenewals(2)
-                    .build();
-            loanPolicyRepository.save(loanPolicy);
-
-            for (int i = 0; i < 100; i++) {
-                Document document = Document.builder()
-                        .documentName(faker.book().title())
-                        .author(faker.book().author())
-                        .publisher(faker.book().publisher())
-                        .isbn(UUID.randomUUID().toString())
-                        .publishedDate(LocalDate.now().minusDays(random.nextInt(1000)))
-                        .pageCount(random.nextInt(200) + 100)
-                        .quantity(random.nextInt(10) + 1)
-                        .description(faker.lorem().sentence())
-                        .documentLink("https://example.com/" + faker.lorem().word())
-                        .documentType(documentType)
-                        .status(DocumentStatus.AVAILABLE)
-                        .price(BigDecimal.valueOf(100000.00))
-                        .build();
-                document.setAvailableCount(document.getQuantity());
-
-                documentRepository.save(document);
-            }
-
-            System.out.println("100 documents have been inserted into the database.");
-        } else {
-            System.out.println("Documents already exist in the database. Skipping data initialization.");
-        }
-
-//        // Kiểm tra và tạo dữ liệu giả cho User nếu chưa có dữ liệu
-//        if (userRepository.count() <2) {
-//            // Tạo các role giả nếu chưa tồn tại
-//            Role adminRole = roleRepository.findById("ADMIN").orElseGet(() -> {
-//                Role role = Role.builder().name("ADMIN").build();
-//                return roleRepository.save(role);
-//            });
-//            Role userRole = roleRepository.findById("USER").orElseGet(() -> {
-//                Role role = Role.builder().name("USER").build();
-//                return roleRepository.save(role);
-//            });
+//package com.spkt.librasys.config;
+//
+//import com.github.javafaker.Faker;
+//import com.spkt.librasys.entity.*;
+//import com.spkt.librasys.entity.enums.DocumentStatus;
+//import com.spkt.librasys.repository.LoanPolicyRepository;
+//import com.spkt.librasys.repository.RoleRepository;
+//import com.spkt.librasys.repository.access.UserRepository;
+//import com.spkt.librasys.repository.DocumentRepository;
+//import com.spkt.librasys.repository.DocumentTypeRepository;
+//import lombok.RequiredArgsConstructor;
+//import org.springframework.boot.CommandLineRunner;
+//import org.springframework.stereotype.Component;
+//
+//import java.math.BigDecimal;
+//import java.time.LocalDate;
+//import java.util.Random;
+//import java.util.UUID;
+//
+//@Component
+//@RequiredArgsConstructor
+//public class DataInitializer implements CommandLineRunner {
+//
+//    private final DocumentRepository documentRepository;
+//    private final DocumentTypeRepository documentTypeRepository;
+//    private final UserRepository userRepository;
+//    private final RoleRepository roleRepository;
+//    private final LoanPolicyRepository loanPolicyRepository;
+//
+//    @Override
+//    public void run(String... args) {
+//        Faker faker = new Faker();
+//        Random random = new Random();
+//
+//        // Kiểm tra và tạo dữ liệu giả cho Document nếu chưa có dữ liệu
+//        if (documentRepository.count() == 0) {
+//            DocumentType documentType = DocumentType.builder()
+//                    .typeName("General Knowledge")
+//                    .description("Description")
+//                    .build();
+//            documentType  =  documentTypeRepository.save(documentType);
+//            LoanPolicy loanPolicy = LoanPolicy.builder()
+//                    .documentType(documentType)
+//                    .maxLoanDays(30)
+//                    .maxRenewals(2)
+//                    .build();
+//            loanPolicyRepository.save(loanPolicy);
 //
 //            for (int i = 0; i < 100; i++) {
-//                User user = User.builder()
-//                        .username(faker.internet().emailAddress())
-//                        .password(faker.internet().password())
-//                        .firstName(faker.name().firstName())
-//                        .lastName(faker.name().lastName())
-//                        .dob(LocalDate.now().minusYears(random.nextInt(60) + 18)) // Giả lập tuổi từ 18 đến 78
-//                        .phoneNumber(faker.phoneNumber().cellPhone())
-//                        .address(faker.address().fullAddress())
-//                        .registrationDate(LocalDate.now().minusDays(random.nextInt(365))) // Đăng ký từ 1 năm trước
-//                        .expirationDate(LocalDate.now().plusYears(1)) // Hạn sử dụng là 1 năm sau
-//                        .roles(new HashSet<>(Set.of(userRole))) // Gán role cho user
+//                Document document = Document.builder()
+//                        .documentName(faker.book().title())
+//                        .author(faker.book().author())
+//                        .publisher(faker.book().publisher())
+//                        .isbn(UUID.randomUUID().toString())
+//                        .publishedDate(LocalDate.now().minusDays(random.nextInt(1000)))
+//                        .pageCount(random.nextInt(200) + 100)
+//                        .quantity(random.nextInt(10) + 1)
+//                        .description(faker.lorem().sentence())
+//                        .documentLink("https://example.com/" + faker.lorem().word())
+//                        .documentType(documentType)
+//                        .status(DocumentStatus.AVAILABLE)
+//                        .price(BigDecimal.valueOf(100000.00))
 //                        .build();
+//                document.setAvailableCount(document.getQuantity());
 //
-//                userRepository.save(user);
+//                documentRepository.save(document);
 //            }
 //
-//            System.out.println("10 users have been inserted into the database.");
+//            System.out.println("100 documents have been inserted into the database.");
 //        } else {
-//            System.out.println("Users already exist in the database. Skipping user data initialization.");
+//            System.out.println("Documents already exist in the database. Skipping data initialization.");
 //        }
-    }
-}
+//
+////        // Kiểm tra và tạo dữ liệu giả cho User nếu chưa có dữ liệu
+////        if (userRepository.count() <2) {
+////            // Tạo các role giả nếu chưa tồn tại
+////            Role adminRole = roleRepository.findById("ADMIN").orElseGet(() -> {
+////                Role role = Role.builder().name("ADMIN").build();
+////                return roleRepository.save(role);
+////            });
+////            Role userRole = roleRepository.findById("USER").orElseGet(() -> {
+////                Role role = Role.builder().name("USER").build();
+////                return roleRepository.save(role);
+////            });
+////
+////            for (int i = 0; i < 100; i++) {
+////                User user = User.builder()
+////                        .username(faker.internet().emailAddress())
+////                        .password(faker.internet().password())
+////                        .firstName(faker.name().firstName())
+////                        .lastName(faker.name().lastName())
+////                        .dob(LocalDate.now().minusYears(random.nextInt(60) + 18)) // Giả lập tuổi từ 18 đến 78
+////                        .phoneNumber(faker.phoneNumber().cellPhone())
+////                        .address(faker.address().fullAddress())
+////                        .registrationDate(LocalDate.now().minusDays(random.nextInt(365))) // Đăng ký từ 1 năm trước
+////                        .expirationDate(LocalDate.now().plusYears(1)) // Hạn sử dụng là 1 năm sau
+////                        .roles(new HashSet<>(Set.of(userRole))) // Gán role cho user
+////                        .build();
+////
+////                userRepository.save(user);
+////            }
+////
+////            System.out.println("10 users have been inserted into the database.");
+////        } else {
+////            System.out.println("Users already exist in the database. Skipping user data initialization.");
+////        }
+//    }
+//}

@@ -27,7 +27,7 @@ import org.springframework.web.filter.CorsFilter;
 public class SecurityConfig {
     private final String[] PUBLIC_GET_ENDPOINTS = {
             "/api/v1/documents",        // Cho phép truy cập tài liệu công khai
-            "/api/v1/documents/**" ,   // Cho phép xem chi tiết tài liệu mà không cần xác thực
+            "/api/v1/documents/{documentId}" ,   // Cho phép xem chi tiết tài liệu mà không cần xác thực
     };
     private final String[] PUBLIC_POST_ENDPOINTS = {
             "/api/v1/users",
@@ -45,32 +45,17 @@ public class SecurityConfig {
     private CustomJwtDecode customJwtDecode;
 
     @Bean
-    @Order(2) // Đảm bảo filter chain này được ưu tiên xử lý trước
-    public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
-        http
-                .securityMatcher(PUBLIC_GET_ENDPOINTS) // Áp dụng filter chain này cho các endpoint công khai
-                .csrf(AbstractHttpConfigurer::disable)
-                .cors(Customizer.withDefaults())
-                .authorizeHttpRequests(authorize -> authorize
-                        .anyRequest().permitAll()
-                );
-        return http.build();
-    }
-
-
-    @Bean
-    @Order(1)
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request->
-                request.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Cho phép tất cả các yêu cầu OPTIONS
-                        .requestMatchers(HttpMethod.POST,PUBLIC_POST_ENDPOINTS).permitAll()
-                        .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
-                        .requestMatchers( "/swagger-ui/**", "/swagger-ui.html","/api-docs", "/api-docs/**").permitAll() // Cho phép truy cập các endpoint của Swagger
+                        request.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Cho phép tất cả các yêu cầu OPTIONS
+                                .requestMatchers(HttpMethod.POST,PUBLIC_POST_ENDPOINTS).permitAll()
+                                .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
+                                .requestMatchers( "/swagger-ui/**", "/swagger-ui.html","/api-docs", "/api-docs/**").permitAll() // Cho phép truy cập các endpoint của Swagger
 
 
-                        //.hasAuthority("SCOPE_ADMIN")
-                       // .hasRole(Role.ADMIN.name())
-                .anyRequest().authenticated())
+                                //.hasAuthority("SCOPE_ADMIN")
+                                // .hasRole(Role.ADMIN.name())
+                                .anyRequest().authenticated())
 //                .oauth2Login(oauth2Login ->
 //                        oauth2Login
 //                                .loginPage("/api/v1/auth/login-google")  // Endpoint đăng nhập Google

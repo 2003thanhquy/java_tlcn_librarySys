@@ -7,7 +7,7 @@ import com.spkt.librasys.entity.Fine;
 import com.spkt.librasys.repository.FineRepository;
 import com.spkt.librasys.repository.LoanTransactionRepository;
 import com.spkt.librasys.repository.access.UserRepository;
-import com.spkt.librasys.repository.document.DocumentRepository;
+import com.spkt.librasys.repository.DocumentRepository;
 import com.spkt.librasys.service.DashboardService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

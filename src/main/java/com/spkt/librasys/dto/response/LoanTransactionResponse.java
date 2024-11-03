@@ -18,6 +18,8 @@ public class LoanTransactionResponse {
     String username;  
     LocalDate loanDate;  
     LocalDate dueDate;  
-    LocalDate returnDate;  
+    LocalDate returnDate;
+    Long originalRackId;
+    Long originalWarehouseId;
     LoanTransaction.Status status;  // Trạng thái của giao dịch
 }
