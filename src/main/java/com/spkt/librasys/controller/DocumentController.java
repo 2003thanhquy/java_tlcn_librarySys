@@ -17,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,8 +31,9 @@ public class DocumentController {
 
     DocumentService documentService;
 
-    @PostMapping
-    public ApiResponse<DocumentResponse> createDocument(@RequestBody @Valid DocumentCreateRequest request) {
+    @PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    public ApiResponse<DocumentResponse> createDocument(
+            @ModelAttribute @Valid DocumentCreateRequest request) {
         DocumentResponse response = documentService.createDocument(request);
         return ApiResponse.<DocumentResponse>builder()
                 .message("Document created successfully")

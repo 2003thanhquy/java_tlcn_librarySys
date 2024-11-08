@@ -77,6 +77,10 @@ public class User {
     @Column(name = "lock_count", nullable = false)
     int lockCount = 0; // Số lần tài khoản bị khóa
 
+    // Quan hệ Many-to-One với Department
+    @ManyToOne
+    @JoinColumn(name = "department_id")
+    Department department;
 
 
     @Enumerated(EnumType.STRING)

@@ -1,6 +1,7 @@
 package com.spkt.librasys.exception;
 
 import com.spkt.librasys.dto.response.ApiResponse;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolation;
 import lombok.extern.slf4j.Slf4j;
@@ -142,6 +143,16 @@ public class GlobalExceptionHandler {
         apiResponse.setCode(ErrorCode.INVALID_REQUEST.getCode());
         apiResponse.setMessage("Dữ liệu không hợp lệ: " + ex.getMessage());
         return ResponseEntity.badRequest().body(apiResponse);
+    }
+
+    @ExceptionHandler(RequestNotPermitted.class)
+    public ResponseEntity<ApiResponse<String>> handleRequestNotPermitted(RequestNotPermitted e) {
+        log.error("Rate limit exceeded: {}", e.getMessage());
+        ApiResponse<String> response = ApiResponse.<String>builder()
+                .code(429)
+                .message("Yêu cầu đã vượt quá giới hạn cho phép. Vui lòng thử lại sau.")
+                .build();
+        return ResponseEntity.status(429).body(response);
     }
 
 }

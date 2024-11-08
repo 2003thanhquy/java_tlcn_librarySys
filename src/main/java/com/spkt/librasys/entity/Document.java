@@ -67,6 +67,8 @@ public class Document {
 
     @Column(name = "cover_image")
     String coverImage; // Đường dẫn tới ảnh bìa của tài liệu
+    @Column(name = "image_public_id")
+    String imagePublicId;
 
     @Column(name = "document_link")
     String documentLink; // Đường dẫn tới tài liệu điện tử (nếu có)
@@ -105,4 +107,9 @@ public class Document {
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     List<DocumentHistory> documentHistories = new ArrayList<>();
+
+    @ManyToMany(mappedBy = "documents")
+    @ToString.Exclude
+    @Builder.Default
+    Set<Course> courses = new HashSet<>();
 }

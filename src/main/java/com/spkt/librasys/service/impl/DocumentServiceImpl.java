@@ -1,5 +1,6 @@
 package com.spkt.librasys.service.impl;
 
+import com.cloudinary.utils.ObjectUtils;
 import com.spkt.librasys.constant.PredefinedRole;
 import com.spkt.librasys.dto.request.document.DocumentCreateRequest;
 import com.spkt.librasys.dto.request.document.DocumentQuantityUpdateRequest;
@@ -27,11 +28,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,7 +43,6 @@ public class DocumentServiceImpl implements DocumentService {
 
     DocumentRepository documentRepository;
     DocumentTypeRepository documentTypeRepository;
-    UserRepository userRepository;
     AccessHistoryService accessHistoryService;
     DocumentMapper documentMapper;
     SecurityContextService securityContextService;
@@ -50,33 +50,63 @@ public class DocumentServiceImpl implements DocumentService {
     WarehouseRepository warehouseRepository;
     DocumentHistoryRepository documentHistoryRepository;
     RackRepository rackRepository;
+    CloudinaryService cloudinaryService;
 
     @Override
     @Transactional
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public DocumentResponse createDocument(DocumentCreateRequest request) {
-        // 1. Kiểm tra và lấy các DocumentType
-        Set<DocumentType> documentTypes = getDocumentTypes(request.getDocumentTypeIds());
+        try {
+            // 1. Kiểm tra và lấy các DocumentType
+            Set<DocumentType> documentTypes = getDocumentTypes(request.getDocumentTypeIds());
 
-        // 2. Kiểm tra và lấy Warehouse
-        Warehouse warehouse = getWarehouse(request.getWarehouseId());
+            // 2. Kiểm tra và lấy Warehouse
+            Warehouse warehouse = getWarehouse(request.getWarehouseId());
 
-        // 3. Ánh xạ DocumentCreateRequest sang Document
-        Document document = documentMapper.toDocument(request);
-        document.setDocumentTypes(documentTypes);
+            // 3. Ánh xạ DocumentCreateMultipartRequest sang Document
+            Document document = documentMapper.toDocument(request);
+            document.setDocumentTypes(documentTypes);
 
-        // 4. Tạo DocumentLocation và gán vào Document
-        DocumentLocation location = createDocumentLocation(warehouse, request.getQuantity(), request.getSize());
-        document.getLocations().add(location);
-        // 5. Lưu Document
-        Document savedDocument = documentRepository.save(document);
+            // 4. Tạo DocumentLocation và gán vào Document
+            DocumentLocation location = createDocumentLocation(warehouse, request.getQuantity(), request.getSize());
+            document.getLocations().add(location);
 
-        // 6. Lưu DocumentHistory
-        saveDocumentHistory(savedDocument, location, request.getQuantity(), DocumentHistory.Action.ADD);
+            // 5. Upload ảnh bìa lên Cloudinary trước khi lưu Document (nếu có)
+            MultipartFile coverImage = request.getImage();
+            if (coverImage != null && !coverImage.isEmpty()) {
+                try {
+                    // Tạo tên tệp duy nhất để tránh trùng lặp
+                    String public_id = UUID.randomUUID().toString();
+                    Map options = ObjectUtils.asMap(
+                            "folder", "document",
+                            "overwrite", true,
+                            "public_id", public_id
+                    );
+                    var uploadResult = cloudinaryService.uploadFile(coverImage, options);
+                    String coverImageUrl = (String) uploadResult.get("secure_url");
+                    document.setCoverImage(coverImageUrl); // Gán URL ảnh bìa
+                    document.setImagePublicId(public_id);
+                } catch (IOException e) {
+                    log.error("Error uploading cover image to Cloudinary: {}", e.getMessage());
+                    throw new AppException(ErrorCode.CLOUDINARY_UPLOAD_FAILED, "Error uploading cover image");
+                }
+            }
 
-        // 7. Trả về DocumentResponse
-        return documentMapper.toDocumentResponse(savedDocument);
+            // 6. Lưu Document sau khi hoàn tất tất cả thông tin
+            Document savedDocument = documentRepository.save(document);
+
+            // 7. Lưu DocumentHistory (nếu có)
+            saveDocumentHistory(savedDocument, location, request.getQuantity(), DocumentHistory.Action.ADD);
+
+            // 8. Trả về DocumentResponse
+            return documentMapper.toDocumentResponse(savedDocument);
+
+        } catch (Exception e) {
+            log.error("Error creating document: {}", e.getMessage());
+            throw new AppException(ErrorCode.DATABASE_ERROR, "Error creating document");
+       }
     }
+
 
     private Set<DocumentType> getDocumentTypes(Set<Long> documentTypeIds) {
         Set<DocumentType> documentTypes = new HashSet<>(documentTypeRepository.findAllById(documentTypeIds));

@@ -73,7 +73,11 @@ public enum ErrorCode {
     // Review Errors
     REVIEW_ALREADY_EXISTS(8001, "Review already exists", HttpStatus.CONFLICT),
     REVIEW_NOT_FOUND(8002, "Review not found", HttpStatus.NOT_FOUND),
-    USER_HAS_NOT_BORROWED_DOCUMENT(8003, "User has not borrowed this document", HttpStatus.FORBIDDEN);
+    USER_HAS_NOT_BORROWED_DOCUMENT(8003, "User has not borrowed this document", HttpStatus.FORBIDDEN),
+    //
+    CLOUDINARY_UPLOAD_FAILED(8004, "Cloudinary upload failed", HttpStatus.INTERNAL_SERVER_ERROR);
+
+
     ErrorCode(int code, String message, HttpStatusCode statusCode) {
         this.code = code;
         this.message = message;

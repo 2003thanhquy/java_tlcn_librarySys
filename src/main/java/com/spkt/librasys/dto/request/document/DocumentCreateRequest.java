@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -50,9 +51,6 @@ public class DocumentCreateRequest {
     // Mô tả ngắn về tài liệu
     private String description;
 
-    // Đường dẫn tới ảnh bìa của tài liệu
-    private String coverImage;
-
     // Đường dẫn tới tài liệu điện tử (nếu có)
     private String documentLink;
 
@@ -68,4 +66,7 @@ public class DocumentCreateRequest {
 
     @NotNull(message = "Warehouse ID is required")
     private Long warehouseId;
+
+    // Thêm trường MultipartFile cho coverImage
+    private MultipartFile image;
 }
