@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.spkt.librasys.entity.Department;
 import com.spkt.librasys.entity.Role;
 import com.spkt.librasys.entity.User;
 import jakarta.persistence.Column;
@@ -31,6 +32,10 @@ public class UserResponse {
     int maxBorrowLimit;
     User.Status is_active;
     List<Role> roles;
+
+    int studentBatch;
+    Department department;
+
 
     // Các trường trạng thái của tài khoản
     User.Status isActive; // Trạng thái tài khoản: ACTIVE, DEACTIVATED, LOCKED

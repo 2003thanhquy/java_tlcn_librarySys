@@ -36,4 +36,5 @@ public class UserCreateRequest {
 
     @NotBlank(message = "ADDRESS_CANNOT_BE_BLANK")
     String address;
+
 }

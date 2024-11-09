@@ -1,5 +1,6 @@
 package com.spkt.librasys.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -20,7 +21,10 @@ public class Department {
     @Column(name = "department_id", nullable = false, unique = true)
     Long departmentId;
 
-    @Column(name = "department_code", nullable = false, unique = true)
+    @Column(name = "department_code_id", nullable = false, unique = true)
+    Long departmentCodeId;
+
+    @Column(name = "department_code", nullable = false)
     String departmentCode; // Mã ngành, ví dụ: "CS", "ECON"
 
     @Column(name = "department_name", nullable = false)
@@ -31,7 +35,7 @@ public class Department {
 
     // Quan hệ One-to-Many với User
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
-    @ToString.Exclude
+    @JsonBackReference
     Set<User> users;
 
     // Quan hệ One-to-Many với StudentClass

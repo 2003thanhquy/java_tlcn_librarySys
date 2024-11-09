@@ -9,6 +9,7 @@ import org.mapstruct.*;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
 
+    @Mapping(target = "department", ignore = true)
     User toUser(UserCreateRequest request);
 
     UserResponse toUserResponse(User user);

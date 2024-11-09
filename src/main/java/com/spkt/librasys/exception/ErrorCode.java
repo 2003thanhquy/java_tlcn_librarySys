@@ -52,6 +52,8 @@ public enum ErrorCode {
     RACK_NOT_FOUND(4011, "Rack not found", HttpStatus.NOT_FOUND),
     LOCATION_NOT_FOUND(4012, "Document location in rack not found", HttpStatus.NOT_FOUND),
     RACK_CAPACITY_EXCEEDED(4013, "Rack does not have enough capacity", HttpStatus.BAD_REQUEST),
+    DEPARTMENT_NOT_FOUND(4014,"DEPARTMENT_NOT_FOUND",HttpStatus.NOT_FOUND),
+
     // Database Errors
     DATABASE_ERROR(5001, "Database error occurred", HttpStatus.INTERNAL_SERVER_ERROR),
     DATA_INTEGRITY_VIOLATION(5002, "Data integrity violation", HttpStatus.CONFLICT),
@@ -75,7 +77,7 @@ public enum ErrorCode {
     REVIEW_NOT_FOUND(8002, "Review not found", HttpStatus.NOT_FOUND),
     USER_HAS_NOT_BORROWED_DOCUMENT(8003, "User has not borrowed this document", HttpStatus.FORBIDDEN),
     //
-    CLOUDINARY_UPLOAD_FAILED(8004, "Cloudinary upload failed", HttpStatus.INTERNAL_SERVER_ERROR);
+    CLOUDINARY_UPLOAD_FAILED(9001, "Cloudinary upload failed", HttpStatus.INTERNAL_SERVER_ERROR);
 
 
     ErrorCode(int code, String message, HttpStatusCode statusCode) {

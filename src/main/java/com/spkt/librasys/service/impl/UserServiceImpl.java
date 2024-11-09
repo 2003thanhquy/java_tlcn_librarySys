@@ -5,11 +5,13 @@ import com.spkt.librasys.dto.request.user.ChangePasswordRequest;
 import com.spkt.librasys.dto.request.user.UserCreateRequest;
 import com.spkt.librasys.dto.request.user.UserUpdateRequest;
 import com.spkt.librasys.dto.response.user.UserResponse;
+import com.spkt.librasys.entity.Department;
 import com.spkt.librasys.entity.Role;
 import com.spkt.librasys.entity.User;
 import com.spkt.librasys.exception.AppException;
 import com.spkt.librasys.exception.ErrorCode;
 import com.spkt.librasys.mapper.UserMapper;
+import com.spkt.librasys.repository.DepartmentRepository;
 import com.spkt.librasys.repository.RoleRepository;
 import com.spkt.librasys.repository.access.UserRepository;
 import com.spkt.librasys.service.*;
@@ -46,6 +48,8 @@ public class UserServiceImpl implements UserService {
     SecurityContextService securityContextService;
     RoleService roleService;
     VerificationService verificationService;
+    private final DepartmentRepository departmentRepository;
+
     @Override
     public UserResponse getMyInfo() {
         User currentUser =  securityContextService.getCurrentUser(); // Lấy thông tin người dùng hiện tại từ SecurityContextHolder
@@ -63,6 +67,21 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponse createUser(UserCreateRequest request) {
         User user = userMapper.toUser(request);
+        String email = request.getUsername();
+        if (email != null && email.length() >= 2) {
+            try {
+                int studentBatch = Integer.parseInt(email.substring(0, 2));
+                Long departmentCodeId = (long) Integer.parseInt(email.substring(2, 4));
+                Department department = departmentRepository.findByDepartmentCodeId(departmentCodeId).
+                        orElseThrow(()->new AppException(ErrorCode.DEPARTMENT_NOT_FOUND));
+                user.setDepartment(department);
+                user.setStudentBatch(studentBatch);
+            } catch (NumberFormatException e) {
+                log.error("email không phải là số hợp lệ: {}", email.substring(0, 4));
+                //throw new AppException(ErrorCode.INVALID_EMAIL_FORMAT, "Hai ký tự đầu tiên của email không phải là số hợp lệ.");
+            }
+        }
+
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
         HashSet<Role> roles = new HashSet<>();

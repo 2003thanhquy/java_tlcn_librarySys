@@ -34,12 +34,14 @@ public class DataInit implements CommandLineRunner {
         // 1. Tạo và lưu Departments nếu chưa có
         if (departmentRepository.count() < 1) {
             Department csDepartment = Department.builder()
+                    .departmentCodeId(11L)
                     .departmentCode("CS")
                     .departmentName("Công nghệ Thông tin")
                     .description("Mô tả ngành Công nghệ Thông tin")
                     .build();
 
             Department econDepartment = Department.builder()
+                    .departmentCodeId(22L)
                     .departmentCode("ECON")
                     .departmentName("Kinh tế")
                     .description("Mô tả ngành Kinh tế")
