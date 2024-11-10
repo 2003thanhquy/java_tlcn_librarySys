@@ -71,7 +71,7 @@ public class UserServiceImpl implements UserService {
         if (email != null && email.length() >= 2) {
             try {
                 int studentBatch = Integer.parseInt(email.substring(0, 2));
-                Long departmentCodeId = (long) Integer.parseInt(email.substring(2, 4));
+                Long departmentCodeId = (long) Integer.parseInt(email.substring(3, 5));
                 Department department = departmentRepository.findByDepartmentCodeId(departmentCodeId).
                         orElseThrow(()->new AppException(ErrorCode.DEPARTMENT_NOT_FOUND));
                 user.setDepartment(department);

@@ -7,6 +7,7 @@ import com.spkt.librasys.entity.Document;
 import com.spkt.librasys.entity.DocumentType;
 import org.mapstruct.*;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,6 +23,14 @@ public interface DocumentMapper {
 
     //@BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void updateDocument(@MappingTarget Document document, DocumentUpdateRequest request);
+
+    /**
+     * Chuyển đổi từ danh sách Document entity sang danh sách DocumentResponse DTO.
+     *
+     * @param documents Danh sách các Document entity.
+     * @return Danh sách các DTO DocumentResponse.
+     */
+    List<DocumentResponse> toDocumentResponseList(List<Document> documents);
 
     // Phương thức lấy tên loại tài liệu từ Set<DocumentType>
     default Set<String> getDocumentTypeIds(Document document) {

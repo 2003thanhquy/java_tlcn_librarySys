@@ -34,7 +34,7 @@ public class DataInit implements CommandLineRunner {
         // 1. Tạo và lưu Departments nếu chưa có
         if (departmentRepository.count() < 1) {
             Department csDepartment = Department.builder()
-                    .departmentCodeId(11L)
+                    .departmentCodeId(10L)
                     .departmentCode("CS")
                     .departmentName("Công nghệ Thông tin")
                     .description("Mô tả ngành Công nghệ Thông tin")

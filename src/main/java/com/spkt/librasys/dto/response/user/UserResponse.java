@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.spkt.librasys.dto.response.department.DepartmentResponse;
+import com.spkt.librasys.dto.response.role.RoleResponse;
 import com.spkt.librasys.entity.Department;
 import com.spkt.librasys.entity.Role;
 import com.spkt.librasys.entity.User;
@@ -30,11 +32,10 @@ public class UserResponse {
     LocalDate expirationDate;
     int currentBorrowedCount;
     int maxBorrowLimit;
-    User.Status is_active;
-    List<Role> roles;
+    List<RoleResponse> roles;
 
     int studentBatch;
-    Department department;
+    DepartmentResponse department;
 
 
     // Các trường trạng thái của tài khoản

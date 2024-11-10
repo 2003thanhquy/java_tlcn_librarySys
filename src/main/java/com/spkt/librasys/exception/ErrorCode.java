@@ -19,7 +19,7 @@ public enum ErrorCode {
     USER_DEACTIVATED(1010, "User account has been deactivated", HttpStatus.FORBIDDEN),
     USER_LOCKED(1011, "User account is locked", HttpStatus.FORBIDDEN),
     USER_ALREADY_DELETED(1012, "User account has already been deleted", HttpStatus.GONE),
-    USER_PENDING(1013, "User account is pending verification", HttpStatus.PROCESSING),
+    USER_PENDING(1013, "User account is pending verification", HttpStatus.BAD_REQUEST),
 
     // Authentication errors
     TOKEN_EXPIRED(2001, "Token has expired", HttpStatus.UNAUTHORIZED),

@@ -13,12 +13,13 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@ControllerAdvice
+@RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
 
@@ -56,17 +57,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = AppException.class)
     public ResponseEntity<ApiResponse> handlingAppException(AppException exception) {
         ErrorCode errorCode = exception.getErrorCode();
+        log.error("Handling AppException: {}", exception.getMessage());
         ApiResponse apiResponse = new ApiResponse();
 
-        // Sử dụng thông điệp tùy chỉnh nếu có
-        String message = (exception.getMessageCustom() != null && !exception.getMessageCustom().isEmpty())
-                ? exception.getMessageCustom()
-                : errorCode.getMessage();
-
         apiResponse.setCode(errorCode.getCode());
-        apiResponse.setMessage(message);
+        apiResponse.setMessage(errorCode.getMessage());
 
-        return ResponseEntity.status(errorCode.getStatusCode()).body(apiResponse);
+        return ResponseEntity.badRequest().body(apiResponse);
+
     }
 
     /**
