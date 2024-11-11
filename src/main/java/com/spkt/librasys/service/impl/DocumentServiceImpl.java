@@ -464,7 +464,7 @@ public class DocumentServiceImpl implements DocumentService {
         return watermarkedContent;
     }
     public byte[] extractPageContent(Document document, int pageNumber) {
-        String filePath = "upload/documents/1.pdf"; // Thay bằng đường dẫn phù hợp
+        String filePath = document.getDocumentLink(); // Thay bằng đường dẫn phù hợp
         if (filePath == null || filePath.isEmpty()) {
             throw new RuntimeException("Đường dẫn file của tài liệu không được thiết lập");
         }
