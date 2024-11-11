@@ -132,12 +132,27 @@
             <artifactId>cloudinary-http5</artifactId>
             <version>2.0.0</version>
         </dependency>
-
+<!--excel-->
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
             <version>5.2.3</version>
         </dependency>
+<!--        pdf-->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>2.0.27</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.levigo.jbig2/levigo-jbig2-imageio -->
+        <dependency>
+            <groupId>com.levigo.jbig2</groupId>
+            <artifactId>levigo-jbig2-imageio</artifactId>
+            <version>2.0</version>
+        </dependency>
+
+
+
     </dependencies>
 
     <build>

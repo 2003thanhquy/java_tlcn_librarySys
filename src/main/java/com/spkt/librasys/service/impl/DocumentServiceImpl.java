@@ -1,6 +1,7 @@
 package com.spkt.librasys.service.impl;
 
 import com.cloudinary.utils.ObjectUtils;
+import com.levigo.jbig2.JBIG2ImageReaderSpi;
 import com.spkt.librasys.constant.PredefinedRole;
 import com.spkt.librasys.dto.request.document.DocumentCreateRequest;
 import com.spkt.librasys.dto.request.document.DocumentQuantityUpdateRequest;
@@ -23,6 +24,9 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.ImageType;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -30,9 +34,18 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+import javax.imageio.ImageIO;
+import javax.imageio.spi.IIORegistry;
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -334,6 +347,8 @@ public class DocumentServiceImpl implements DocumentService {
                 throw new AppException(ErrorCode.INVALID_LOCATION_TYPE, "Invalid location type");
         }
     }
+
+
     private void updateQuantityInWarehouse(Document document, Long warehouseId, int newQuantity) {
         // Kiểm tra Warehouse tồn tại
         warehouseRepository.findById(warehouseId)
@@ -401,6 +416,80 @@ public class DocumentServiceImpl implements DocumentService {
             saveDocumentHistory(document, location, documentQuantityChange,action);
         }
     }
+    //Read book
+
+    @Override
+    public byte[] getDocumentPageContent(Long documentId, int pageNumber) {
+        // Lấy tài liệu từ cơ sở dữ liệu hoặc hệ thống lưu trữ
+        User userCurr = securityContextService.getCurrentUser();
+        if(userCurr == null)
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        Document document = documentRepository.findById(documentId)
+                .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND,"Tài liệu không tồn tại"));
+
+        // Lấy nội dung trang sách
+        byte[] pageContent = extractPageContent(document, pageNumber);
+
+        // Thêm watermark vào nội dung trang
+        byte[] watermarkedContent = addWatermarkToImage(pageContent, "User: " + userCurr.getUsername());
+
+        return watermarkedContent;
+    }
+    public byte[] extractPageContent(Document document, int pageNumber) {
+        String filePath = "upload/documents/1.pdf"; // Thay bằng đường dẫn phù hợp
+        if (filePath == null || filePath.isEmpty()) {
+            throw new RuntimeException("Đường dẫn file của tài liệu không được thiết lập");
+        }
+
+        Path pdfPath = Paths.get(filePath).toAbsolutePath();
+        System.out.println("Đường dẫn tuyệt đối tới file PDF: " + pdfPath.toString());
+
+        if (!Files.exists(pdfPath)) {
+            throw new RuntimeException("File không tồn tại tại đường dẫn: " + pdfPath.toString());
+        }
+
+        // Đăng ký JBIG2 ImageIO plugin
+        IIORegistry.getDefaultInstance().registerServiceProvider(new JBIG2ImageReaderSpi());
+
+        try (PDDocument pdfDocument = PDDocument.load(pdfPath.toFile())) {
+            PDFRenderer pdfRenderer = new PDFRenderer(pdfDocument);
+            BufferedImage bim = pdfRenderer.renderImageWithDPI(pageNumber - 1, 150, ImageType.RGB);
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(bim, "png", baos);
+            return baos.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Lỗi khi đọc tài liệu", e);
+        }
+    }
+    private byte[] addWatermarkToImage(byte[] imageData, String watermarkText) {
+        try {
+            InputStream is = new ByteArrayInputStream(imageData);
+            BufferedImage image = ImageIO.read(is);
+
+            Graphics2D g2d = (Graphics2D) image.getGraphics();
+            AlphaComposite alphaChannel = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.3f);
+            g2d.setComposite(alphaChannel);
+            g2d.setColor(Color.GRAY);
+            g2d.setFont(new Font("Arial", Font.BOLD, 30));
+            FontMetrics fontMetrics = g2d.getFontMetrics();
+            Rectangle2D rect = fontMetrics.getStringBounds(watermarkText, g2d);
+
+            int centerX = (image.getWidth() - (int) rect.getWidth()) / 2;
+            int centerY = image.getHeight() / 2;
+
+            g2d.drawString(watermarkText, centerX, centerY);
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(image, "png", baos);
+            g2d.dispose();
+
+            return baos.toByteArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Lỗi khi thêm watermark", e);
+        }
+    }
+
 
 
 }

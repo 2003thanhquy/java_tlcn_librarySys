@@ -18,8 +18,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Base64;
 import java.util.List;
 
 @RestController
@@ -169,5 +171,24 @@ public class DocumentController {
         return ApiResponse.<Void>builder()
                 .message("Document quantity updated successfully")
                 .build();
+    }
+
+    @GetMapping("/{documentId}/read")
+    public ApiResponse<String> readDocument(
+            @PathVariable Long documentId,
+            @RequestParam(value = "page", defaultValue = "1") int page) {
+        try {
+            byte[] pageContent = documentService.getDocumentPageContent(documentId, page);
+            String base64Content = Base64.getEncoder().encodeToString(pageContent);
+            return ApiResponse.<String>builder()
+                    .message("Page content retrieved successfully")
+                    .result(base64Content)
+                    .build();
+        } catch (Exception e) {
+            return ApiResponse.<String>builder()
+                    .code(1001)
+                    .message("Error retrieving page content: " + e.getMessage())
+                    .build();
+        }
     }
 }

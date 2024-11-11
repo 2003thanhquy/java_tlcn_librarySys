@@ -27,4 +27,5 @@ public interface DocumentService {
 
     void updateQuantity(DocumentQuantityUpdateRequest request);
 
+    byte[] getDocumentPageContent(Long documentId, int pageNumber);
 }
