@@ -43,6 +43,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.List;
@@ -102,6 +103,33 @@ public class DocumentServiceImpl implements DocumentService {
                 } catch (IOException e) {
                     log.error("Error uploading cover image to Cloudinary: {}", e.getMessage());
                     throw new AppException(ErrorCode.CLOUDINARY_UPLOAD_FAILED, "Error uploading cover image");
+                }
+            }
+
+            // 6. Upload file PDF và lưu vào thư mục "upload/documents/"
+            MultipartFile pdfFile = request.getPdfFile();
+            if (pdfFile != null && !pdfFile.isEmpty()) {
+                // Kiểm tra phần mở rộng
+                String fileNameOriginal = pdfFile.getOriginalFilename();
+                if (!fileNameOriginal.toLowerCase().endsWith(".pdf")) {
+                    throw new AppException(ErrorCode.FILE_UPLOAD_FAILED, "Chỉ cho phép upload file PDF");
+
+                }
+                try {
+                    // Tạo tên file duy nhất để tránh trùng lặp, ví dụ: sử dụng UUID
+                    String fileName = UUID.randomUUID().toString() + ".pdf";
+                    String uploadDir = "upload/documents/";
+                    File uploadDirFile = new File(uploadDir);
+                    if (!uploadDirFile.exists()) {
+                        uploadDirFile.mkdirs();
+                    }
+                    Path filePath = Paths.get(uploadDir).resolve(fileName);
+                    Files.copy(pdfFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+                    // Lưu đường dẫn file vào thuộc tính filePath của Document
+                    document.setDocumentLink(filePath.toString());
+                } catch (IOException e) {
+                    log.error("Error uploading PDF file: {}", e.getMessage());
+                    throw new AppException(ErrorCode.FILE_UPLOAD_FAILED, "Error uploading PDF file");
                 }
             }
 

@@ -38,7 +38,6 @@ public class SecurityConfig {
             "/api/v1/token",
             "/api/v1/auth/login-google",
             "/oauth2/**",
-            "/api/v1/program-classes/upload",
             "/api/v1/cloudinary/**"
     };
 

@@ -51,9 +51,6 @@ public class DocumentCreateRequest {
     // Mô tả ngắn về tài liệu
     private String description;
 
-    // Đường dẫn tới tài liệu điện tử (nếu có)
-    private String documentLink;
-
     // Giá của tài liệu
     private BigDecimal price;
 
@@ -69,4 +66,7 @@ public class DocumentCreateRequest {
 
     // Thêm trường MultipartFile cho coverImage
     private MultipartFile image;
+
+    // Đường dẫn tới tài liệu điện tử (nếu có)
+    private MultipartFile pdfFile; // File PDF
 }

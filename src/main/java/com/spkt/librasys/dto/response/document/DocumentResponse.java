@@ -29,7 +29,6 @@ public class DocumentResponse {
     private DocumentStatus status;
     private String description;
     private String coverImage;
-    private String documentLink;
     private BigDecimal price;
     private DocumentSize size;
     private Set<DocumentType> documentTypes;
