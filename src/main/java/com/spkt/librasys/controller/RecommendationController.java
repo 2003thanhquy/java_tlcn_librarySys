@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/v1/recommendations")
 @RequiredArgsConstructor
 public class RecommendationController {
 
@@ -25,7 +25,7 @@ public class RecommendationController {
      * @param size Kích thước trang (mặc định là 10).
      * @return ResponseEntity chứa PageDTO với danh sách các Document được đề xuất.
      */
-    @GetMapping("/recommendations/documents")
+    @GetMapping("/users")
     public ApiResponse<PageDTO<DocumentResponse>> getUserDocumentRecommendations(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {

@@ -35,6 +35,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -72,10 +73,11 @@ public class UserServiceImpl implements UserService {
             try {
                 int studentBatch = Integer.parseInt(email.substring(0, 2));
                 Long departmentCodeId = (long) Integer.parseInt(email.substring(3, 5));
-                Department department = departmentRepository.findByDepartmentCodeId(departmentCodeId).
-                        orElseThrow(()->new AppException(ErrorCode.DEPARTMENT_NOT_FOUND));
-                user.setDepartment(department);
-                user.setStudentBatch(studentBatch);
+                Optional<Department> department = departmentRepository.findByDepartmentCodeId(departmentCodeId);
+                if(department.isPresent()) {
+                    user.setDepartment(department.get());
+                    user.setStudentBatch(studentBatch);
+                }
             } catch (NumberFormatException e) {
                 log.error("email không phải là số hợp lệ: {}", email.substring(0, 4));
                 //throw new AppException(ErrorCode.INVALID_EMAIL_FORMAT, "Hai ký tự đầu tiên của email không phải là số hợp lệ.");

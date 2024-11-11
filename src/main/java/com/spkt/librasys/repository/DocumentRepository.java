@@ -27,6 +27,6 @@ public interface DocumentRepository extends JpaRepository<Document, Long> , JpaS
             "GROUP BY d.documentId ORDER BY COUNT(lt) DESC")
     Page<Object[]> findTopBorrowedDocuments(Pageable pageable);
 
-    Page<Document> findByCoursesIn(Collection<Set<Course>> courses, Pageable pageable);
+    Page<Document> findByCoursesIn(Set<Course> courses, Pageable pageable);
 
 }

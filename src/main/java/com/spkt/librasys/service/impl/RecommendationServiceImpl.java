@@ -20,7 +20,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -65,10 +64,9 @@ public class RecommendationServiceImpl implements RecommendationService {
         }
 
         // Lấy các tài liệu liên kết với các khóa học của người dùng với phân trang
-        Page<Document> recommendedDocumentsPage = documentRepository.findByCoursesIn(Collections.singleton(userCourses), pageable);
+        Page<Document> recommendedDocumentsPage = documentRepository.findByCoursesIn(userCourses, pageable);
 
         // Chuyển đổi các thực thể Document thành các DTO DocumentResponse sử dụng mapper
-
         Page<DocumentResponse> pages = recommendedDocumentsPage.map(documentMapper::toDocumentResponse);
 
         return new PageDTO<>(pages);
