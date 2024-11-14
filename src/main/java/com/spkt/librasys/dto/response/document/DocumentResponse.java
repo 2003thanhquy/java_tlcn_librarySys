@@ -1,5 +1,7 @@
 package com.spkt.librasys.dto.response.document;
 
+import com.spkt.librasys.dto.response.course.CourseResponse;
+import com.spkt.librasys.entity.Course;
 import com.spkt.librasys.entity.DocumentLocation;
 import com.spkt.librasys.entity.DocumentType;
 import com.spkt.librasys.entity.enums.DocumentSize;
@@ -33,5 +35,6 @@ public class DocumentResponse {
     private DocumentSize size;
     private Set<DocumentType> documentTypes;
     private Set<DocumentLocation> documentLocations;
+    private Set<CourseResponse> courses;
     // Thêm các trường khác nếu cần
 }

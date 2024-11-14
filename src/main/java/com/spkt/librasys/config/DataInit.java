@@ -27,6 +27,7 @@ public class DataInit implements CommandLineRunner {
     DocumentRepository documentRepository;
     DocumentTypeRepository documentTypeRepository;
     private final WarehouseRepository warehouseRepository;
+    private final LoanPolicyRepository loanPolicyRepository;
 
     @Override
     @Transactional // Thêm annotation này
@@ -161,6 +162,28 @@ public class DataInit implements CommandLineRunner {
                     .build();
 
             documentTypeRepository.saveAll(Arrays.asList(type1, type2, type3, type4));
+
+            LoanPolicy loanPolicy1 = LoanPolicy.builder()
+                    .maxRenewals(2)
+                    .maxLoanDays(90)
+                    .documentType(type1)
+                    .build();
+            LoanPolicy loanPolicy2 = LoanPolicy.builder()
+                    .maxRenewals(2)
+                    .maxLoanDays(90)
+                    .documentType(type2)
+                    .build();
+            LoanPolicy loanPolicy3= LoanPolicy.builder()
+                    .maxRenewals(2)
+                    .maxLoanDays(90)
+                    .documentType(type3)
+                    .build();
+            LoanPolicy loanPolicy4 = LoanPolicy.builder()
+                    .maxRenewals(2)
+                    .maxLoanDays(90)
+                    .documentType(type4)
+                    .build();
+            loanPolicyRepository.saveAll(List.of(loanPolicy1, loanPolicy2, loanPolicy3,loanPolicy4));
         }
 
         //insert wareHouse default document -> warehouse

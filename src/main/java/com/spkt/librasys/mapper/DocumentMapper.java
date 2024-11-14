@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses={CourseMapper.class})
 public interface DocumentMapper {
 
     @Mapping(target = "documentTypes", ignore = true) // Bỏ qua vì sẽ gán thủ công trong service
@@ -19,6 +19,7 @@ public interface DocumentMapper {
 
     @Mapping(target = "documentTypes", source = "documentTypes") // Chuyển đổi DocumentType thành ID
     @Mapping(target = "documentLocations", source = "locations") // Ánh xạ locations vào documentLocations
+    @Mapping(target = "courses", source = "courses")
     DocumentResponse toDocumentResponse(Document document);
 
     //@BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

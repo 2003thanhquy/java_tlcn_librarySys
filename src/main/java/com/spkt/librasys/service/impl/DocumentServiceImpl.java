@@ -65,6 +65,7 @@ public class DocumentServiceImpl implements DocumentService {
     DocumentHistoryRepository documentHistoryRepository;
     RackRepository rackRepository;
     CloudinaryService cloudinaryService;
+    CourseRepository courseRepository;
 
     @Override
     @Transactional
@@ -81,11 +82,15 @@ public class DocumentServiceImpl implements DocumentService {
             Document document = documentMapper.toDocument(request);
             document.setDocumentTypes(documentTypes);
 
-            // 4. Tạo DocumentLocation và gán vào Document
+            // 4. Lấy và thêm các Course vào Document
+            Set<Course> courses = getCoursesByIds(request.getCourseIds());
+            document.setCourses(courses);
+
+            // 5. Tạo DocumentLocation và gán vào Document
             DocumentLocation location = createDocumentLocation(warehouse, request.getQuantity(), request.getSize());
             document.getLocations().add(location);
 
-            // 5. Upload ảnh bìa lên Cloudinary trước khi lưu Document (nếu có)
+            // 6. Upload ảnh bìa lên Cloudinary trước khi lưu Document (nếu có)
             MultipartFile coverImage = request.getImage();
             if (coverImage != null && !coverImage.isEmpty()) {
                 try {
@@ -106,17 +111,14 @@ public class DocumentServiceImpl implements DocumentService {
                 }
             }
 
-            // 6. Upload file PDF và lưu vào thư mục "upload/documents/"
+            // 7. Upload file PDF và lưu vào thư mục "upload/documents/"
             MultipartFile pdfFile = request.getPdfFile();
             if (pdfFile != null && !pdfFile.isEmpty()) {
-                // Kiểm tra phần mở rộng
                 String fileNameOriginal = pdfFile.getOriginalFilename();
                 if (!fileNameOriginal.toLowerCase().endsWith(".pdf")) {
                     throw new AppException(ErrorCode.FILE_UPLOAD_FAILED, "Chỉ cho phép upload file PDF");
-
                 }
                 try {
-                    // Tạo tên file duy nhất để tránh trùng lặp, ví dụ: sử dụng UUID
                     String fileName = UUID.randomUUID().toString() + ".pdf";
                     String uploadDir = "upload/documents/";
                     File uploadDirFile = new File(uploadDir);
@@ -125,7 +127,6 @@ public class DocumentServiceImpl implements DocumentService {
                     }
                     Path filePath = Paths.get(uploadDir).resolve(fileName);
                     Files.copy(pdfFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-                    // Lưu đường dẫn file vào thuộc tính filePath của Document
                     document.setDocumentLink(filePath.toString());
                 } catch (IOException e) {
                     log.error("Error uploading PDF file: {}", e.getMessage());
@@ -133,21 +134,26 @@ public class DocumentServiceImpl implements DocumentService {
                 }
             }
 
-            // 6. Lưu Document sau khi hoàn tất tất cả thông tin
+            // 8. Lưu Document sau khi hoàn tất tất cả thông tin
             Document savedDocument = documentRepository.save(document);
 
-            // 7. Lưu DocumentHistory (nếu có)
+            // 9. Lưu DocumentHistory (nếu có)
             saveDocumentHistory(savedDocument, location, request.getQuantity(), DocumentHistory.Action.ADD);
 
-            // 8. Trả về DocumentResponse
+            // 10. Trả về DocumentResponse
             return documentMapper.toDocumentResponse(savedDocument);
 
         } catch (Exception e) {
             log.error("Error creating document: {}", e.getMessage());
             throw new AppException(ErrorCode.DATABASE_ERROR, "Error creating document");
-       }
+        }
     }
 
+
+    // Phương thức bổ trợ để lấy danh sách Course theo ID
+    private Set<Course> getCoursesByIds(Set<Long> courseIds) {
+        return courseRepository.findAllById(courseIds).stream().collect(Collectors.toSet());
+    }
 
     private Set<DocumentType> getDocumentTypes(Set<Long> documentTypeIds) {
         Set<DocumentType> documentTypes = new HashSet<>(documentTypeRepository.findAllById(documentTypeIds));

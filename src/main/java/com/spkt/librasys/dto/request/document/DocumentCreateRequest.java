@@ -61,6 +61,9 @@ public class DocumentCreateRequest {
     @NotNull(message = "Document type IDs are required")
     private Set<Long> documentTypeIds;
 
+    //@NotNull(message = "Course IDs are required")
+    private Set<Long> courseIds;
+
     @NotNull(message = "Warehouse ID is required")
     private Long warehouseId;
 
@@ -69,4 +72,5 @@ public class DocumentCreateRequest {
 
     // Đường dẫn tới tài liệu điện tử (nếu có)
     private MultipartFile pdfFile; // File PDF
+
 }
