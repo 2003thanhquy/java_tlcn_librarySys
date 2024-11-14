@@ -1,5 +1,6 @@
 package com.spkt.librasys.service.impl;
 
+import com.spkt.librasys.config.NotificationWebSocketController;
 import com.spkt.librasys.dto.PageDTO;
 import com.spkt.librasys.dto.request.notification.NotificationCreateRequest;
 import com.spkt.librasys.dto.response.notification.NotificationResponse;
@@ -37,6 +38,7 @@ public class NotificationServiceImpl implements NotificationService {
     AuthenticationService authenticationService;
     NotificationMapper notificationMapper;
     SecurityContextService  securityContextService;
+    NotificationWebSocketController notificationWebSocketController;
 
     @Override
     @Transactional
@@ -59,7 +61,9 @@ public class NotificationServiceImpl implements NotificationService {
                         .status(Notification.NotificationStatus.UNREAD)
                         .build())
                 .collect(Collectors.toList());
-
+        for (Notification notification : notifications) {
+            notificationWebSocketController.sendNotificationToUser(notification.getUser().getUsername(), notificationMapper.toNotificationResponse(notification));
+        }
         notificationRepository.saveAll(notifications);
     }
 

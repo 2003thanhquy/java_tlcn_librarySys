@@ -50,13 +50,10 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity.authorizeHttpRequests(request->
                         request.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Cho phép tất cả các yêu cầu OPTIONS
+                                .requestMatchers("/ws/**").permitAll()
                                 .requestMatchers(HttpMethod.POST,PUBLIC_POST_ENDPOINTS).permitAll()
                                 .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
                                 .requestMatchers( "/swagger-ui/**", "/swagger-ui.html","/api-docs", "/api-docs/**").permitAll() // Cho phép truy cập các endpoint của Swagger
-
-
-                                //.hasAuthority("SCOPE_ADMIN")
-                                // .hasRole(Role.ADMIN.name())
                                 .anyRequest().authenticated())
 //                .oauth2Login(oauth2Login ->
 //                        oauth2Login
@@ -90,10 +87,11 @@ public class SecurityConfig {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
-
-        corsConfiguration.addAllowedOrigin("*");
+        corsConfiguration.addAllowedOrigin("http://localhost:3000"); // Domain
+        corsConfiguration.setAllowCredentials(true); // Để sử dụng cùng với `allowedOrigin`
         corsConfiguration.addAllowedMethod("*");
         corsConfiguration.addAllowedHeader("*");
+
 
         UrlBasedCorsConfigurationSource urlBasedCorsConfigurationSource = new UrlBasedCorsConfigurationSource();
         urlBasedCorsConfigurationSource.registerCorsConfiguration("/**", corsConfiguration);

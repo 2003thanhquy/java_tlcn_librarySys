@@ -31,6 +31,9 @@ public class CustomJwtDecode implements JwtDecoder{
 
     @Override
     public Jwt decode(String token) throws JwtException {
+        if(token.startsWith("Bearer ")){
+            token = token.substring(7);
+        }
         var response = authenticationService.introspect(
                 IntrospectRequest.builder().token(token).build());
 
