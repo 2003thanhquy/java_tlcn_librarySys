@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity(name = "zones")
+@Entity(name = "display_zones")
 public class DisplayZone {
 
     @Id
