@@ -40,6 +40,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.text.ParseException;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -91,6 +92,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         String token = generationToken(user);
+        // Cập nhật thời gian đăng nhập cuối cùng
+        user.setLastLoginDate(LocalDateTime.now());
+        userRepository.save(user);
         return AuthenticationResponse.builder()
                 .token(token)
                 .authenticated(true)

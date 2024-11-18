@@ -106,7 +106,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
 
         Document document = documentRepository.findById(loanTransaction.getDocument().getDocumentId())
                 .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND));
-
+        System.out.println("document"+document.getAvailableCount());
         if (document.getAvailableCount() <= 0) {
             throw new AppException(ErrorCode.RESOURCE_CONFLICT, "Số lượng sách không đủ để mượn.");
         }

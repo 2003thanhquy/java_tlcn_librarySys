@@ -79,6 +79,8 @@ public class User {
 
     @Column(name = "student_batch")
     int studentBatch;
+    @Column(name = "last_login_date")
+    LocalDateTime lastLoginDate; // Thời gian đăng nhập cuối cùng
     // Quan hệ Many-to-One với Department
     @ManyToOne
     @JoinColumn(name = "department_id")

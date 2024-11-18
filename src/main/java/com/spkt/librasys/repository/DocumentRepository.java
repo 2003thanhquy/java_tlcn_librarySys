@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
@@ -28,5 +29,36 @@ public interface DocumentRepository extends JpaRepository<Document, Long> , JpaS
     Page<Object[]> findTopBorrowedDocuments(Pageable pageable);
 
     Page<Document> findByCoursesIn(Set<Course> courses, Pageable pageable);
+
+
+    // Tổng số sách
+    @Query("SELECT COUNT(d) FROM documents_001 d")
+    long countTotalDocuments();
+
+    // Tổng số sách đang được mượn
+    @Query("SELECT SUM(d.quantity - d.availableCount) FROM documents_001 d")
+    long countBorrowedDocuments();
+
+    // Tổng số sách còn trong kho
+    @Query("SELECT SUM(d.availableCount) FROM documents_001 d")
+    long countAvailableDocuments();
+
+    // Tổng số sách đã bị hư hỏng hoặc mất
+    @Query("SELECT COUNT(d) FROM documents_001 d WHERE d.status = 'DISABLED'")
+    long countDisabledDocuments();
+
+    // Số sách theo từng thể loại
+    @Query("SELECT dt.typeName, COUNT(d) FROM documents_001 d " +
+            "JOIN d.documentTypes dt " +
+            "GROUP BY dt.typeName")
+    List<Object[]> countDocumentsByType();
+
+    // Số sách theo danh sách code môn mở lớp trong năm
+    @Query("SELECT pc.year, c.courseCode, COUNT(d) FROM documents_001 d " +
+            "JOIN d.courses c " +
+            "JOIN c.programClasses pc " +
+            "WHERE pc.year = :year " +
+            "GROUP BY pc.year, c.courseCode")
+    List<Object[]> countDocumentsByCourseCode(@Param("year") String year);
 
 }

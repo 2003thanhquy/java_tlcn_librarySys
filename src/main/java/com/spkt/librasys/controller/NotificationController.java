@@ -79,4 +79,12 @@ public class NotificationController {
                 .result("Notification has been deleted")
                 .build();
     }
+    @GetMapping("/unread-count")
+    public ApiResponse<Long> getUnreadNotificationCount() {
+        Long unreadCount = notificationService.getUnreadNotificationCountForCurrentUser();
+        return ApiResponse.<Long>builder()
+                .result(unreadCount)
+                .message("Unread notification count fetched successfully")
+                .build();
+    }
 }

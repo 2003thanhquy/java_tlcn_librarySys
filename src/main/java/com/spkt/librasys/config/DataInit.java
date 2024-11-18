@@ -187,11 +187,11 @@ public class DataInit implements CommandLineRunner {
         }
 
         //insert wareHouse default document -> warehouse
+        Warehouse warehouse = Warehouse.builder()
+                .warehouseName("Main Warehouse")
+                .location("123 Main St, City Center")
+                .build();
         if (warehouseRepository.count() < 1) {
-            Warehouse warehouse = Warehouse.builder()
-                    .warehouseName("Main Warehouse")
-                    .location("123 Main St, City Center")
-                    .build();
             warehouseRepository.save(warehouse); // Lưu Warehouse vào cơ sở dữ liệu
             // Tạo dữ liệu mẫu cho DisplayZone trong Warehouse
             DisplayZone displayZone = DisplayZone.builder()
@@ -241,6 +241,11 @@ public class DataInit implements CommandLineRunner {
             // Đảm bảo chèn đầy đủ 40 documents
             // Định dạng ngày tháng
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/d/yyyy");
+               DocumentLocation location = DocumentLocation.builder()
+                    .warehouseId(warehouse.getWarehouseId())
+                    .rackId(null) // Không gán rack cụ thể lúc tạo
+                    .build();
+            location.updateTotalSize();
 
             // Tạo danh sách các Documents
             List<Document> documents = Arrays.asList(
@@ -261,6 +266,11 @@ public class DataInit implements CommandLineRunner {
                             .price(new BigDecimal("67.62"))
                             .publishedDate(null) // "########" được chuyển thành null
                             .publisher("Publisher D")
+                            .locations(List.of(DocumentLocation.builder()
+                                    .size(DocumentSize.LARGE)
+                                    .warehouseId(warehouse.getWarehouseId())
+                                    .rackId(null) // Không gán rack cụ thể lúc tạo
+                                    .quantity(19).build()))
                             .build(),
 
                     // Document 2
@@ -280,6 +290,11 @@ public class DataInit implements CommandLineRunner {
                             .price(new BigDecimal("17.01"))
                             .publishedDate(LocalDate.parse("1/3/2021", formatter))
                             .publisher("Publisher C")
+                            .locations(List.of(DocumentLocation.builder()
+                                    .size(DocumentSize.SMALL)
+                                    .warehouseId(warehouse.getWarehouseId())
+                                    .rackId(null) // Không gán rack cụ thể lúc tạo
+                                    .quantity(49).build()))
                             .build(),
 
                     // Document 3

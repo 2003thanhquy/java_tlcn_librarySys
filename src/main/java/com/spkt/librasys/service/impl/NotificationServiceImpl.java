@@ -123,4 +123,15 @@ public class NotificationServiceImpl implements NotificationService {
                 .orElseThrow(() -> new AppException(ErrorCode.NOTIFICATION_NOT_FOUND));
         return notificationMapper.toNotificationResponse(notification);
     }
+
+    @Override
+    public Long getUnreadNotificationCountForCurrentUser() {
+        User currentUser = securityContextService.getCurrentUser();
+        if (currentUser == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND, "Current user not found");
+        }
+        return notificationRepository.countByUserAndStatus(currentUser, Notification.NotificationStatus.UNREAD);
+
+    }
+
 }

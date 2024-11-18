@@ -27,4 +27,6 @@ public interface NotificationService {
 
     // Lấy thông báo theo ID
     NotificationResponse getNotificationById(Long notificationId);
+    //để xử lý việc đếm thông báo chưa đọc
+    Long getUnreadNotificationCountForCurrentUser();
 }

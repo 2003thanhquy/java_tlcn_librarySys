@@ -1,9 +1,7 @@
 package com.spkt.librasys.controller;
 
 import com.spkt.librasys.dto.response.ApiResponse;
-import com.spkt.librasys.dto.response.dashboard.DashboardDocumentCountResponse;
-import com.spkt.librasys.dto.response.dashboard.DashboardLoanTransactionCountResponse;
-import com.spkt.librasys.dto.response.dashboard.DashboardTopBorrowedDocumentsResponse;
+import com.spkt.librasys.dto.response.dashboard.*;
 import com.spkt.librasys.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,9 +10,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/dashboard")
+@RequestMapping("/api/v1/dashboards")
 @Slf4j
 public class DashboardController {
 
@@ -106,6 +108,58 @@ public class DashboardController {
         return ApiResponse.<Long>builder()
                 .message("Monthly active users count retrieved successfully")
                 .result(count)
+                .build();
+    }
+    // API: Thống kê người dùng tổng hợp
+    @GetMapping("/users/statistics")
+    public ApiResponse<UserStatisticsResponse> getUserStatistics(
+            @RequestParam(required = false) Integer month,
+            @RequestParam(required = false) Integer year) {
+
+        // Lấy dữ liệu thống kê từ service
+        UserStatisticsResponse response = dashboardService.getUserStatistics(month, year);
+
+        return ApiResponse.<UserStatisticsResponse>builder()
+                .message("User statistics retrieved successfully")
+                .result(response)
+                .build();
+    }
+    // API: Thống kê tài liệu
+    @GetMapping("/documents/statistics")
+    public ApiResponse<DocumentStatisticsResponse> getDocumentStatistics(
+            @RequestParam(defaultValue = "#{T(java.time.Year).now().toString()}") String year) {
+
+        DocumentStatisticsResponse response = dashboardService.getDocumentStatistics(year);
+
+        return ApiResponse.<DocumentStatisticsResponse>builder()
+                .message("Document statistics retrieved successfully")
+                .result(response)
+                .build();
+    }
+    // API: Thống kê mượn trả tổng hợp
+    @GetMapping("/loans/statistics")
+    public ApiResponse<LoanTransactionStatisticsResponse> getLoanTransactionStatistics(
+            @RequestParam(defaultValue = "#{T(java.time.Year).now().value}") int year) {
+
+        LoanTransactionStatisticsResponse response = dashboardService.getLoanTransactionStatistics(year);
+
+        return ApiResponse.<LoanTransactionStatisticsResponse>builder()
+                .message("Loan transaction statistics retrieved successfully")
+                .result(response)
+                .build();
+    }
+
+    // API: Bảng hoạt động mượn trả
+    @GetMapping("/loans/activities")
+    public ApiResponse<List<Map<String, Object>>> getLoanTransactionActivities(
+            @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate) {
+
+        List<Map<String, Object>> response = dashboardService.getLoanTransactionActivities(startDate, endDate);
+
+        return ApiResponse.<List<Map<String, Object>>>builder()
+                .message("Loan transaction activities retrieved successfully")
+                .result(response)
                 .build();
     }
 }
