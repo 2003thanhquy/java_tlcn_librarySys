@@ -52,9 +52,14 @@ public class DocumentController {
                 .build();
     }
 
-    @PutMapping("/{id}")
-    public ApiResponse<DocumentResponse> updateDocument(@PathVariable Long id, @RequestBody @Valid DocumentUpdateRequest request) {
+    @PutMapping(value = "/{id}", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    public ApiResponse<DocumentResponse> updateDocument(
+            @PathVariable Long id,
+            @ModelAttribute @Valid DocumentUpdateRequest request) {
+        // Gọi service để cập nhật document
         DocumentResponse response = documentService.updateDocument(id, request);
+
+        // Trả về kết quả
         return ApiResponse.<DocumentResponse>builder()
                 .message("Document updated successfully")
                 .result(response)

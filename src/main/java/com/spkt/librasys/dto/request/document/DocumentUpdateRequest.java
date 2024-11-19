@@ -2,11 +2,12 @@ package com.spkt.librasys.dto.request.document;
 
 import com.spkt.librasys.entity.enums.DocumentSize;
 import com.spkt.librasys.entity.enums.DocumentStatus;
-import lombok.*;
-import lombok.experimental.FieldDefaults;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Set;
@@ -40,10 +41,6 @@ public class DocumentUpdateRequest {
 
     String description;
 
-    String documentLink;
-
-    String coverImage;
-
     @NotNull(message = "Size is required")
     DocumentSize size;
 
@@ -51,5 +48,9 @@ public class DocumentUpdateRequest {
     DocumentStatus status;
 
     @NotNull(message = "Document type IDs are required")
-    Set<Long> documentTypeIds; // Sử dụng Set để tránh trùng lặp
+    Set<Long> documentTypeIds;
+
+    // Trường thêm để hỗ trợ cập nhật file ảnh và PDF
+    MultipartFile image; // Ảnh bìa
+    MultipartFile pdfFile; // File PDF
 }

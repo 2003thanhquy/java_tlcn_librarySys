@@ -199,21 +199,76 @@ public class DocumentServiceImpl implements DocumentService {
         Document document = documentRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND));
 
-        // 2. Cập nhật Document bằng mapper mà không thay đổi quantity
+        // 2. Cập nhật thông tin cơ bản của Document
         documentMapper.updateDocument(document, request);
 
-        // 3. Cập nhật DocumentType nếu có thay đổi trong request
+        // 3. Cập nhật DocumentType nếu có thay đổi
         if (request.getDocumentTypeIds() != null && !request.getDocumentTypeIds().isEmpty()) {
             Set<DocumentType> documentTypes = getDocumentTypes(request.getDocumentTypeIds());
             document.setDocumentTypes(documentTypes);
         }
 
-        // 4. Lưu Document đã cập nhật
+        // 4. Cập nhật hình ảnh (nếu có)
+        MultipartFile image = request.getImage();
+        if (image != null && !image.isEmpty()) {
+            try {
+                // Xóa ảnh cũ trên Cloudinary (nếu có)
+                if (document.getImagePublicId() != null) {
+                    cloudinaryService.deleteFile(document.getImagePublicId());
+                }
+
+                // Upload ảnh mới lên Cloudinary
+                String publicId = UUID.randomUUID().toString();
+                Map<String, Object> options = Map.of(
+                        "folder", "document",
+                        "overwrite", true,
+                        "public_id", publicId
+                );
+                Map uploadResult = cloudinaryService.uploadFile(image, options);
+                document.setCoverImage((String) uploadResult.get("secure_url"));
+                document.setImagePublicId(publicId);
+            } catch (IOException e) {
+                log.error("Error uploading cover image to Cloudinary: {}", e.getMessage());
+                throw new AppException(ErrorCode.CLOUDINARY_UPLOAD_FAILED, "Error uploading cover image");
+            }
+        }
+
+        // 5. Cập nhật file PDF (nếu có)
+        MultipartFile pdfFile = request.getPdfFile();
+        if (pdfFile != null && !pdfFile.isEmpty()) {
+            try {
+                // Kiểm tra định dạng file
+                if (!pdfFile.getOriginalFilename().toLowerCase().endsWith(".pdf")) {
+                    throw new AppException(ErrorCode.FILE_UPLOAD_FAILED, "Chỉ cho phép upload file PDF");
+                }
+
+                // Xóa file PDF cũ (nếu có)
+                if (document.getDocumentLink() != null) {
+                    Files.deleteIfExists(Paths.get(document.getDocumentLink()));
+                }
+
+                // Upload file PDF mới
+                String fileName = UUID.randomUUID().toString() + ".pdf";
+                String uploadDir = "upload/documents/";
+                Path filePath = Paths.get(uploadDir).resolve(fileName);
+                Files.createDirectories(filePath.getParent());
+                Files.copy(pdfFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+                // Gán đường dẫn mới vào document
+                document.setDocumentLink(filePath.toString());
+            } catch (IOException e) {
+                log.error("Error uploading PDF file: {}", e.getMessage());
+                throw new AppException(ErrorCode.FILE_UPLOAD_FAILED, "Error uploading PDF file");
+            }
+        }
+
+        // 6. Lưu Document sau khi cập nhật
         Document updatedDocument = documentRepository.save(document);
 
-        // 5. Trả về DocumentResponse
+        // 7. Trả về DocumentResponse
         return documentMapper.toDocumentResponse(updatedDocument);
     }
+
 
     @Override
     public DocumentResponse getDocumentById(Long id) {
