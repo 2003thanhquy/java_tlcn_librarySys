@@ -1,6 +1,7 @@
 package com.spkt.librasys.controller;
 
 import com.spkt.librasys.dto.PageDTO;
+import com.spkt.librasys.dto.request.BarcodeScanRequest;
 import com.spkt.librasys.dto.request.loanTransaction.*;
 import com.spkt.librasys.dto.response.ApiResponse;
 import com.spkt.librasys.dto.response.LoanTransactionResponse;
@@ -13,6 +14,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -40,11 +43,11 @@ public class LoanTransactionController {
         LoanTransactionResponse response;
         String message = switch (request.getAction()) {
             case RECEIVE -> {
-                response = loanTransactionService.receiveDocument(request.getTransactionId());
+                response = loanTransactionService.receiveDocument(request.getTransactionId(),true);
                 yield "Người dùng đã nhận sách thành công";
             }
             case RETURN_REQUEST -> {
-                response = loanTransactionService.returnDocument(request.getTransactionId());
+                response = loanTransactionService.returnDocument(request.getTransactionId(),true);
                 yield "Sách đã được trả thành công";
             }
             case CANCEL -> {
@@ -129,4 +132,21 @@ public class LoanTransactionController {
                 .result(response)
                 .build();
     }
+    @PostMapping("/scan-qrcode")
+    public ApiResponse<LoanTransactionResponse> handleBarcodeScan(@RequestBody @Valid BarcodeScanRequest request) {
+        LoanTransactionResponse response = loanTransactionService.handleQrcodeScan(request.getBarcodeData());
+        return ApiResponse.<LoanTransactionResponse>builder()
+                .message("Giao dịch được cập nhật thành công dựa trên quét mã vạch")
+                .result(response)
+                .build();
+    }
+    @GetMapping("/{transactionId}/qrcode-image")
+    public ResponseEntity<byte[]> getBarcodeImage(@PathVariable Long transactionId) {
+        byte[] qrCodeImage = loanTransactionService.getQrcodeImage(transactionId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .body(qrCodeImage);
+    }
+
+
 }

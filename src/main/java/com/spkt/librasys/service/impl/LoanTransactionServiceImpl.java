@@ -1,5 +1,16 @@
 package com.spkt.librasys.service.impl;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.WriterException;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.MACSigner;
+import com.nimbusds.jose.crypto.MACVerifier;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.ParseException;
 import com.spkt.librasys.constant.PredefinedRole;
 import com.spkt.librasys.dto.request.loanTransaction.*;
 import com.spkt.librasys.dto.request.notification.NotificationCreateRequest;
@@ -16,9 +27,12 @@ import com.spkt.librasys.service.LoanTransactionService;
 import com.spkt.librasys.service.NotificationService;
 import com.spkt.librasys.service.SecurityContextService;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.NonFinal;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -27,12 +41,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,6 +68,10 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
     DocumentMoveService documentMoveService;
     RackRepository rackRepository;
     WarehouseRepository warehouseRepository;
+
+    @NonFinal
+    @Value("${jwt.signer-key}")
+    protected String SIGNER_KEY;
 
     @Override
     @Transactional
@@ -195,19 +214,12 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
     @Override
     @Transactional
     @PreAuthorize("hasRole('USER')")
-    public LoanTransactionResponse receiveDocument(Long transactionId) {
+    public LoanTransactionResponse receiveDocument(Long transactionId, boolean isUser) {
         LoanTransaction loanTransaction = loanTransactionRepository.findById(transactionId)
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
 
-        User currentUser =  securityContextService.getCurrentUser();
-
-        // Kiểm tra xem người dùng có phải là người đã thực hiện giao dịch không
-        if (!loanTransaction.getUser().getUserId().equals(currentUser.getUserId())) {
-            throw new AppException(ErrorCode.UNAUTHORIZED, "Bạn không có quyền nhận sách này.");
-        }
-
-        if (!loanTransaction.getStatus().equals(LoanTransaction.Status.APPROVED)) {
-            throw new AppException(ErrorCode.INVALID_REQUEST, "Giao dịch chưa được phê duyệt.");
+        if(isUser){
+            validateUserPermissions(loanTransaction,LoanTransaction.Status.APPROVED);
         }
         // Thiết lập ngày mượn sách và ngày dự kiến trả dựa trên maxLoanDays của tài liệu
 
@@ -235,7 +247,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
 
         // Gửi thông báo nhận sách
         NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
-                .userIds(List.of(currentUser.getUserId()))
+                .userIds(List.of(loanTransaction.getUser().getUserId()))
                 .title("Sách đã được nhận")
                 .content(String.format("Bạn đã nhận sách '%s' thành công.", loanTransaction.getDocument().getDocumentName()))
                 .build();
@@ -246,18 +258,11 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
 
     @Override
     @Transactional
-    public LoanTransactionResponse returnDocument(Long transactionId) {
+    public LoanTransactionResponse returnDocument(Long transactionId, boolean isUser) {
         LoanTransaction loanTransaction = loanTransactionRepository.findById(transactionId)
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
-
-        User currentUser =  securityContextService.getCurrentUser();
-
-        if (!loanTransaction.getUser().getUserId().equals(currentUser.getUserId())) {
-            throw new AppException(ErrorCode.UNAUTHORIZED, "Bạn không có quyền trả sách này.");
-        }
-
-        if (!loanTransaction.getStatus().equals(LoanTransaction.Status.RECEIVED)) {
-            throw new AppException(ErrorCode.INVALID_REQUEST, "Giao dịch không ở trạng thái nhận sách.");
+        if (isUser) {
+            validateUserPermissions(loanTransaction, LoanTransaction.Status.RECEIVED);
         }
 
         // Cập nhật trạng thái giao dịch và số lượng sách khả dụng
@@ -803,6 +808,115 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         return transactions.map(loanTransactionMapper::toLoanTransactionResponse);
     }
 
+    @Override
+    @Transactional
+    @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+    public LoanTransactionResponse handleQrcodeScan(String barcodeData) {
+        // Giải mã mã vạch để lấy LoanTransactionId
+        Long transactionId = parseQrcodeToken(barcodeData);
+
+        // Lấy giao dịch mượn sách dựa trên LoanTransactionId
+        LoanTransaction loanTransaction = loanTransactionRepository.findById(transactionId)
+                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
+
+        // Kiểm tra quyền truy cập
+        User currentUser = securityContextService.getCurrentUser();
+        if (currentUser == null) {
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
+        }
+        // Cập nhật trạng thái giao dịch dựa trên trạng thái hiện tại
+        if (loanTransaction.getStatus() == LoanTransaction.Status.APPROVED) {
+            // Người dùng đang nhận sách
+            return receiveDocument(loanTransaction.getTransactionId(),false);
+        } else if (loanTransaction.getStatus() == LoanTransaction.Status.RECEIVED) {
+            return returnDocument(loanTransaction.getTransactionId(),false);
+        } else {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Không thể xử lý quét mã vạch cho trạng thái giao dịch hiện tại.");
+        }
+    }
+    private Long parseQrcodeToken(String barcodeToken) {
+        try {
+            // Phân tích JWT từ chuỗi barcodeToken
+            SignedJWT signedJWT = SignedJWT.parse(barcodeToken);
+
+            // Tạo đối tượng xác thực chữ ký số với khóa bí mật
+            JWSVerifier verifier = new MACVerifier(SIGNER_KEY.getBytes());
+
+            // Xác thực chữ ký số
+            if (!signedJWT.verify(verifier)) {
+                throw new AppException(ErrorCode.UNAUTHORIZED, "QR code không hợp lệ.");
+            }
+
+            // Kiểm tra thời gian hết hạn
+            Date expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+            if (expirationTime.before(new Date())) {
+                throw new AppException(ErrorCode.UNAUTHORIZED, "QR code đã hết hạn.");
+            }
+
+            // Trích xuất transactionId từ claims
+            Long transactionId = signedJWT.getJWTClaimsSet().getLongClaim("transactionId");
+            return transactionId;
+        } catch (JOSEException | java.text.ParseException e) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Dữ liệu QR code không hợp lệ.");
+        }
+    }
+    public String generateQrcodeToken(Long transactionId) {
+        JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
+        JWTClaimsSet claimsSet = new JWTClaimsSet.Builder()
+                .claim("transactionId", transactionId)
+                .issuer("")
+                .issueTime(new Date())
+                .expirationTime(new Date(
+                        Instant.now().plus(15, ChronoUnit.MINUTES).toEpochMilli())) // Thời gian hết hạn
+                .build();
+
+        Payload payload = new Payload(claimsSet.toJSONObject());
+        JWSObject jwsObject = new JWSObject(header, payload);
+
+        try {
+            jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
+            return jwsObject.serialize();
+        } catch (JOSEException e) {
+            log.error("Cannot create barcode token", e);
+            throw new AppException(ErrorCode.SERVER_ERROR);
+        }
+    }
+    public byte[] generateQRCodeImage(String barcodeToken) throws WriterException, IOException {
+        QRCodeWriter qrCodeWriter = new QRCodeWriter();
+        int width = 300;
+        int height = 300;
+        BitMatrix bitMatrix = qrCodeWriter.encode(barcodeToken, BarcodeFormat.QR_CODE, width, height);
+
+        ByteArrayOutputStream pngOutputStream = new ByteArrayOutputStream();
+        MatrixToImageWriter.writeToStream(bitMatrix, "PNG", pngOutputStream);
+        return pngOutputStream.toByteArray();
+    }
+
+
+    @Override
+    public byte[] getQrcodeImage(Long transactionId) {
+        // Kiểm tra quyền truy cập
+        LoanTransaction loanTransaction = loanTransactionRepository.findById(transactionId)
+                .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
+
+        User currentUser = securityContextService.getCurrentUser();
+        if (!loanTransaction.getUser().getUserId().equals(currentUser.getUserId())) {
+            throw new AppException(ErrorCode.UNAUTHORIZED, "Bạn không có quyền lấy QR code cho giao dịch này.");
+        }
+
+        // Tạo barcode token
+        String barcodeToken = generateQrcodeToken(transactionId);
+
+        try {
+            // Tạo hình ảnh QR code
+            return generateQRCodeImage(barcodeToken);
+        } catch (WriterException | IOException e) {
+            throw new AppException(ErrorCode.SERVER_ERROR, "Lỗi khi tạo QR code");
+        }
+    }
+
+
+
     // Phương thức lấy danh sách ID của các người dùng có vai trò là MANAGER
     private List<String> getManagerUserIds() {
         return userRepository.findAll().stream()
@@ -810,6 +924,23 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                         .anyMatch(role -> PredefinedRole.MANAGER_ROLE.equals(role.getName())))
                 .map(User::getUserId)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Kiểm tra quyền và trạng thái của giao dịch nếu người dùng là user.
+     */
+    private void validateUserPermissions(LoanTransaction loanTransaction,LoanTransaction.Status requiredStatus){
+        User currentUser = securityContextService.getCurrentUser();
+
+        // Kiểm tra xem người dùng có phải là người đã thực hiện giao dịch không
+        if (!loanTransaction.getUser().getUserId().equals(currentUser.getUserId())) {
+            throw new AppException(ErrorCode.UNAUTHORIZED, "Bạn không có quyền thực hiện giao dịch này.");
+        }
+
+        // Kiểm tra trạng thái giao dịch
+        if (!loanTransaction.getStatus().equals(requiredStatus)) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, String.format("Giao dịch không ở trạng thái %s.", requiredStatus));
+        }
     }
 
 

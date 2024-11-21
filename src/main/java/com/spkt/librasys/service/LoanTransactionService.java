@@ -39,7 +39,7 @@ public interface LoanTransactionService {
      * @param transactionId ID của giao dịch mượn sách cần xác nhận.
      * @return LoanTransactionResponse chứa thông tin giao dịch đã cập nhật.
      */
-    LoanTransactionResponse receiveDocument(Long transactionId);
+    LoanTransactionResponse receiveDocument(Long transactionId, boolean isUser);
     LoanTransactionResponse confirmReturnDocument(LoanTransactionReturnRequest request);
 
     /**
@@ -56,7 +56,7 @@ public interface LoanTransactionService {
      * @param transactionId ID của giao dịch mượn sách cần trả.
      * @return LoanTransactionResponse chứa thông tin giao dịch đã cập nhật.
      */
-    LoanTransactionResponse returnDocument(Long transactionId);
+    LoanTransactionResponse returnDocument(Long transactionId, boolean isUser);
 
     /**
      * Người dùng hủy yêu cầu mượn sách trước khi được phê duyệt.
@@ -103,4 +103,8 @@ public interface LoanTransactionService {
      * @return PageDTO chứa danh sách LoanTransactionResponse của các sách đang được mượn.
      */
     Page<LoanTransactionResponse> getUserBorrowedBooks(Pageable pageable);
+
+    LoanTransactionResponse handleQrcodeScan(String barcodeData);
+
+    byte[] getQrcodeImage(Long transactionId);
 }
