@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -173,7 +174,7 @@ public class DashboardServiceImpl implements DashboardService {
                 .collect(Collectors.toList());
 
         // Bảng thống kê hoạt động mượn trả
-        List<Map<String, Object>> loanActivities = loanTransactionRepository.getLoanTransactionActivities(LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31)).stream()
+        List<Map<String, Object>> loanActivities = loanTransactionRepository.getLoanTransactionActivities(LocalDateTime.of(year, 1, 1,0,0), LocalDateTime.of(year, 12, 31,23,59)).stream()
                 .map(obj -> {
                     Map<String, Object> map = new HashMap<>();
                     map.put("userId", obj[0]);
@@ -197,8 +198,12 @@ public class DashboardServiceImpl implements DashboardService {
                 .build();
     }
     @Override
-    public List<Map<String, Object>> getLoanTransactionActivities(LocalDate startDate, LocalDate endDate) {
-        return loanTransactionRepository.getLoanTransactionActivities(startDate, endDate).stream()
+    public Map<String, Object> getLoanTransactionActivities(LocalDate startDate, LocalDate endDate) {
+        // Chuyển đổi LocalDate sang LocalDateTime
+        LocalDateTime startDateTime = startDate.atStartOfDay(); // 00:00:00
+        LocalDateTime endDateTime = endDate.atTime(23, 59, 59); // 23:59:59
+
+        var results = loanTransactionRepository.getLoanTransactionActivities(startDateTime, endDateTime).stream()
                 .map(obj -> {
                     Map<String, Object> map = new HashMap<>();
                     map.put("userId", obj[0]);
@@ -211,5 +216,18 @@ public class DashboardServiceImpl implements DashboardService {
                     return map;
                 })
                 .collect(Collectors.toList());
+        // Tính tổng số lượng cho từng trạng thái
+        Map<String, Long> statusSummary = results.stream()
+                .collect(Collectors.groupingBy(
+                        item -> item.get("status").toString(), // Chuyển enum sang String
+                        Collectors.counting()
+                ));
+
+        // Trả về kết quả kèm tổng số trạng thái
+        Map<String, Object> summary = new HashMap<>();
+        summary.put("statusSummary", statusSummary); // Tổng kết trạng thái
+        summary.put("activities", results); // Danh sách hoạt động
+
+        return summary;
     }
 }

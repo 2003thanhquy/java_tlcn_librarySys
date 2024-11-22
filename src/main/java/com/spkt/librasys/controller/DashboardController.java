@@ -149,15 +149,15 @@ public class DashboardController {
                 .build();
     }
 
-    // API: Bảng hoạt động mượn trả
+    // API: Bảng hoạt động mượn trả theo startDate -> endDate
     @GetMapping("/loans/activities")
-    public ApiResponse<List<Map<String, Object>>> getLoanTransactionActivities(
+    public ApiResponse<Map<String, Object>> getLoanTransactionActivities(
             @RequestParam LocalDate startDate,
             @RequestParam LocalDate endDate) {
 
-        List<Map<String, Object>> response = dashboardService.getLoanTransactionActivities(startDate, endDate);
+        Map<String, Object> response = dashboardService.getLoanTransactionActivities(startDate, endDate);
 
-        return ApiResponse.<List<Map<String, Object>>>builder()
+        return ApiResponse.<Map<String, Object>>builder()
                 .message("Loan transaction activities retrieved successfully")
                 .result(response)
                 .build();

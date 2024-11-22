@@ -75,7 +75,7 @@ public interface LoanTransactionRepository extends JpaRepository<LoanTransaction
             "lt.loanDate, lt.returnDate, lt.status " +
             "FROM loan_transaction_001 lt " +
             "WHERE lt.loanDate BETWEEN :startDate AND :endDate")
-    List<Object[]> getLoanTransactionActivities(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    List<Object[]> getLoanTransactionActivities(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
 
 }

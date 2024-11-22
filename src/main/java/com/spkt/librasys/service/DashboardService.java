@@ -21,7 +21,7 @@ public interface DashboardService {
     DocumentStatisticsResponse getDocumentStatistics(String year);
 
     LoanTransactionStatisticsResponse getLoanTransactionStatistics(int year);
-    List<Map<String, Object>> getLoanTransactionActivities(LocalDate startDate, LocalDate endDate);
+    Map<String, Object> getLoanTransactionActivities(LocalDate startDate, LocalDate endDate);
 
 }
 
