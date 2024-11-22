@@ -99,14 +99,28 @@ public class DashboardController {
                 .build();
     }
 
-    // Lấy số lượng người dùng hoạt động hàng tháng
-    @GetMapping("/users/active/monthly/count")
+    // Lấy số lượng người dùng hoạt động hàng tháng hoac them nam
+    @GetMapping("/users/active")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<Long> getMonthlyActiveUsersCount(@RequestParam int month, @RequestParam int year) {
+    public ApiResponse<Long> getActiveUsersCount(
+            @RequestParam int year,
+            @RequestParam(required = false) Integer month
+    ) {
         log.info("Getting monthly active users count for month: {} and year: {}", month, year);
-        Long count = dashboardService.getMonthlyActiveUsersCount(month, year);
+        Long count;
+        String message;
+        if (month != null) {
+            // Lấy số lượng người dùng hoạt động theo tháng
+            count = dashboardService.getMonthlyActiveUsersCount(month, year);
+            message = String.format("Active users count for %02d/%d retrieved successfully", month, year);
+        } else {
+            // Lấy số lượng người dùng hoạt động trong cả năm
+            count = dashboardService.getYearlyActiveUsersCount(year);
+            message = String.format("Active users count for year %d retrieved successfully", year);
+        }
+
         return ApiResponse.<Long>builder()
-                .message("Monthly active users count retrieved successfully")
+                .message(message)
                 .result(count)
                 .build();
     }

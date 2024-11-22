@@ -30,18 +30,13 @@ public interface DocumentRepository extends JpaRepository<Document, Long> , JpaS
 
     Page<Document> findByCoursesIn(Set<Course> courses, Pageable pageable);
 
-
-    // Tổng số sách
-    @Query("SELECT COUNT(d) FROM documents_001 d")
+    // Tổng số sách trong thư viện
+    @Query("SELECT SUM(d.quantity) FROM documents_001 d")
     long countTotalDocuments();
 
-    // Tổng số sách đang được mượn
-    @Query("SELECT SUM(d.quantity - d.availableCount) FROM documents_001 d")
-    long countBorrowedDocuments();
-
-    // Tổng số sách còn trong kho
+    // Tổng số sách còn sẵn
     @Query("SELECT SUM(d.availableCount) FROM documents_001 d")
-    long countAvailableDocuments();
+    long countAvailableBooks();
 
     // Tổng số sách đã bị hư hỏng hoặc mất
     @Query("SELECT COUNT(d) FROM documents_001 d WHERE d.status = 'DISABLED'")

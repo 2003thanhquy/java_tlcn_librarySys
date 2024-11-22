@@ -71,9 +71,22 @@ public class DashboardServiceImpl implements DashboardService {
 
     @Override
     public Long getMonthlyActiveUsersCount(int month, int year) {
-        LocalDate start = LocalDate.of(year, month, 1);
-        LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
-        return userRepository.countActiveUsersInCurrentMonth(start, end);
+        // Ngày đầu tháng với thời gian 00:00:00
+        LocalDateTime start = LocalDateTime.of(year, month, 1, 0, 0);
+        // Ngày cuối tháng với thời gian 23:59:59
+        LocalDateTime end = start.withDayOfMonth(start.toLocalDate().lengthOfMonth()).toLocalDate().atTime(0,0);
+
+        return userRepository.countActiveUsersInCurrent(start, end);
+    }
+
+    @Override
+    public Long getYearlyActiveUsersCount(int year) {
+        // Ngày đầu năm với thời gian 00:00:00
+        LocalDateTime start = LocalDateTime.of(year, 1, 1, 0, 0);
+        // Ngày cuối năm với thời gian 23:59:59
+        LocalDateTime end = LocalDateTime.of(year, 12, 31, 23, 59, 59);
+
+        return userRepository.countActiveUsersInCurrent(start, end);
     }
     @Override
     public UserStatisticsResponse getUserStatistics(Integer month, Integer year) {
@@ -103,10 +116,17 @@ public class DashboardServiceImpl implements DashboardService {
 
     @Override
     public DocumentStatisticsResponse getDocumentStatistics(String year) {
+        // Lấy tổng số sách
         long totalDocuments = documentRepository.countTotalDocuments();
-        long borrowedDocuments = documentRepository.countBorrowedDocuments();
-        long availableDocuments = documentRepository.countAvailableDocuments();
-        long disabledDocuments = documentRepository.countDisabledDocuments();
+
+        // Lấy số sách còn sẵn trong kho
+        long availableDocuments = documentRepository.countAvailableBooks();
+
+        // Lấy số sách bị hư hỏng từ LoanTransaction
+        long damagedDocuments = loanTransactionRepository.countDamagedBooksFromTransactions();
+
+        // Tính số sách đang mượn
+        long borrowedDocs = totalDocuments - availableDocuments - damagedDocuments;
 
         // Chuyển đổi documentsByType
         List<Map<String, Object>> documentsByType = documentRepository.countDocumentsByType().stream()
@@ -114,26 +134,30 @@ public class DashboardServiceImpl implements DashboardService {
                     Map<String, Object> map = new HashMap<>();
                     map.put("typeName", obj[0]);
                     map.put("count", obj[1]);
+                    //map.put("percentage", ((long) obj[1] * 100.0) / totalBooks); // Tính phần trăm
                     return map;
+
                 })
                 .collect(Collectors.toList());
 
         // Chuyển đổi documentsByCourseCode
-        List<Map<String, Object>> documentsByCourseCode = documentRepository.countDocumentsByCourseCode(year).stream()
+        String academicYear = year + "-" + (Integer.parseInt(year) + 1);
+        List<Map<String, Object>> documentsByCourseCode = documentRepository.countDocumentsByCourseCode(academicYear).stream()
                 .map(obj -> {
                     Map<String, Object> map = new HashMap<>();
                     map.put("year", obj[0]);
                     map.put("courseCode", obj[1]);
                     map.put("count", obj[2]);
+
                     return map;
                 })
                 .collect(Collectors.toList());
 
         return DocumentStatisticsResponse.builder()
                 .totalDocuments(totalDocuments)
-                .borrowedDocuments(borrowedDocuments)
+                .borrowedDocuments(borrowedDocs)
                 .availableDocuments(availableDocuments)
-                .disabledDocuments(disabledDocuments)
+                .disabledDocuments(damagedDocuments)
                 .documentsByType(documentsByType)
                 .documentsByCourseCode(documentsByCourseCode)
                 .build();

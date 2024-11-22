@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Repository
@@ -21,6 +22,7 @@ public interface UserRepository extends JpaRepository<User, String> {
     @Query("SELECT COUNT(u) FROM users_001 u WHERE u.registrationDate BETWEEN :start AND :end")
     Long countNewUsersInCurrentMonth(@Param("start") LocalDate start, @Param("end") LocalDate end);
 
-    @Query("SELECT COUNT(a) FROM access_histories_001 a WHERE a.accessTime BETWEEN :start AND :end")
-    Long countActiveUsersInCurrentMonth(@Param("start") LocalDate start, @Param("end") LocalDate end);
+    @Query("SELECT COUNT(a) FROM users_001 a WHERE a.lastLoginDate BETWEEN :start AND :end")
+    Long countActiveUsersInCurrent(@Param("start") LocalDateTime startTime, @Param("end") LocalDateTime end);
+
 }

@@ -77,5 +77,7 @@ public interface LoanTransactionRepository extends JpaRepository<LoanTransaction
             "WHERE lt.loanDate BETWEEN :startDate AND :endDate")
     List<Object[]> getLoanTransactionActivities(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
-
+    // Tổng số sách bị hư hỏng (dựa trên các giao dịch trả sách)
+    @Query("SELECT COUNT(lt) FROM loan_transaction_001 lt WHERE lt.returnCondition = com.spkt.librasys.entity.LoanTransaction.Condition.DAMAGED")
+    long countDamagedBooksFromTransactions();
 }

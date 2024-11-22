@@ -16,6 +16,7 @@ public interface DashboardService {
     Long getUnpaidFinesCount();
     Long getUnreturnedDocumentsCount();
     Long getMonthlyActiveUsersCount(int month, int year);
+    Long getYearlyActiveUsersCount(int year);
     UserStatisticsResponse getUserStatistics(Integer month, Integer year);
 
     DocumentStatisticsResponse getDocumentStatistics(String year);
