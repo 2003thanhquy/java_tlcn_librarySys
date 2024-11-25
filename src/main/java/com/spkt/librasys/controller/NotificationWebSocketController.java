@@ -1,4 +1,4 @@
-package com.spkt.librasys.config;
+package com.spkt.librasys.controller;
 
 import com.spkt.librasys.dto.response.notification.NotificationResponse;
 import lombok.RequiredArgsConstructor;

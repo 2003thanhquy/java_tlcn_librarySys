@@ -1,7 +1,6 @@
 package com.spkt.librasys.service.impl;
 
-import com.spkt.librasys.config.NotificationWebSocketController;
-import com.spkt.librasys.dto.PageDTO;
+import com.spkt.librasys.controller.NotificationWebSocketController;
 import com.spkt.librasys.dto.request.notification.NotificationCreateRequest;
 import com.spkt.librasys.dto.response.notification.NotificationResponse;
 import com.spkt.librasys.entity.Notification;
