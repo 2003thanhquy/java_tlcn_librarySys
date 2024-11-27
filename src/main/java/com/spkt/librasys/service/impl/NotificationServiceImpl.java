@@ -1,6 +1,5 @@
 package com.spkt.librasys.service.impl;
 
-import com.spkt.librasys.controller.NotificationWebSocketController;
 import com.spkt.librasys.dto.request.notification.NotificationCreateRequest;
 import com.spkt.librasys.dto.response.notification.NotificationResponse;
 import com.spkt.librasys.entity.Notification;
@@ -12,6 +11,7 @@ import com.spkt.librasys.repository.NotificationRepository;
 import com.spkt.librasys.repository.access.UserRepository;
 import com.spkt.librasys.service.AuthenticationService;
 import com.spkt.librasys.service.NotificationService;
+import com.spkt.librasys.service.WebSocketService;
 import com.spkt.librasys.service.SecurityContextService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +37,7 @@ public class NotificationServiceImpl implements NotificationService {
     AuthenticationService authenticationService;
     NotificationMapper notificationMapper;
     SecurityContextService  securityContextService;
-    NotificationWebSocketController notificationWebSocketController;
+    WebSocketService notificationWebSocketService;
 
     @Override
     @Transactional
@@ -61,7 +61,7 @@ public class NotificationServiceImpl implements NotificationService {
                         .build())
                 .collect(Collectors.toList());
         for (Notification notification : notifications) {
-            notificationWebSocketController.sendNotificationToUser(notification.getUser().getUsername(), notificationMapper.toNotificationResponse(notification));
+            notificationWebSocketService.sendNotificationToUser(notification.getUser().getUsername(), notificationMapper.toNotificationResponse(notification));
         }
         notificationRepository.saveAll(notifications);
     }

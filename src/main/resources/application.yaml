@@ -79,4 +79,6 @@ cloudinary:
   cloud-name: dz9yzexh0
   api-key: 482653722794945
   api-secret: 23VTZBEf6rL-BBXVF3wOPqFWbas
+pagination:
+  max-size: 100
 

@@ -22,10 +22,7 @@ import com.spkt.librasys.mapper.LoanTransactionMapper;
 import com.spkt.librasys.repository.*;
 import com.spkt.librasys.repository.access.UserRepository;
 import com.spkt.librasys.repository.specification.LoanTransactionSpecification;
-import com.spkt.librasys.service.DocumentMoveService;
-import com.spkt.librasys.service.LoanTransactionService;
-import com.spkt.librasys.service.NotificationService;
-import com.spkt.librasys.service.SecurityContextService;
+import com.spkt.librasys.service.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
@@ -68,6 +65,8 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
     DocumentMoveService documentMoveService;
     RackRepository rackRepository;
     WarehouseRepository warehouseRepository;
+    WebSocketService socketService;
+    private final WebSocketService webSocketService;
 
     @NonFinal
     @Value("${jwt.signer-key}")
@@ -98,7 +97,11 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                 .loanDate(LocalDateTime.now())
                 //.dueDate(LocalDate.now().plusDays(getMaxLoanDays(user, document)))
                 .build();
-
+        // Lưu giao dịch vào cơ sở dữ liệu
+        LoanTransaction savedTransaction = loanTransactionRepository.save(loanTransaction);
+        LoanTransactionResponse loanResponse  = loanTransactionMapper.toLoanTransactionResponse(savedTransaction);
+        // Gửi thông báo WebSocket cho người dùng và quản lý
+        sendLoanStatusUpdate(loanTransaction, loanResponse);
         // Tạo thông báo cho người dùng
         NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
                 .userIds(List.of(user.getUserId()))
@@ -107,9 +110,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                 .build();
         notificationService.createNotifications(notificationCreateRequest);
 
-        // Lưu giao dịch vào cơ sở dữ liệu
-        LoanTransaction savedTransaction = loanTransactionRepository.save(loanTransaction);
-        return loanTransactionMapper.toLoanTransactionResponse(savedTransaction);
+        return loanResponse;
     }
 
     @Override
@@ -163,7 +164,9 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                 document.getDocumentName(), locationDetails);
 
         loanTransaction =  loanTransactionRepository.save(loanTransaction);
-
+        LoanTransactionResponse loanResponse  = loanTransactionMapper.toLoanTransactionResponse(loanTransaction);
+        // Gửi thông báo WebSocket cho người dùng và quản lý
+        sendLoanStatusUpdate(loanTransaction, loanResponse);
         NotificationCreateRequest managerNotification = NotificationCreateRequest.builder()
                 .userIds(List.of(userCurrent.getUserId()))
                 .title("Phê duyệt yêu cầu mượn sách")
@@ -183,7 +186,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                 .build();
         notificationService.createNotifications(notificationCreateRequest);
 
-        return loanTransactionMapper.toLoanTransactionResponse(loanTransaction);
+        return loanResponse;
     }
 
     @Override
@@ -201,6 +204,9 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
 
 
         LoanTransaction updatedTransaction = loanTransactionRepository.save(loanTransaction);
+        LoanTransactionResponse loanResponse  = loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
+        // Gửi thông báo WebSocket cho người dùng và quản lý
+        sendLoanStatusUpdate(loanTransaction, loanResponse);
         // Gửi thông báo từ chối giao dịch
         NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
                 .userIds(List.of( loanTransaction.getUser().getUserId()))
@@ -209,7 +215,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                 .build();
         notificationService.createNotifications(notificationCreateRequest);
 
-        return loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
+        return loanResponse;
     }
     @Override
     @Transactional
@@ -245,6 +251,9 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         // Lưu lại giao dịch
         LoanTransaction updatedTransaction = loanTransactionRepository.save(loanTransaction);
 
+        LoanTransactionResponse loanResponse  = loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
+        // Gửi thông báo WebSocket cho người dùng và quản lý
+        sendLoanStatusUpdate(loanTransaction, loanResponse);
         // Gửi thông báo nhận sách
         NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
                 .userIds(List.of(loanTransaction.getUser().getUserId()))
@@ -253,7 +262,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                 .build();
         notificationService.createNotifications(notificationCreateRequest);
 
-        return loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
+        return loanResponse;
     }
 
     @Override
@@ -278,7 +287,10 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         user.setCurrentBorrowedCount(user.getCurrentBorrowedCount() - 1);
         userRepository.save(user);
 
-        loanTransactionRepository.save(loanTransaction);
+        LoanTransaction updatedTransaction = loanTransactionRepository.save(loanTransaction);
+        LoanTransactionResponse loanResponse  = loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
+        // Gửi thông báo WebSocket cho người dùng và quản lý
+        sendLoanStatusUpdate(loanTransaction, loanResponse);
 
         // Gửi thông báo xác nhận trả sách
         NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
@@ -288,7 +300,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                 .build();
         notificationService.createNotifications(notificationCreateRequest);
 
-        return loanTransactionMapper.toLoanTransactionResponse(loanTransaction);
+        return loanResponse;
     }
 
     @Override
@@ -420,6 +432,9 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         }
 
         LoanTransaction updatedTransaction = loanTransactionRepository.save(loanTransaction);
+        LoanTransactionResponse loanResponse  = loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
+        // Gửi thông báo WebSocket cho người dùng và quản lý
+        sendLoanStatusUpdate(loanTransaction, loanResponse);
 
         // Gửi thông báo xác nhận trả sách cho người dùng
         NotificationCreateRequest userNotification = NotificationCreateRequest.builder()
@@ -429,7 +444,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                 .build();
         notificationService.createNotifications(userNotification);
 
-        return loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
+        return loanResponse;
     }
 
     @Override
@@ -478,6 +493,9 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         loanTransaction.setDueDate(newDueDate);
 
         LoanTransaction updatedTransaction = loanTransactionRepository.save(loanTransaction);
+        LoanTransactionResponse loanResponse  = loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
+        // Gửi thông báo WebSocket cho người dùng và quản lý
+        sendLoanStatusUpdate(loanTransaction, loanResponse);
 
         // Lưu vào lịch sử gia hạn
         RenewalHistory renewalHistory = RenewalHistory.builder()
@@ -496,7 +514,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                 .build();
         notificationService.createNotifications(notificationCreateRequest);
 
-        return loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
+        return loanResponse;
     }
     @Override
     @Transactional
@@ -614,7 +632,9 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
 
             // Lưu lại giao dịch
             LoanTransaction updatedTransaction = loanTransactionRepository.save(loanTransaction);
-
+            LoanTransactionResponse loanResponse  = loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
+            // Gửi thông báo WebSocket cho người dùng và quản lý
+            sendLoanStatusUpdate(loanTransaction, loanResponse);
             // Gửi thông báo hủy yêu cầu cho người dùng
             NotificationCreateRequest userNotification = NotificationCreateRequest.builder()
                     .userIds(List.of(loanTransaction.getUser().getUserId()))
@@ -623,7 +643,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                     .build();
             notificationService.createNotifications(userNotification);
 
-            return loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
+            return loanResponse;
         } else {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Chỉ có thể hủy yêu cầu ở trạng thái PENDING hoặc APPROVED trong vòng 24 giờ.");
         }
@@ -925,6 +945,15 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                 .map(User::getUserId)
                 .collect(Collectors.toList());
     }
+// Phương thức lấy danh sách username của các người dùng có vai trò là MANAGER hoặc ADMIN
+    private List<String> getManagerUsernames() {
+        return userRepository.findAll().stream()
+                .filter(user -> user.getRoles().stream()
+                        .anyMatch(role -> role.getName().equals(PredefinedRole.MANAGER_ROLE) ||
+                                role.getName().equals(PredefinedRole.ADMIN_ROLE)))  // So sánh đúng các vai trò
+                .map(User::getUsername)  // Lấy username của người dùng
+                .collect(Collectors.toList());  // Thu thập vào danh sách
+    }
 
     /**
      * Kiểm tra quyền và trạng thái của giao dịch nếu người dùng là user.
@@ -940,6 +969,18 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         // Kiểm tra trạng thái giao dịch
         if (!loanTransaction.getStatus().equals(requiredStatus)) {
             throw new AppException(ErrorCode.INVALID_REQUEST, String.format("Giao dịch không ở trạng thái %s.", requiredStatus));
+        }
+    }
+
+    // Phương thức gửi thông báo WebSocket cho người dùng và các quản lý
+    private void sendLoanStatusUpdate(LoanTransaction loanTransaction, LoanTransactionResponse loanResponse) {
+        // Gửi thông báo cho người dùng cụ thể
+        webSocketService.sendUpdateStatusLoan(loanTransaction.getUser().getUsername(), loanResponse);
+
+        // Gửi thông báo cho người quản lý (ADMIN, MANAGER)
+        List<String> managerUserIds = getManagerUsernames();  // Lấy danh sách người quản lý
+        for (String managerUserId : managerUserIds) {
+            webSocketService.sendUpdateStatusLoan(managerUserId, loanResponse);
         }
     }
 

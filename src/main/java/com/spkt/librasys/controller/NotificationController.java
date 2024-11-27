@@ -1,5 +1,6 @@
 package com.spkt.librasys.controller;
 
+import com.spkt.librasys.config.PaginationConfig;
 import com.spkt.librasys.dto.PageDTO;
 import com.spkt.librasys.dto.request.notification.NotificationCreateRequest;
 import com.spkt.librasys.dto.response.ApiResponse;
@@ -8,10 +9,13 @@ import com.spkt.librasys.service.NotificationService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 public class NotificationController {
 
     NotificationService notificationService;
+    PaginationConfig paginationConfig;
 
     @GetMapping("/{id}")
     public ApiResponse<NotificationResponse> getNotification(@PathVariable Long id) {
@@ -31,8 +36,15 @@ public class NotificationController {
     }
 
     @GetMapping
-    public ApiResponse<PageDTO<NotificationResponse>> getAllNotifications(Pageable pageable) {
-        Page<NotificationResponse> notifications = notificationService.getAllNotifications(pageable);
+    public ApiResponse<PageDTO<NotificationResponse>> getAllNotifications(
+            Pageable pageable
+    ) {
+        int size  = pageable.getPageSize();
+        int maxSize = paginationConfig.getMaxSize();
+        size = Math.min(size, maxSize);;
+        Pageable modifiedPageable = PageRequest.of(pageable.getPageNumber(), size, Sort.by(Sort.Order.desc("createdAt")));
+
+        Page<NotificationResponse> notifications = notificationService.getAllNotifications(modifiedPageable);
         PageDTO<NotificationResponse> pageDTO = new PageDTO<>(notifications);
         return ApiResponse.<PageDTO<NotificationResponse>>builder()
                 .result(pageDTO)
@@ -40,8 +52,16 @@ public class NotificationController {
     }
 
     @GetMapping("/my-notifications")
-    public ApiResponse<PageDTO<NotificationResponse>> getMyNotifications(Pageable pageable) {
-        Page<NotificationResponse> notifications = notificationService.getNotificationsForCurrentUser(pageable);
+    public ApiResponse<PageDTO<NotificationResponse>> getMyNotifications(
+            Pageable pageable
+    ) {
+        int size  = pageable.getPageSize();
+        int maxSize = paginationConfig.getMaxSize();
+        size = Math.min(size, maxSize);;
+        Pageable modifiedPageable = PageRequest.of(pageable.getPageNumber(), size, Sort.by(Sort.Order.desc("createdAt")));
+
+        // Lấy dữ liệu thông báo cho người dùng hiện tại
+        Page<NotificationResponse> notifications = notificationService.getNotificationsForCurrentUser(modifiedPageable);
         PageDTO<NotificationResponse> pageDTO = new PageDTO<>(notifications);
         return ApiResponse.<PageDTO<NotificationResponse>>builder()
                 .result(pageDTO)
