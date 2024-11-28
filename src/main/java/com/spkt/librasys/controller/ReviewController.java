@@ -15,6 +15,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Lớp Controller xử lý các yêu cầu liên quan đến đánh giá tài liệu.
+ * Cung cấp các API để tạo, sửa, xóa và lấy thông tin đánh giá.
+ */
 @RestController
 @RequestMapping("/api/v1/reviews")
 @RequiredArgsConstructor
@@ -23,7 +27,13 @@ public class ReviewController {
 
     ReviewService reviewService;
 
-    // Create a new review
+    /**
+     * Tạo mới một đánh giá cho tài liệu.
+     *
+     * @param request yêu cầu tạo đánh giá
+     * @param userId ID của người dùng thực hiện đánh giá
+     * @return ApiResponse chứa thông tin của đánh giá mới tạo
+     */
     @PostMapping
     @PreAuthorize("hasRole('USER')")
     public ApiResponse<ReviewResponse> createReview(
@@ -32,12 +42,19 @@ public class ReviewController {
 
         ReviewResponse reviewResponse = reviewService.createReview(userId, request);
         return ApiResponse.<ReviewResponse>builder()
-                .message("Review created successfully")
+                .message("Tạo đánh giá thành công")
                 .result(reviewResponse)
                 .build();
     }
 
-    // Update an existing review
+    /**
+     * Cập nhật đánh giá đã tồn tại.
+     *
+     * @param reviewId ID của đánh giá cần cập nhật
+     * @param userId ID của người dùng thực hiện cập nhật
+     * @param request yêu cầu cập nhật đánh giá
+     * @return ApiResponse chứa thông tin của đánh giá sau khi cập nhật
+     */
     @PutMapping("/{reviewId}")
     @PreAuthorize("hasRole('USER')")
     public ApiResponse<ReviewResponse> updateReview(
@@ -47,12 +64,18 @@ public class ReviewController {
 
         ReviewResponse reviewResponse = reviewService.updateReview(reviewId, userId, request);
         return ApiResponse.<ReviewResponse>builder()
-                .message("Review updated successfully")
+                .message("Cập nhật đánh giá thành công")
                 .result(reviewResponse)
                 .build();
     }
 
-    // Delete a review
+    /**
+     * Xóa một đánh giá.
+     *
+     * @param reviewId ID của đánh giá cần xóa
+     * @param userId ID của người dùng thực hiện xóa
+     * @return ApiResponse thông báo xóa đánh giá thành công
+     */
     @DeleteMapping("/{reviewId}")
     @PreAuthorize("hasRole('USER')")
     public ApiResponse<Void> deleteReview(
@@ -61,11 +84,17 @@ public class ReviewController {
 
         reviewService.deleteReview(reviewId, userId);
         return ApiResponse.<Void>builder()
-                .message("Review deleted successfully")
+                .message("Xóa đánh giá thành công")
                 .build();
     }
 
-    // Get reviews for a document
+    /**
+     * Lấy danh sách đánh giá của một tài liệu.
+     *
+     * @param documentId ID của tài liệu cần lấy đánh giá
+     * @param pageable thông tin phân trang
+     * @return ApiResponse chứa danh sách đánh giá của tài liệu
+     */
     @GetMapping("/document/{documentId}")
     public ApiResponse<PageDTO<ReviewResponse>> getReviewsByDocument(
             @PathVariable Long documentId,
@@ -74,12 +103,18 @@ public class ReviewController {
         Page<ReviewResponse> reviews = reviewService.getReviewsByDocument(documentId, pageable);
         PageDTO<ReviewResponse> pageDTO = new PageDTO<>(reviews);
         return ApiResponse.<PageDTO<ReviewResponse>>builder()
-                .message("Reviews retrieved successfully")
+                .message("Lấy danh sách đánh giá thành công")
                 .result(pageDTO)
                 .build();
     }
 
-    // Get reviews by a user
+    /**
+     * Lấy danh sách đánh giá của một người dùng.
+     *
+     * @param userId ID của người dùng cần lấy đánh giá
+     * @param pageable thông tin phân trang
+     * @return ApiResponse chứa danh sách đánh giá của người dùng
+     */
     @GetMapping("/user/{userId}")
     @PreAuthorize("hasRole('USER')")
     public ApiResponse<PageDTO<ReviewResponse>> getUserReviews(
@@ -89,22 +124,33 @@ public class ReviewController {
         Page<ReviewResponse> reviews = reviewService.getUserReviews(userId, pageable);
         PageDTO<ReviewResponse> pageDTO = new PageDTO<>(reviews);
         return ApiResponse.<PageDTO<ReviewResponse>>builder()
-                .message("User reviews retrieved successfully")
+                .message("Lấy danh sách đánh giá của người dùng thành công")
                 .result(pageDTO)
                 .build();
     }
 
-    // Admin approves a review
+    /**
+     * Duyệt một đánh giá bởi quản trị viên.
+     *
+     * @param reviewId ID của đánh giá cần duyệt
+     * @return ApiResponse thông báo duyệt đánh giá thành công
+     */
     @PostMapping("/{reviewId}/approve")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> approveReview(@PathVariable Long reviewId) {
         reviewService.approveReview(reviewId);
         return ApiResponse.<Void>builder()
-                .message("Review approved successfully")
+                .message("Duyệt đánh giá thành công")
                 .build();
     }
 
-    // Admin rejects a review
+    /**
+     * Từ chối một đánh giá bởi quản trị viên.
+     *
+     * @param reviewId ID của đánh giá cần từ chối
+     * @param rejectionReason lý do từ chối
+     * @return ApiResponse thông báo từ chối đánh giá thành công
+     */
     @PostMapping("/{reviewId}/reject")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Void> rejectReview(
@@ -113,7 +159,7 @@ public class ReviewController {
 
         reviewService.rejectReview(reviewId, rejectionReason);
         return ApiResponse.<Void>builder()
-                .message("Review rejected successfully")
+                .message("Từ chối đánh giá thành công")
                 .build();
     }
 }

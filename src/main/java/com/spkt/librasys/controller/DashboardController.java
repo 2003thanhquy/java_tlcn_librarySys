@@ -14,6 +14,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller xử lý các yêu cầu liên quan đến thống kê trên Dashboard.
+ * Các API cung cấp thông tin thống kê về tài liệu, người dùng, giao dịch mượn trả, và các dữ liệu khác.
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/dashboards")
@@ -22,7 +26,11 @@ public class DashboardController {
 
     private final DashboardService dashboardService;
 
-    // Lấy tổng số tài liệu
+    /**
+     * Lấy tổng số tài liệu trong hệ thống.
+     *
+     * @return ApiResponse chứa tổng số tài liệu.
+     */
     @GetMapping("/documents/count")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public ApiResponse<DashboardDocumentCountResponse> getDocumentCount() {
@@ -34,7 +42,13 @@ public class DashboardController {
                 .build();
     }
 
-    // Lấy số lượng giao dịch mượn sách theo tháng, chọn tháng và năm
+    /**
+     * Lấy số lượng giao dịch mượn sách theo tháng và năm.
+     *
+     * @param month Tháng cần lấy số lượng giao dịch.
+     * @param year Năm cần lấy số lượng giao dịch.
+     * @return ApiResponse chứa số lượng giao dịch mượn sách.
+     */
     @GetMapping("/loans/count")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<DashboardLoanTransactionCountResponse> getLoanTransactionsCount(
@@ -48,7 +62,13 @@ public class DashboardController {
                 .build();
     }
 
-    // Lấy danh sách tài liệu được mượn nhiều nhất, hỗ trợ phân trang
+    /**
+     * Lấy danh sách tài liệu được mượn nhiều nhất, có hỗ trợ phân trang.
+     *
+     * @param page Số trang (default = 0).
+     * @param size Số lượng tài liệu trên mỗi trang (default = 10).
+     * @return ApiResponse chứa danh sách tài liệu mượn nhiều nhất.
+     */
     @GetMapping("/documents/top-borrowed")
     @PreAuthorize("hasRole('ADMIN') or hasRole('USER')")
     public ApiResponse<Page<DashboardTopBorrowedDocumentsResponse>> getTopBorrowedDocuments(
@@ -63,7 +83,13 @@ public class DashboardController {
                 .build();
     }
 
-    // Lấy số lượng người dùng mới
+    /**
+     * Lấy số lượng người dùng mới trong tháng và năm cụ thể.
+     *
+     * @param month Tháng cần lấy số lượng người dùng mới.
+     * @param year Năm cần lấy số lượng người dùng mới.
+     * @return ApiResponse chứa số lượng người dùng mới.
+     */
     @GetMapping("/users/new/count")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Long> getNewUsersCount(@RequestParam int month, @RequestParam int year) {
@@ -75,7 +101,11 @@ public class DashboardController {
                 .build();
     }
 
-    // Lấy số lượng khoản phạt chưa thanh toán
+    /**
+     * Lấy số lượng khoản phạt chưa thanh toán.
+     *
+     * @return ApiResponse chứa số lượng khoản phạt chưa thanh toán.
+     */
     @GetMapping("/fines/unpaid/count")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Long> getUnpaidFinesCount() {
@@ -87,7 +117,11 @@ public class DashboardController {
                 .build();
     }
 
-    // Lấy số lượng tài liệu chưa trả
+    /**
+     * Lấy số lượng tài liệu chưa trả.
+     *
+     * @return ApiResponse chứa số lượng tài liệu chưa trả.
+     */
     @GetMapping("/documents/unreturned/count")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Long> getUnreturnedDocumentsCount() {
@@ -99,14 +133,20 @@ public class DashboardController {
                 .build();
     }
 
-    // Lấy số lượng người dùng hoạt động hàng tháng hoac them nam
+    /**
+     * Lấy số lượng người dùng hoạt động theo tháng hoặc năm.
+     *
+     * @param year Năm cần lấy số lượng người dùng hoạt động.
+     * @param month Tháng cần lấy số lượng người dùng hoạt động (tùy chọn).
+     * @return ApiResponse chứa số lượng người dùng hoạt động.
+     */
     @GetMapping("/users/active")
     @PreAuthorize("hasRole('ADMIN')")
     public ApiResponse<Long> getActiveUsersCount(
             @RequestParam int year,
             @RequestParam(required = false) Integer month
     ) {
-        log.info("Getting monthly active users count for month: {} and year: {}", month, year);
+        log.info("Getting active users count for month: {} and year: {}", month, year);
         Long count;
         String message;
         if (month != null) {
@@ -124,13 +164,19 @@ public class DashboardController {
                 .result(count)
                 .build();
     }
-    // API: Thống kê người dùng tổng hợp
+
+    /**
+     * API thống kê người dùng tổng hợp theo tháng và năm (tùy chọn).
+     *
+     * @param month Tháng cần thống kê (tùy chọn).
+     * @param year Năm cần thống kê.
+     * @return ApiResponse chứa thống kê người dùng.
+     */
     @GetMapping("/users/statistics")
     public ApiResponse<UserStatisticsResponse> getUserStatistics(
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year) {
 
-        // Lấy dữ liệu thống kê từ service
         UserStatisticsResponse response = dashboardService.getUserStatistics(month, year);
 
         return ApiResponse.<UserStatisticsResponse>builder()
@@ -138,7 +184,13 @@ public class DashboardController {
                 .result(response)
                 .build();
     }
-    // API: Thống kê tài liệu
+
+    /**
+     * API thống kê tài liệu theo năm.
+     *
+     * @param year Năm cần thống kê (tùy chọn, mặc định là năm hiện tại).
+     * @return ApiResponse chứa thống kê tài liệu.
+     */
     @GetMapping("/documents/statistics")
     public ApiResponse<DocumentStatisticsResponse> getDocumentStatistics(
             @RequestParam(defaultValue = "#{T(java.time.Year).now().toString()}") String year) {
@@ -150,7 +202,13 @@ public class DashboardController {
                 .result(response)
                 .build();
     }
-    // API: Thống kê mượn trả tổng hợp
+
+    /**
+     * API thống kê giao dịch mượn trả theo năm.
+     *
+     * @param year Năm cần thống kê (tùy chọn, mặc định là năm hiện tại).
+     * @return ApiResponse chứa thống kê giao dịch mượn trả.
+     */
     @GetMapping("/loans/statistics")
     public ApiResponse<LoanTransactionStatisticsResponse> getLoanTransactionStatistics(
             @RequestParam(defaultValue = "#{T(java.time.Year).now().value}") int year) {
@@ -163,7 +221,13 @@ public class DashboardController {
                 .build();
     }
 
-    // API: Bảng hoạt động mượn trả theo startDate -> endDate
+    /**
+     * API bảng hoạt động mượn trả trong khoảng thời gian từ startDate đến endDate.
+     *
+     * @param startDate Ngày bắt đầu.
+     * @param endDate Ngày kết thúc.
+     * @return ApiResponse chứa bảng hoạt động giao dịch mượn trả.
+     */
     @GetMapping("/loans/activities")
     public ApiResponse<Map<String, Object>> getLoanTransactionActivities(
             @RequestParam LocalDate startDate,

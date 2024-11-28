@@ -20,6 +20,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Controller quản lý các yêu cầu liên quan đến người dùng trong hệ thống.
+ * Các API này cho phép tạo mới, cập nhật, xóa người dùng, cũng như các chức năng liên quan đến xác minh tài khoản và thay đổi mật khẩu.
+ */
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -30,12 +34,26 @@ public class UserController {
     UserService userService;
     VerificationService verificationService;
 
+    /**
+     * Lấy thông tin người dùng theo ID.
+     *
+     * @param userId ID của người dùng
+     * @return ApiResponse chứa thông tin người dùng
+     */
     @GetMapping ("/{userId}")
-    public  ApiResponse<UserResponse> getUser(@PathVariable String userId){
+    public ApiResponse<UserResponse> getUser(@PathVariable String userId){
         return ApiResponse.<UserResponse>builder()
                 .result(userService.getUserById(userId))
                 .build();
     }
+
+    /**
+     * Lấy danh sách tất cả người dùng trong hệ thống với phân trang.
+     *
+     * @param username (tuỳ chọn) tên người dùng để tìm kiếm
+     * @param pageable thông tin phân trang
+     * @return ApiResponse chứa danh sách người dùng với phân trang
+     */
     @GetMapping
     public ApiResponse<PageDTO<UserResponse>> getAllUsers(
             @RequestParam(required = false) String username,
@@ -46,6 +64,12 @@ public class UserController {
                 .result(pageDTO)
                 .build();
     }
+
+    /**
+     * Lấy thông tin của người dùng hiện tại.
+     *
+     * @return ApiResponse chứa thông tin người dùng hiện tại
+     */
     @GetMapping("/my-info")
     ApiResponse<UserResponse> getMyInfo() {
         log.info("get my Info");
@@ -53,91 +77,159 @@ public class UserController {
                 .result(userService.getMyInfo())
                 .build();
     }
+
+    /**
+     * Tạo mới người dùng trong hệ thống.
+     *
+     * @param request yêu cầu tạo người dùng mới
+     * @return ApiResponse chứa thông tin người dùng mới được tạo
+     */
     @PostMapping
     public ApiResponse<UserResponse> createUser(@RequestBody @Valid UserCreateRequest request) {
         return ApiResponse.<UserResponse>builder()
                 .result(userService.createUser(request))
                 .build();
     }
+
+    /**
+     * Cập nhật thông tin người dùng.
+     *
+     * @param userId ID của người dùng cần cập nhật
+     * @param request yêu cầu cập nhật thông tin người dùng
+     * @return ApiResponse chứa thông tin người dùng sau khi cập nhật
+     */
     @PutMapping("/{userId}")
     public ApiResponse<UserResponse> updateUser(@PathVariable String userId, @RequestBody @Valid UserUpdateRequest request) {
         return ApiResponse.<UserResponse>builder()
                 .result(userService.updateUser(userId, request))
                 .build();
     }
+
+    /**
+     * Xóa người dùng theo ID.
+     *
+     * @param userId ID của người dùng cần xóa
+     * @return ApiResponse thông báo xóa người dùng thành công
+     */
     @DeleteMapping("/{userId}")
     public ApiResponse<String> deleteUser(@PathVariable String userId){
         userService.deleteUser(userId);
         return ApiResponse.<String>builder()
-                .result("User has been deleted").build();
+                .result("Người dùng đã được xóa thành công")
+                .build();
     }
-    // Phương thức để thay đổi mật khẩu
+
+    /**
+     * Thay đổi mật khẩu của người dùng.
+     *
+     * @param request yêu cầu thay đổi mật khẩu
+     * @return ApiResponse thông báo thay đổi mật khẩu thành công
+     */
     @PatchMapping("/change-password")
     public ApiResponse<String> changePassword(@RequestBody @Valid ChangePasswordRequest request) {
         userService.changePassword(request);
         return ApiResponse.<String>builder()
-                .result("Password has been changed successfully")
+                .result("Mật khẩu đã được thay đổi thành công")
                 .build();
     }
-    // Vô hiệu hóa tài khoản người dùng
+
+    /**
+     * Vô hiệu hóa người dùng.
+     *
+     * @param userId ID của người dùng cần vô hiệu hóa
+     * @param reason lý do vô hiệu hóa (tuỳ chọn)
+     * @return ApiResponse thông báo người dùng đã bị vô hiệu hóa
+     */
     @PatchMapping("/{userId}/deactivate")
     public ApiResponse<String> deactivateUser(@PathVariable String userId, @RequestParam(required = false) String reason) {
         userService.deactivateUser(userId, reason);
         return ApiResponse.<String>builder()
-                .result("User has been deactivated successfully")
+                .result("Người dùng đã bị vô hiệu hóa thành công")
                 .build();
     }
 
-    // Kích hoạt lại tài khoản người dùng
+    /**
+     * Kích hoạt lại người dùng.
+     *
+     * @param userId ID của người dùng cần kích hoạt lại
+     * @return ApiResponse thông báo người dùng đã được kích hoạt lại
+     */
     @PatchMapping("/{userId}/reactivate")
     public ApiResponse<String> reactivateUser(@PathVariable String userId) {
         userService.reactivateUser(userId);
         return ApiResponse.<String>builder()
-                .result("User has been reactivated successfully")
+                .result("Người dùng đã được kích hoạt lại thành công")
                 .build();
     }
 
-    // Khóa tài khoản người dùng
+    /**
+     * Khóa người dùng.
+     *
+     * @param userId ID của người dùng cần khóa
+     * @param reason lý do khóa người dùng (tuỳ chọn)
+     * @return ApiResponse thông báo người dùng đã bị khóa
+     */
     @PatchMapping("/{userId}/lock")
     public ApiResponse<String> lockUser(@PathVariable String userId, @RequestParam(required = false) String reason) {
         userService.lockUser(userId, reason);
         return ApiResponse.<String>builder()
-                .result("User has been locked successfully")
+                .result("Người dùng đã bị khóa thành công")
                 .build();
     }
 
-    // Mở khóa tài khoản người dùng
+    /**
+     * Mở khóa người dùng.
+     *
+     * @param userId ID của người dùng cần mở khóa
+     * @return ApiResponse thông báo người dùng đã được mở khóa
+     */
     @PatchMapping("/{userId}/unlock")
     public ApiResponse<String> unlockUser(@PathVariable String userId) {
         userService.unlockUser(userId);
         return ApiResponse.<String>builder()
-                .result("User has been unlocked successfully")
+                .result("Người dùng đã được mở khóa thành công")
                 .build();
     }
 
+    /**
+     * Xác minh tài khoản người dùng.
+     *
+     * @param request yêu cầu xác minh tài khoản
+     * @return ApiResponse thông báo xác minh tài khoản thành công hoặc thất bại
+     */
     @PostMapping("/verify-account")
     public ApiResponse<Void> verifyAccount(@RequestBody VerificationRequest request) {
         boolean isVerified = verificationService.verifyAccount(request);
         return ApiResponse.<Void>builder()
-                .message(isVerified?"Account verified successfully":"Invalid or expired verification code")
+                .message(isVerified ? "Tài khoản đã được xác minh thành công" : "Mã xác minh không hợp lệ hoặc đã hết hạn")
                 .build();
     }
+
+    /**
+     * Gửi lại mã xác minh cho tài khoản.
+     *
+     * @param email email của người dùng cần gửi mã xác minh lại
+     * @return ApiResponse thông báo gửi lại mã xác minh thành công hoặc thất bại
+     */
     @PostMapping("/resend-verification")
     public ApiResponse<Void> resendVerificationCode(@RequestParam String email) {
         boolean isResent = verificationService.resendVerificationCode(email);
-
         return ApiResponse.<Void>builder()
-                    .message(isResent?"Verification code resent successfully":"Failed to resend verification code. Please try again later.")
-                    .build();
-
+                .message(isResent ? "Mã xác minh đã được gửi lại thành công" : "Gửi lại mã xác minh thất bại. Vui lòng thử lại sau.")
+                .build();
     }
-    // Phương thức xóa nhiều người dùng
+
+    /**
+     * Xóa nhiều người dùng theo danh sách ID.
+     *
+     * @param userIds danh sách các ID người dùng cần xóa
+     * @return ApiResponse thông báo xóa nhiều người dùng thành công
+     */
     @DeleteMapping("/batch")
     public ApiResponse<Void> deleteUsers(@RequestBody List<String> userIds) {
         userService.deleteUsersByIds(userIds);
         return ApiResponse.<Void>builder()
-                .message("Users have been deleted successfully")
+                .message("Người dùng đã được xóa thành công")
                 .build();
     }
-
 }

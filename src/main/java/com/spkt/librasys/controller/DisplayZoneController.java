@@ -10,6 +10,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Controller xử lý các yêu cầu liên quan đến DisplayZone.
+ * Các API này cho phép tạo, sửa, xóa và lấy thông tin về DisplayZone.
+ */
 @RestController
 @RequestMapping("/api/v1/display-zones")
 @RequiredArgsConstructor
@@ -17,6 +21,12 @@ public class DisplayZoneController {
 
     private final DisplayZoneService displayZoneService;
 
+    /**
+     * Tạo một DisplayZone mới.
+     *
+     * @param request Dữ liệu yêu cầu để tạo DisplayZone.
+     * @return ApiResponse chứa thông tin của DisplayZone vừa tạo.
+     */
     @PostMapping
     public ApiResponse<DisplayZoneResponse> createDisplayZone(@Valid @RequestBody DisplayZoneRequest request) {
         DisplayZoneResponse response = displayZoneService.createDisplayZone(request);
@@ -26,6 +36,13 @@ public class DisplayZoneController {
                 .build();
     }
 
+    /**
+     * Cập nhật thông tin của DisplayZone theo ID.
+     *
+     * @param id ID của DisplayZone cần cập nhật.
+     * @param request Dữ liệu yêu cầu để cập nhật DisplayZone.
+     * @return ApiResponse chứa thông tin của DisplayZone sau khi cập nhật.
+     */
     @PutMapping("/{id}")
     public ApiResponse<DisplayZoneResponse> updateDisplayZone(
             @PathVariable Long id,
@@ -37,6 +54,12 @@ public class DisplayZoneController {
                 .build();
     }
 
+    /**
+     * Lấy thông tin của DisplayZone theo ID.
+     *
+     * @param id ID của DisplayZone cần lấy thông tin.
+     * @return ApiResponse chứa thông tin của DisplayZone tìm thấy.
+     */
     @GetMapping("/{id}")
     public ApiResponse<DisplayZoneResponse> getDisplayZoneById(@PathVariable Long id) {
         DisplayZoneResponse response = displayZoneService.getDisplayZoneById(id);
@@ -46,6 +69,12 @@ public class DisplayZoneController {
                 .build();
     }
 
+    /**
+     * Lấy danh sách tất cả DisplayZone với phân trang.
+     *
+     * @param pageable Tham số phân trang để giới hạn kết quả trả về.
+     * @return ApiResponse chứa danh sách các DisplayZone.
+     */
     @GetMapping
     public ApiResponse<PageDTO<DisplayZoneResponse>> getAllDisplayZones(Pageable pageable) {
         PageDTO<DisplayZoneResponse> response = displayZoneService.getAllDisplayZones(pageable);
@@ -55,6 +84,12 @@ public class DisplayZoneController {
                 .build();
     }
 
+    /**
+     * Xóa DisplayZone theo ID.
+     *
+     * @param id ID của DisplayZone cần xóa.
+     * @return ApiResponse trả về thông báo thành công khi xóa.
+     */
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteDisplayZone(@PathVariable Long id) {
         displayZoneService.deleteDisplayZone(id);

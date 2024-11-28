@@ -11,6 +11,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * Controller xử lý các yêu cầu liên quan đến các khóa học (Course).
+ * Cung cấp các API để tạo, cập nhật, lấy, xóa và tải lên danh sách khóa học từ Excel.
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/courses")
@@ -18,6 +22,12 @@ public class CourseController {
 
     private final CourseService courseService;
 
+    /**
+     * Endpoint để tạo một khóa học mới.
+     *
+     * @param request Thông tin khóa học cần tạo.
+     * @return ApiResponse chứa thông tin của khóa học vừa được tạo.
+     */
     @PostMapping
     public ApiResponse<CourseResponse> createCourse(@Valid @RequestBody CourseRequest request) {
         CourseResponse response = courseService.createCourse(request);
@@ -27,6 +37,13 @@ public class CourseController {
                 .build();
     }
 
+    /**
+     * Endpoint để cập nhật thông tin một khóa học theo ID.
+     *
+     * @param id ID của khóa học cần cập nhật.
+     * @param request Thông tin cập nhật cho khóa học.
+     * @return ApiResponse chứa thông tin của khóa học đã được cập nhật.
+     */
     @PutMapping("/{id}")
     public ApiResponse<CourseResponse> updateCourse(@PathVariable Long id, @Valid @RequestBody CourseRequest request) {
         CourseResponse response = courseService.updateCourse(id, request);
@@ -36,6 +53,12 @@ public class CourseController {
                 .build();
     }
 
+    /**
+     * Endpoint để lấy danh sách tất cả các khóa học, có phân trang.
+     *
+     * @param pageable Tham số phân trang để phân trang kết quả.
+     * @return ApiResponse chứa danh sách các khóa học.
+     */
     @GetMapping
     public ApiResponse<PageDTO<CourseResponse>> getAllCourses(Pageable pageable) {
         PageDTO<CourseResponse> response = courseService.getAllCourses(pageable);
@@ -45,6 +68,12 @@ public class CourseController {
                 .build();
     }
 
+    /**
+     * Endpoint để lấy thông tin chi tiết của một khóa học theo ID.
+     *
+     * @param id ID của khóa học cần lấy.
+     * @return ApiResponse chứa thông tin chi tiết của khóa học.
+     */
     @GetMapping("/{id}")
     public ApiResponse<CourseResponse> getCourseById(@PathVariable Long id) {
         CourseResponse response = courseService.getCourseById(id);
@@ -54,6 +83,12 @@ public class CourseController {
                 .build();
     }
 
+    /**
+     * Endpoint để xóa một khóa học theo ID.
+     *
+     * @param id ID của khóa học cần xóa.
+     * @return ApiResponse thông báo xóa thành công.
+     */
     @DeleteMapping("/{id}")
     public ApiResponse<Void> deleteCourse(@PathVariable Long id) {
         courseService.deleteCourse(id);
@@ -62,6 +97,12 @@ public class CourseController {
                 .build();
     }
 
+    /**
+     * Endpoint để tạo nhiều khóa học từ tệp Excel.
+     *
+     * @param file Tệp Excel chứa danh sách các khóa học cần tạo.
+     * @return ApiResponse thông báo thành công sau khi tải lên tệp.
+     */
     @PostMapping("/upload")
     public ApiResponse<Void> createCoursesFromExcel(@RequestParam("file") MultipartFile file) {
         courseService.createCoursesFromExcel(file);
