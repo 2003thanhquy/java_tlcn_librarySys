@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
  * Giao diện LoanTransactionService định nghĩa các hành vi liên quan đến giao dịch mượn sách.
  */
 public interface LoanTransactionService {
+
     /**
      * Tạo yêu cầu mượn sách từ người dùng.
      *
@@ -37,9 +38,17 @@ public interface LoanTransactionService {
      * Xác nhận người dùng đã nhận sách sau khi yêu cầu mượn được phê duyệt.
      *
      * @param transactionId ID của giao dịch mượn sách cần xác nhận.
+     * @param isUser       thông tin nếu người dùng đã nhận sách hay chưa.
      * @return LoanTransactionResponse chứa thông tin giao dịch đã cập nhật.
      */
     LoanTransactionResponse receiveDocument(Long transactionId, boolean isUser);
+
+    /**
+     * Xác nhận việc trả sách sau khi giao dịch mượn sách đã hoàn tất.
+     *
+     * @param request thông tin yêu cầu trả sách.
+     * @return LoanTransactionResponse chứa thông tin giao dịch đã được cập nhật.
+     */
     LoanTransactionResponse confirmReturnDocument(LoanTransactionReturnRequest request);
 
     /**
@@ -54,6 +63,7 @@ public interface LoanTransactionService {
      * Người dùng trả sách sau khi đã mượn.
      *
      * @param transactionId ID của giao dịch mượn sách cần trả.
+     * @param isUser       thông tin nếu người dùng trả sách hay không.
      * @return LoanTransactionResponse chứa thông tin giao dịch đã cập nhật.
      */
     LoanTransactionResponse returnDocument(Long transactionId, boolean isUser);
@@ -61,7 +71,7 @@ public interface LoanTransactionService {
     /**
      * Người dùng hủy yêu cầu mượn sách trước khi được phê duyệt.
      *
-     * @param transactionId  ID của giao dịch mượn sách cần hủy
+     * @param transactionId  ID của giao dịch mượn sách cần hủy.
      * @return LoanTransactionResponse chứa thông tin giao dịch đã được hủy.
      */
     LoanTransactionResponse cancelLoanTransactionByUser(Long transactionId);
@@ -95,16 +105,29 @@ public interface LoanTransactionService {
      * @param documentId ID của cuốn sách cần kiểm tra.
      * @return true nếu người dùng đang mượn cuốn sách, false nếu không.
      */
-    boolean isUserBorrowingDocument( Long documentId);
+    boolean isUserBorrowingDocument(Long documentId);
 
     /**
      * Lấy danh sách các sách mà người dùng đang mượn với phân trang.
+     *
      * @param pageable thông tin phân trang.
      * @return PageDTO chứa danh sách LoanTransactionResponse của các sách đang được mượn.
      */
     Page<LoanTransactionResponse> getUserBorrowedBooks(Pageable pageable);
 
+    /**
+     * Xử lý quét mã QR để xác nhận giao dịch mượn sách.
+     *
+     * @param barcodeData Dữ liệu mã vạch được quét.
+     * @return LoanTransactionResponse chứa thông tin giao dịch đã xử lý.
+     */
     LoanTransactionResponse handleQrcodeScan(String barcodeData);
 
+    /**
+     * Lấy ảnh mã QR của một giao dịch mượn sách.
+     *
+     * @param transactionId ID của giao dịch mượn sách.
+     * @return Mảng byte chứa dữ liệu ảnh mã QR.
+     */
     byte[] getQrcodeImage(Long transactionId);
 }

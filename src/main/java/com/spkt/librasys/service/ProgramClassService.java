@@ -8,6 +8,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+/**
+ * Giao diện ProgramClassService định nghĩa các hành vi liên quan đến chương trình lớp học (ProgramClass).
+ */
 public interface ProgramClassService {
 
     /**

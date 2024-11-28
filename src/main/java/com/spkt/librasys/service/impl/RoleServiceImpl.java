@@ -45,35 +45,6 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    @Transactional
-    public RoleResponse createRole(RoleCreateRequest request) {
-        Role role = roleMapper.toRole(request);
-        Role savedRole = roleRepository.save(role);
-        return roleMapper.toRoleResponse(savedRole);
-    }
-
-    @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    @Transactional
-    public RoleResponse updateRole(String roleName, RoleCreateRequest request) {
-        Role role = roleRepository.findByName(roleName)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
-        role.setDescription(request.getDescription());
-        Role updatedRole = roleRepository.save(role);
-        return roleMapper.toRoleResponse(updatedRole);
-    }
-
-    @Override
-    @PreAuthorize("hasRole('ADMIN')")
-    @Transactional
-    public void deleteRole(String roleName) {
-        Role role = roleRepository.findByName(roleName)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
-        roleRepository.delete(role);
-    }
-
-    @Override
     public Boolean isAdmin(User user) {
         return user.getRoles().stream()
                 .anyMatch(role -> role.getName().equals("ADMIN"));
