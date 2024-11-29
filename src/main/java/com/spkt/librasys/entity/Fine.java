@@ -33,6 +33,10 @@ public class Fine {
     String reason;  // Lý do bị phạt
     @Column(name = "processed_by")
     String processedBy;  // Thêm trường lưu thông tin người xử lý khoản phạt
+
+    @Column(name = "payment_method", nullable = false)
+    @Enumerated(EnumType.STRING)
+    PaymentMethod paymentMethod;  // Phương thức thanh toán (Ngân hàng, Tiền mặt)
     // Mối quan hệ một-một với LoanTransaction
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "loan_transaction_id", nullable = false)
@@ -46,5 +50,9 @@ public class Fine {
     public enum Status{
         PAID, UNPAID
     }
+    public enum PaymentMethod {
+        BANK, CASH
+    }
+
 
 }

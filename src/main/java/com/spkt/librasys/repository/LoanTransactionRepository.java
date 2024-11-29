@@ -14,8 +14,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public interface LoanTransactionRepository extends JpaRepository<LoanTransaction, Long>, JpaSpecificationExecutor<LoanTransaction> {
+    Optional<LoanTransaction> findByVnpTxnRef(String vnpTxnRef);
 
     List<LoanTransaction> findAllByStatusAndCreatedAtBefore(LoanTransaction.Status status, LocalDateTime dateTime);
 

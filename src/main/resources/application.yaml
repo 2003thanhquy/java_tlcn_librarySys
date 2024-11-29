@@ -81,4 +81,11 @@ cloudinary:
   api-secret: 23VTZBEf6rL-BBXVF3wOPqFWbas
 pagination:
   max-size: 100
+vnp:
+  paymentUrl: "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html"  # URL thanh toán VNPay (môi trường sandbox)
+  merchantCode: "4UFOVH3Y"  # Mã Website (vnp_TmnCode)
+  secretKey: "FK9RX4IUMW8NTOU6CYCUNMSG17YGNSU3"  # Chuỗi bí mật (vnp_HashSecret)
+  returnUrl: "http://localhost:8009/returnUrl"  # URL trả về sau khi thanh toán
+  notifyUrl: "http://localhost:8009/notifyUrl"  # URL thông báo kết quả thanh toán
+
 

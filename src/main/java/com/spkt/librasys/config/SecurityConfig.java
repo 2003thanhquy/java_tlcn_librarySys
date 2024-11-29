@@ -51,6 +51,7 @@ public class SecurityConfig {
         httpSecurity.authorizeHttpRequests(request->
                         request.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Cho phép tất cả các yêu cầu OPTIONS
                                 .requestMatchers("/ws/**").permitAll()
+                                .requestMatchers("/api/v1/vnpay/**").permitAll()
                                 .requestMatchers(HttpMethod.POST,PUBLIC_POST_ENDPOINTS).permitAll()
                                 .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
                                 .requestMatchers( "/swagger-ui/**", "/swagger-ui.html","/api-docs", "/api-docs/**").permitAll() // Cho phép truy cập các endpoint của Swagger

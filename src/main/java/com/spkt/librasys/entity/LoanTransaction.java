@@ -45,6 +45,9 @@ public class LoanTransaction {
     @Column(name = "updated_at")
     LocalDateTime updatedAt;
 
+    @Column(name = "vnp_txn_ref") // Trường để lưu vnp_TxnRef
+    String vnpTxnRef;
+
     @Column(name = "return_condition", length = 20)
     @Enumerated(EnumType.STRING)
     Condition returnCondition; // Trạng thái của sách khi trả lại
