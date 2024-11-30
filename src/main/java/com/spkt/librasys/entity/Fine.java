@@ -34,7 +34,7 @@ public class Fine {
     @Column(name = "processed_by")
     String processedBy;  // Thêm trường lưu thông tin người xử lý khoản phạt
 
-    @Column(name = "payment_method", nullable = false)
+    @Column(name = "payment_method")
     @Enumerated(EnumType.STRING)
     PaymentMethod paymentMethod;  // Phương thức thanh toán (Ngân hàng, Tiền mặt)
     // Mối quan hệ một-một với LoanTransaction
