@@ -259,7 +259,6 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasRole('USER')")
     public LoanTransactionResponse receiveDocument(Long transactionId, boolean isUser) {
         LoanTransaction loanTransaction = loanTransactionRepository.findById(transactionId)
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
