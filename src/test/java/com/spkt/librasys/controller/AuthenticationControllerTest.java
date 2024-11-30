@@ -39,7 +39,6 @@ public class AuthenticationControllerTest {
         // Giả lập phản hồi từ service
         AuthenticationResponse response = AuthenticationResponse.builder()
                 .token("dummyToken")
-                .authenticated(true)
                 .build();
 
         Mockito.when(authenticationService.login(Mockito.any(AuthenticationRequest.class)))
@@ -63,7 +62,6 @@ public class AuthenticationControllerTest {
         // Giả lập phản hồi từ service
         AuthenticationResponse response = AuthenticationResponse.builder()
                 .token("newToken")
-                .authenticated(true)
                 .build();
 
         Mockito.when(authenticationService.refresh(Mockito.any(RefreshRequest.class)))

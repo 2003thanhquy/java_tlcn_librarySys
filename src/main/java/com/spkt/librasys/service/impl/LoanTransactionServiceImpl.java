@@ -65,44 +65,57 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
     DocumentMoveService documentMoveService;
     RackRepository rackRepository;
     WarehouseRepository warehouseRepository;
-    WebSocketService socketService;
-    private final WebSocketService webSocketService;
+    WebSocketService webSocketService;
 
     @NonFinal
     @Value("${jwt.signer-key}")
     protected String SIGNER_KEY;
-
     @Override
     @Transactional
     public LoanTransactionResponse createLoanTransaction(LoanTransactionRequest request) {
-        User user =  securityContextService.getCurrentUser();
+        // 1. Xác thực người dùng hiện tại. Nếu không có người dùng hợp lệ, ném ngoại lệ USER_NOT_FOUND.
+        User user = securityContextService.getCurrentUser();
         if (user == null) {
             throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
 
+        // 2. Tìm tài liệu mượn từ ID. Nếu không tìm thấy tài liệu, ném ngoại lệ DOCUMENT_NOT_FOUND.
         Document document = documentRepository.findById(request.getDocumentId())
                 .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND));
 
-        // Kiểm tra nếu người dùng có bất kỳ giao dịch PENDING nào vượt quá giới hạn số sách có thể mượn
+        // 3. Kiểm tra xem người dùng đã có yêu cầu mượn tài liệu này chưa và trạng thái yêu cầu đó là PENDING.
+        boolean isUserLoanPendingForDoc = loanTransactionRepository.findByUserAndDocumentAndStatus(user, document, LoanTransaction.Status.PENDING);
+        if (isUserLoanPendingForDoc) {
+            // Nếu đã có giao dịch PENDING, ném ngoại lệ (người dùng không thể mượn sách này thêm lần nữa khi yêu cầu trước đó đang chờ phê duyệt)
+            throw new AppException(ErrorCode.RESOURCE_CONFLICT,
+                    String.format("Bạn đã có yêu cầu mượn sách '%s' đang chờ phê duyệt.", document.getDocumentName()));
+             }
+
+        // 4. Kiểm tra số lượng sách mượn hiện tại và các giao dịch PENDING.
+        // Nếu tổng số sách mượn (đang mượn + PENDING) vượt quá giới hạn mượn của người dùng, ném ngoại lệ RESOURCE_CONFLICT.
         long pendingTransactionsCount = loanTransactionRepository.countByUserAndStatus(user, LoanTransaction.Status.PENDING);
         if (user.getCurrentBorrowedCount() + pendingTransactionsCount >= user.getMaxBorrowLimit()) {
             throw new AppException(ErrorCode.RESOURCE_CONFLICT, "Bạn không thể mượn thêm vì đã đạt giới hạn số lượng sách tối đa.");
         }
 
-        // Tạo giao dịch mượn sách mới
+        // 5. Tạo giao dịch mượn sách mới với trạng thái PENDING (chờ phê duyệt).
         LoanTransaction loanTransaction = LoanTransaction.builder()
                 .document(document)
                 .user(user)
                 .status(LoanTransaction.Status.PENDING)
                 .loanDate(LocalDateTime.now())
-                //.dueDate(LocalDate.now().plusDays(getMaxLoanDays(user, document)))
                 .build();
-        // Lưu giao dịch vào cơ sở dữ liệu
+
+        // 6. Lưu giao dịch mượn sách vào cơ sở dữ liệu.
         LoanTransaction savedTransaction = loanTransactionRepository.save(loanTransaction);
-        LoanTransactionResponse loanResponse  = loanTransactionMapper.toLoanTransactionResponse(savedTransaction);
-        // Gửi thông báo WebSocket cho người dùng và quản lý
+
+        // 7. Chuyển đổi giao dịch thành phản hồi LoanTransactionResponse.
+        LoanTransactionResponse loanResponse = loanTransactionMapper.toLoanTransactionResponse(savedTransaction);
+
+        // 8. Gửi thông báo WebSocket cho người dùng và quản lý về trạng thái giao dịch mượn sách.
         sendLoanStatusUpdate(loanTransaction, loanResponse);
-        // Tạo thông báo cho người dùng
+
+        // 9. Tạo và gửi thông báo cho người dùng về yêu cầu mượn sách đã được tạo và đang chờ phê duyệt.
         NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
                 .userIds(List.of(user.getUserId()))
                 .title("Yêu cầu mượn sách được tạo")
@@ -110,6 +123,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                 .build();
         notificationService.createNotifications(notificationCreateRequest);
 
+        // 10. Trả về phản hồi chứa thông tin giao dịch mượn sách.
         return loanResponse;
     }
 
@@ -117,38 +131,49 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
     @Transactional
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public LoanTransactionResponse approveTransaction(Long transactionId) {
+        // 1. Tìm giao dịch mượn sách theo ID
         LoanTransaction loanTransaction = loanTransactionRepository.findById(transactionId)
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
 
+        // 2. Kiểm tra trạng thái giao dịch
         if (!loanTransaction.getStatus().equals(LoanTransaction.Status.PENDING)) {
-            throw new AppException(ErrorCode.RESOURCE_CONFLICT, "Giao dịch không ở trạng thái PENDING.");
+            throw new AppException(ErrorCode.RESOURCE_CONFLICT, "Giao dịch không ở trạng thái PENDING, hiện tại là " + loanTransaction.getStatus());
         }
 
+        // 3. Tìm tài liệu mượn theo ID
         Document document = documentRepository.findById(loanTransaction.getDocument().getDocumentId())
                 .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND));
-        System.out.println("document"+document.getAvailableCount());
+
+        // 4. Kiểm tra số lượng sách có sẵn
         if (document.getAvailableCount() <= 0) {
             throw new AppException(ErrorCode.RESOURCE_CONFLICT, "Số lượng sách không đủ để mượn.");
         }
 
-        // Giảm số lượng sách có sẵn
+        // 5. Giảm số lượng sách có sẵn
         document.setAvailableCount(document.getAvailableCount() - 1);
         documentRepository.save(document);
 
-        // Cập nhật trạng thái giao dịch
+        // 6. Cập nhật trạng thái giao dịch thành APPROVED
         loanTransaction.setStatus(LoanTransaction.Status.APPROVED);
         loanTransaction.setUpdatedAt(LocalDateTime.now());
 
-        // Cập nhật số sách đã mượn của người dùng
+        // 7. Cập nhật số sách đã mượn của người dùng
         User user = loanTransaction.getUser();
         user.setCurrentBorrowedCount(user.getCurrentBorrowedCount() + 1);
         userRepository.save(user);
-        // thuc hien lay sach tu Rack , WareHouse
-        DocumentLocation location = documentMoveService.approveAndMoveDocument(document.getDocumentId(),1);
-        if(location.getRackId() != null){
+
+        // 8. Thực hiện di chuyển tài liệu từ kệ hoặc kho và cập nhật vị trí
+        DocumentLocation location = documentMoveService.approveAndMoveDocument(document.getDocumentId(), 1);
+        if (location == null) {
+            throw new AppException(ErrorCode.RESOURCE_CONFLICT, "Không thể di chuyển tài liệu. Vị trí không xác định.");
+        }
+        if (location.getRackId() != null) {
             loanTransaction.setOriginalRackId(location.getRackId());
-        }else loanTransaction.setOriginalWarehouseId(location.getWarehouseId());
-        // 12. Gửi thông báo cho người duyệt (Manager/Admin) về vị trí lấy sách
+        } else {
+            loanTransaction.setOriginalWarehouseId(location.getWarehouseId());
+        }
+
+        // 9. Gửi thông báo cho người duyệt (Manager/Admin) về vị trí lấy sách
         User userCurrent = securityContextService.getCurrentUser();
         String locationDetails = "";
         if (loanTransaction.getOriginalRackId() != null) {
@@ -160,13 +185,18 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                     .orElseThrow(() -> new AppException(ErrorCode.WAREHOUSE_NOT_FOUND, "Kho gốc không tồn tại"));
             locationDetails = String.format("Kho ID: %d, Địa điểm: %s", warehouse.getWarehouseId(), warehouse.getLocation());
         }
+
         String managerMessage = String.format("Bạn đã phê duyệt yêu cầu mượn sách '%s'. Vị trí lấy sách: %s. Vui lòng chuẩn bị sách để giao cho người dùng.",
                 document.getDocumentName(), locationDetails);
 
-        loanTransaction =  loanTransactionRepository.save(loanTransaction);
-        LoanTransactionResponse loanResponse  = loanTransactionMapper.toLoanTransactionResponse(loanTransaction);
-        // Gửi thông báo WebSocket cho người dùng và quản lý
+        // 10. Lưu giao dịch mượn sách đã cập nhật
+        loanTransaction = loanTransactionRepository.save(loanTransaction);
+        LoanTransactionResponse loanResponse = loanTransactionMapper.toLoanTransactionResponse(loanTransaction);
+
+        // 11. Gửi thông báo WebSocket cho người dùng và quản lý
         sendLoanStatusUpdate(loanTransaction, loanResponse);
+
+        // 12. Tạo và gửi thông báo cho người duyệt (Manager/Admin)
         NotificationCreateRequest managerNotification = NotificationCreateRequest.builder()
                 .userIds(List.of(userCurrent.getUserId()))
                 .title("Phê duyệt yêu cầu mượn sách")
@@ -174,18 +204,18 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                 .build();
         notificationService.createNotifications(managerNotification);
 
-
-        // Gửi thông báo User
+        // 13. Tạo và gửi thông báo cho người dùng yêu cầu mượn sách đã được phê duyệt
         LocalDateTime expiryTime = loanTransaction.getUpdatedAt().plusDays(2).withHour(0).withMinute(0).withSecond(0).withNano(0);
         NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
                 .userIds(List.of(user.getUserId()))
                 .title("Yêu cầu mượn sách được phê duyệt")
                 .content(String.format("Yêu cầu mượn sách '%s' của bạn đã được phê duyệt. " +
-                        "Bạn có 48 giờ để nhận sách. Nếu không nhận trong thời gian này, yêu cầu sẽ bị hủy tự động vào lúc 00:00 ngày %s.",
+                                "Bạn có 48 giờ để nhận sách. Nếu không nhận trong thời gian này, yêu cầu sẽ bị hủy tự động vào lúc 00:00 ngày %s.",
                         loanTransaction.getDocument().getDocumentName(), expiryTime.toLocalDate()))
                 .build();
         notificationService.createNotifications(notificationCreateRequest);
 
+        // 14. Trả về phản hồi chứa thông tin giao dịch mượn sách
         return loanResponse;
     }
 
@@ -193,30 +223,40 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
     @Transactional
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
     public LoanTransactionResponse rejectTransaction(Long transactionId) {
+        // 1. Tìm giao dịch mượn sách theo ID
         LoanTransaction loanTransaction = loanTransactionRepository.findById(transactionId)
                 .orElseThrow(() -> new AppException(ErrorCode.TRANSACTION_NOT_FOUND));
 
+        // 2. Kiểm tra trạng thái giao dịch
         if (!loanTransaction.getStatus().equals(LoanTransaction.Status.PENDING)) {
-            throw new AppException(ErrorCode.RESOURCE_CONFLICT, "Giao dịch không ở trạng thái PENDING.");
+            throw new AppException(ErrorCode.RESOURCE_CONFLICT,
+                    String.format("Giao dịch không ở trạng thái PENDING mà hiện tại là: %s.", loanTransaction.getStatus()));
         }
 
+        // 3. Cập nhật trạng thái giao dịch thành REJECTED
         loanTransaction.setStatus(LoanTransaction.Status.REJECTED);
 
-
+        // 4. Lưu giao dịch mượn sách đã bị từ chối
         LoanTransaction updatedTransaction = loanTransactionRepository.save(loanTransaction);
-        LoanTransactionResponse loanResponse  = loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
-        // Gửi thông báo WebSocket cho người dùng và quản lý
+
+        // 5. Chuyển đổi giao dịch thành phản hồi LoanTransactionResponse
+        LoanTransactionResponse loanResponse = loanTransactionMapper.toLoanTransactionResponse(updatedTransaction);
+
+        // 6. Gửi thông báo WebSocket cho người dùng và quản lý về trạng thái giao dịch
         sendLoanStatusUpdate(loanTransaction, loanResponse);
-        // Gửi thông báo từ chối giao dịch
+
+        // 7. Tạo và gửi thông báo từ chối giao dịch cho người dùng
         NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
-                .userIds(List.of( loanTransaction.getUser().getUserId()))
+                .userIds(List.of(loanTransaction.getUser().getUserId()))
                 .title("Yêu cầu mượn sách bị từ chối")
                 .content(String.format("Yêu cầu mượn sách '%s' của bạn đã bị từ chối.", loanTransaction.getDocument().getDocumentName()))
                 .build();
         notificationService.createNotifications(notificationCreateRequest);
 
+        // 8. Trả về phản hồi chứa thông tin giao dịch mượn sách
         return loanResponse;
     }
+
     @Override
     @Transactional
     @PreAuthorize("hasRole('USER')")

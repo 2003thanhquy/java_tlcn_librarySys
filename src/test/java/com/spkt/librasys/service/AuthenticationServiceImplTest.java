@@ -72,7 +72,6 @@ public class AuthenticationServiceImplTest {
         // Xác nhận phản hồi không null và chứa token
         assertNotNull(response);
         assertNotNull(response.getToken());
-        assertTrue(response.isAuthenticated());
     }
 
     @Test

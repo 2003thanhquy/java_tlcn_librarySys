@@ -30,6 +30,7 @@ public class FineServiceImpl implements FineService {
         Fine fine = fineRepository.findById(fineId)
                 .orElseThrow(() -> new AppException(ErrorCode.FINE_NOT_FOUND));
         fine.setStatus(Fine.Status.PAID);
+        fine.setPaymentMethod(Fine.PaymentMethod.CASH);
         fineRepository.save(fine);
     }
 }

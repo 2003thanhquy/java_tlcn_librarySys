@@ -97,7 +97,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         userRepository.save(user);
         return AuthenticationResponse.builder()
                 .token(token)
-                .authenticated(true)
                 .build();
     }
 
@@ -170,7 +169,9 @@ public class AuthenticationServiceImpl implements AuthenticationService {
 
         var token = generationToken(user);
 
-        return AuthenticationResponse.builder().token(token).authenticated(true).build();
+        return AuthenticationResponse.builder()
+                .token(token)
+                .build();
     }
     @Override
     public AuthenticationResponse handleGoogleLogin(OAuth2AuthenticationToken authenticationToken) {
@@ -201,7 +202,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         String token = generationToken(user); // Tạo JWT cho người dùng này
         return AuthenticationResponse.builder()
                 .token(token)
-                .authenticated(true)
                 .build();
     }
 

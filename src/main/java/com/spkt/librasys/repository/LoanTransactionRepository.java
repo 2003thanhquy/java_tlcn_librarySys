@@ -82,4 +82,6 @@ public interface LoanTransactionRepository extends JpaRepository<LoanTransaction
     // Tổng số sách bị hư hỏng (dựa trên các giao dịch trả sách)
     @Query("SELECT COUNT(lt) FROM loan_transaction_001 lt WHERE lt.returnCondition = com.spkt.librasys.entity.LoanTransaction.Condition.DAMAGED")
     long countDamagedBooksFromTransactions();
+
+    Boolean findByUserAndDocumentAndStatus(User user, Document document, LoanTransaction.Status status);
 }

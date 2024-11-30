@@ -296,8 +296,10 @@ public class DocumentServiceImpl implements DocumentService {
         if (request.getDocumentTypeId() != null) {
             spec = spec.and(DocumentSpecification.hasDocumentTypeId(request.getDocumentTypeId()));
         }
-        spec = spec.and((root, query, builder) ->
-                builder.equal(root.get("status"), DocumentStatus.AVAILABLE));
+        User userCurrent =  securityContextService.getCurrentUser();
+        if (userCurrent == null || userHasRole(userCurrent, PredefinedRole.USER_ROLE)) {
+            spec = spec.and((root, query, builder) -> builder.equal(root.get("status"), DocumentStatus.AVAILABLE));
+        }
 
 
         // Thực hiện tìm kiếm với Specification đã được thiết lập
