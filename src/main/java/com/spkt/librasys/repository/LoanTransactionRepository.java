@@ -83,5 +83,15 @@ public interface LoanTransactionRepository extends JpaRepository<LoanTransaction
     @Query("SELECT COUNT(lt) FROM loan_transaction_001 lt WHERE lt.returnCondition = com.spkt.librasys.entity.LoanTransaction.Condition.DAMAGED")
     long countDamagedBooksFromTransactions();
 
-    Boolean findByUserAndDocumentAndStatus(User user, Document document, LoanTransaction.Status status);
+    /**
+     * Kiểm tra xem người dùng có yêu cầu mượn tài liệu với trạng thái PENDING hay không.
+     *
+     * @param user Người dùng yêu cầu mượn tài liệu.
+     * @param document Tài liệu người dùng yêu cầu mượn.
+     * @param status Trạng thái của giao dịch (PENDING).
+     * @return Số lượng giao dịch có trạng thái PENDING.
+     */
+    @Query("SELECT COUNT(lt) > 0 FROM loan_transaction_001 lt WHERE lt.user = :user AND lt.document = :document AND lt.status = :status")
+    boolean existsPendingLoanTransaction(@Param("user") User user, @Param("document") Document document, @Param("status") LoanTransaction.Status status);
+
 }

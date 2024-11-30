@@ -84,7 +84,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                 .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND));
 
         // 3. Kiểm tra xem người dùng đã có yêu cầu mượn tài liệu này chưa và trạng thái yêu cầu đó là PENDING.
-        boolean isUserLoanPendingForDoc = loanTransactionRepository.findByUserAndDocumentAndStatus(user, document, LoanTransaction.Status.PENDING);
+        boolean isUserLoanPendingForDoc = loanTransactionRepository.existsPendingLoanTransaction(user, document, LoanTransaction.Status.PENDING);
         if (isUserLoanPendingForDoc) {
             // Nếu đã có giao dịch PENDING, ném ngoại lệ (người dùng không thể mượn sách này thêm lần nữa khi yêu cầu trước đó đang chờ phê duyệt)
             throw new AppException(ErrorCode.RESOURCE_CONFLICT,
