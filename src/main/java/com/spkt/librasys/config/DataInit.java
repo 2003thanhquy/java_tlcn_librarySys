@@ -241,11 +241,6 @@ public class DataInit implements CommandLineRunner {
             // Đảm bảo chèn đầy đủ 40 documents
             // Định dạng ngày tháng
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/d/yyyy");
-               DocumentLocation location = DocumentLocation.builder()
-                    .warehouseId(warehouse.getWarehouseId())
-                    .rackId(null) // Không gán rack cụ thể lúc tạo
-                    .build();
-            location.updateTotalSize();
 
             // Tạo danh sách các Documents
             List<Document> documents = Arrays.asList(
@@ -1082,7 +1077,7 @@ public class DataInit implements CommandLineRunner {
             }
 
             // Lưu lại tất cả tài liệu đã cập nhật vào cơ sở dữ liệu
-            documentRepository.saveAll(documentRepository.findAll());
+           // documentRepository.saveAll(documentRepository.findAll());
 
             // Tương tự, bạn có thể thêm các liên kết bổ sung cho các Documents khác nếu cần
         }
