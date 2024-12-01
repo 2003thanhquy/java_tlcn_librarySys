@@ -24,6 +24,7 @@ public class Fine {
     Double amount;  // Số tiền phạt
 
     @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
     Status status;  // Trạng thái của khoản phạt (VD: Paid, Unpaid)
 
     @Column(name = "issued_date", nullable = false)

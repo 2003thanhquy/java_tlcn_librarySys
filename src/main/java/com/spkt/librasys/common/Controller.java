@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Controller để xử lý các yêu cầu liên quan đến thanh toán với VNPay.
  * Bao gồm các hành động như gửi đơn hàng và xử lý kết quả trả về từ VNPay.
@@ -25,14 +28,15 @@ public class Controller {
      * @return Phản hồi ApiResponse chứa URL thanh toán của VNPay.
      */
     @PostMapping("/submitOrder/{loanTransactionId}")
-    public ApiResponse<String> submitOrder(@PathVariable Long loanTransactionId) {
+    public ApiResponse<Map<String,String>> submitOrder(@PathVariable Long loanTransactionId) {
         // Tạo đơn hàng và lấy URL thanh toán từ VNPay
         String vnpayUrl = vnPayService.createOrder(loanTransactionId);
-
+        Map<String,String> map = new HashMap<>();
+        map.put("vnpayUrl",vnpayUrl);
         // Trả về URL thanh toán với thông điệp "Redirect"
-        return ApiResponse.<String>builder()
+        return ApiResponse.<Map<String,String>>builder()
                 .message("Redirect")
-                .result(vnpayUrl)
+                .result(map)
                 .build();
     }
 
