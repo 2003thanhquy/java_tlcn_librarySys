@@ -15,7 +15,7 @@ public interface VerificationService {
     * @param request Chứa thông tin yêu cầu xác minh tài khoản, bao gồm email và mã xác minh.
     * @return true nếu tài khoản được xác minh thành công, false nếu xác minh không thành công.
     */
-   boolean verifyAccount(VerificationRequest request);
+   boolean verifyAccount(String request);
 
    /**
     * Gửi lại mã xác minh đến email đã đăng ký.

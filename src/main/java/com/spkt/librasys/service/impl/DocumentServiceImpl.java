@@ -287,14 +287,11 @@ public class DocumentServiceImpl implements DocumentService {
         if (request.getDocumentName() != null ) {
             spec = spec.and(DocumentSpecification.hasTitle(request.getDocumentName().trim()));
         }
-        if (request.getAuthor() != null ) {
-            spec = spec.and(DocumentSpecification.hasAuthor(request.getAuthor().trim()));
+        if (request.getDocumentTypeIds() != null) {
+            spec = spec.and(DocumentSpecification.hasDocumentTypeIds(request.getDocumentTypeIds()));
         }
-        if (request.getPublisher() != null) {
-            spec = spec.and(DocumentSpecification.hasPublisher(request.getPublisher().trim()));
-        }
-        if (request.getDocumentTypeId() != null) {
-            spec = spec.and(DocumentSpecification.hasDocumentTypeId(request.getDocumentTypeId()));
+        if(request.getCourseIds() !=null){
+            spec = spec.and(DocumentSpecification.hasCourseIds(request.getCourseIds()));
         }
         User userCurrent =  securityContextService.getCurrentUser();
         if (userCurrent == null || userHasRole(userCurrent, PredefinedRole.USER_ROLE)) {

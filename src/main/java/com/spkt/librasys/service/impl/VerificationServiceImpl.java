@@ -37,11 +37,12 @@ public class VerificationServiceImpl  implements VerificationService {
     @NonFinal
     private String baseUrl;
     @Override
-    public boolean verifyAccount(VerificationRequest request) {
-        VerificationToken token = verificationTokenRepository.findByToken(request.getEmail());
-
-        if (token != null && token.getExpiryDate().isAfter(LocalDateTime.now())) {
-            Optional<User> userOptional = userRepository.findByUsername(request.getEmail());
+    public boolean verifyAccount(String token) {
+        log.info("Verify token email");
+        VerificationToken verificationToken = verificationTokenRepository.findByToken(token);
+        if(token == null) return false;
+        if (verificationToken.getExpiryDate().isAfter(LocalDateTime.now())) {
+            Optional<User> userOptional = userRepository.findByUsername(verificationToken.getEmail());
             if (userOptional.isPresent()) {
                 User user = userOptional.get();
                 user.setIsActive(User.Status.ACTIVE);

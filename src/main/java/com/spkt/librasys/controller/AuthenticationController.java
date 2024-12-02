@@ -5,6 +5,7 @@ import com.spkt.librasys.dto.request.*;
 import com.spkt.librasys.dto.response.ApiResponse;
 import com.spkt.librasys.dto.response.AuthenticationResponse;
 import com.spkt.librasys.dto.response.IntrospectResponse;
+import com.spkt.librasys.dto.response.VerificationResponse;
 import com.spkt.librasys.service.AuthenticationService;
 import com.spkt.librasys.service.VerificationService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -119,14 +120,17 @@ public class AuthenticationController {
     /**
      * Xác minh tài khoản người dùng.
      *
-     * @param request yêu cầu xác minh tài khoản
+     * @param token mã xác minh
      * @return ApiResponse thông báo xác minh tài khoản thành công hoặc thất bại
      */
     @PostMapping("/verify-email")
-    public ApiResponse<Void> verifyAccount(@RequestBody VerificationRequest request) {
-        boolean isVerified = verificationService.verifyAccount(request);
-        return ApiResponse.<Void>builder()
+    public ApiResponse<VerificationResponse> verifyAccount(@RequestParam String token) {
+        boolean isVerified = verificationService.verifyAccount(token);
+        return ApiResponse.<VerificationResponse>builder()
                 .message(isVerified ? "Tài khoản đã được xác minh thành công" : "Mã xác minh không hợp lệ hoặc đã hết hạn")
+                .result(VerificationResponse.builder()
+                        .isVerified(isVerified)
+                        .build())
                 .build();
     }
 
@@ -165,10 +169,13 @@ public class AuthenticationController {
      * @return ApiResponse thông báo kết quả của việc đặt lại mật khẩu
      */
     @PostMapping("/reset-password")
-    public ApiResponse<Void> resetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest) {
+    public ApiResponse<VerificationResponse> resetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest) {
         boolean isResetSuccessful = verificationService.resetPassword(resetPasswordRequest);
-        return ApiResponse.<Void>builder()
+        return ApiResponse.<VerificationResponse>builder()
                 .message(isResetSuccessful ? "Mật khẩu đã được thay đổi thành công." : "Mã reset mật khẩu không hợp lệ hoặc đã hết hạn.")
+                .result(VerificationResponse.builder()
+                        .isVerified(isResetSuccessful)
+                        .build())
                 .build();
     }
 
