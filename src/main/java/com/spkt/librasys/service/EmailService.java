@@ -9,5 +9,5 @@ public interface EmailService {
     String sendHtmlEmail(Email email);
     String sendAttachmentsEmail(Email email);
 
-    CompletableFuture<Boolean> sendVerificationCodeAsync(String toEmail, String verificationCode);
+    CompletableFuture<Boolean> sendEmailAsync(String toEmail, String subject, String body);
 }

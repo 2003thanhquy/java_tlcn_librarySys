@@ -32,7 +32,6 @@ import java.util.List;
 public class UserController {
 
     UserService userService;
-    VerificationService verificationService;
 
     /**
      * Lấy thông tin người dùng theo ID.
@@ -190,35 +189,6 @@ public class UserController {
                 .result("Người dùng đã được mở khóa thành công")
                 .build();
     }
-
-    /**
-     * Xác minh tài khoản người dùng.
-     *
-     * @param request yêu cầu xác minh tài khoản
-     * @return ApiResponse thông báo xác minh tài khoản thành công hoặc thất bại
-     */
-    @PostMapping("/verify-account")
-    public ApiResponse<Void> verifyAccount(@RequestBody VerificationRequest request) {
-        boolean isVerified = verificationService.verifyAccount(request);
-        return ApiResponse.<Void>builder()
-                .message(isVerified ? "Tài khoản đã được xác minh thành công" : "Mã xác minh không hợp lệ hoặc đã hết hạn")
-                .build();
-    }
-
-    /**
-     * Gửi lại mã xác minh cho tài khoản.
-     *
-     * @param email email của người dùng cần gửi mã xác minh lại
-     * @return ApiResponse thông báo gửi lại mã xác minh thành công hoặc thất bại
-     */
-    @PostMapping("/resend-verification")
-    public ApiResponse<Void> resendVerificationCode(@RequestParam String email) {
-        boolean isResent = verificationService.resendVerificationCode(email);
-        return ApiResponse.<Void>builder()
-                .message(isResent ? "Mã xác minh đã được gửi lại thành công" : "Gửi lại mã xác minh thất bại. Vui lòng thử lại sau.")
-                .build();
-    }
-
     /**
      * Xóa nhiều người dùng theo danh sách ID.
      *

@@ -1,5 +1,6 @@
 package com.spkt.librasys.service;
 
+import com.spkt.librasys.dto.request.readingSession.ReadingSessionRequest;
 import com.spkt.librasys.dto.response.readingSession.ReadingSessionResponse;
 import com.spkt.librasys.entity.ReadingSession;
 
@@ -11,11 +12,10 @@ public interface ReadingSessionService {
     /**
      * Bắt đầu phiên đọc mới cho người dùng.
      *
-     * @param userId ID của người dùng
-     * @param documentId ID của tài liệu
+     * @param request ID của tài liệu
      * @return Thông tin phiên đọc mới được tạo, dưới dạng DTO {@link ReadingSessionResponse}
      */
-    ReadingSessionResponse startReadingSession(String userId, Long documentId);
+    ReadingSessionResponse startReadingSession(ReadingSessionRequest request);
 
     /**
      * Cập nhật tiến trình đọc của người dùng.

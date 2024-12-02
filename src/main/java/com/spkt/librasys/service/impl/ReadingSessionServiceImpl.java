@@ -1,5 +1,6 @@
 package com.spkt.librasys.service.impl;
 
+import com.spkt.librasys.dto.request.readingSession.ReadingSessionRequest;
 import com.spkt.librasys.dto.response.readingSession.ReadingSessionResponse;
 import com.spkt.librasys.entity.Document;
 import com.spkt.librasys.entity.ReadingSession;
@@ -11,6 +12,8 @@ import com.spkt.librasys.repository.DocumentRepository;
 import com.spkt.librasys.repository.ReadingSessionRepository;
 import com.spkt.librasys.repository.access.UserRepository;
 import com.spkt.librasys.service.ReadingSessionService;
+import com.spkt.librasys.service.SecurityContextService;
+import org.springdoc.core.service.SecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -31,19 +34,24 @@ public class ReadingSessionServiceImpl implements ReadingSessionService {
 
     @Autowired
     private ReadingSessionMapper readingSessionMapper;  // Inject mapper
+    @Autowired
+    private SecurityContextService securityContextService;
 
     /**
      * Bắt đầu phiên đọc mới cho người dùng.
      *
-     * @param userId ID của người dùng
-     * @param documentId ID của tài liệu
+     * @param request chua documentId ID của tài liệu
      * @return Thông tin phiên đọc mới được tạo, dưới dạng DTO {@link ReadingSessionResponse}
      */
     @Override
-    public ReadingSessionResponse startReadingSession(String userId, Long documentId) {
-        User user = userRepository.findById(userId).orElseThrow(()
-                -> new AppException(ErrorCode.USER_NOT_FOUND));
-        Document document = documentRepository.findById(documentId).orElseThrow(() ->
+    public ReadingSessionResponse startReadingSession(ReadingSessionRequest request) {
+        User user = securityContextService.getCurrentUser();
+        if(user == null) {
+            return ReadingSessionResponse.builder()
+                    .currentPage(1)
+                    .build();
+        }
+        Document document = documentRepository.findById(request.getDocumentId()).orElseThrow(() ->
                 new AppException(ErrorCode.DOCUMENT_NOT_FOUND));
 
         // Kiểm tra nếu phiên đọc đã tồn tại, nếu có thì không tạo mới

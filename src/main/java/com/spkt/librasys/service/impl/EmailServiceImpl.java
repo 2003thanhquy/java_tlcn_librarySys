@@ -65,13 +65,12 @@ public class EmailServiceImpl implements EmailService {
         return "";
     }
     @Async
-    public CompletableFuture<Boolean> sendVerificationCodeAsync(String toEmail, String verificationCode) {
+    public CompletableFuture<Boolean> sendEmailAsync(String toEmail, String subject, String body) {
         // Tạo email để lưu vào database
         Email email = Email.builder()
                 .toEmail(toEmail)
-                .subject("Xác minh tài khoản của bạn")
-                .body("Chào bạn,\n\nĐây là mã xác minh của bạn: " + verificationCode +
-                        "\nMã này sẽ hết hạn sau 10 phút.\n\nTrân trọng,\nĐội ngũ hỗ trợ.")
+                .subject(subject)
+                .body(body)
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -87,4 +86,5 @@ public class EmailServiceImpl implements EmailService {
             return email.getStatus().equals("SUCCESS");
         });
     }
+
 }

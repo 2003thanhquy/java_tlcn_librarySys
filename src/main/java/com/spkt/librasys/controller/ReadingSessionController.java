@@ -25,7 +25,7 @@ public class ReadingSessionController {
      */
     @PostMapping("/start")
     public ApiResponse<ReadingSessionResponse> startReadingSession(@RequestBody ReadingSessionRequest request) {
-        ReadingSessionResponse sessionResponse = readingSessionService.startReadingSession(request.getUserId(), request.getDocumentId());
+        ReadingSessionResponse sessionResponse = readingSessionService.startReadingSession( request);
         return ApiResponse.<ReadingSessionResponse>builder()
                 .result(sessionResponse)
                 .message("Bắt đầu phiên đọc thành công")

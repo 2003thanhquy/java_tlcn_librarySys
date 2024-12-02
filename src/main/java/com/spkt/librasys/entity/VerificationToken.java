@@ -28,6 +28,12 @@ public class VerificationToken {
 
     @Column(name = "expiry_date", nullable = false)
     LocalDateTime expiryDate;
-
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false)
+    TokenType type;
     // Constructors, Getters, and Setters
+    public enum TokenType {
+        VERIFICATION,
+        RESET_PASSWORD
+    }
 }

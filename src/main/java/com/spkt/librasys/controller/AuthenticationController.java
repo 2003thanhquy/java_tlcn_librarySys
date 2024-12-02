@@ -1,14 +1,12 @@
 package com.spkt.librasys.controller;
 
 import com.nimbusds.jose.JOSEException;
-import com.spkt.librasys.dto.request.AuthenticationRequest;
-import com.spkt.librasys.dto.request.IntrospectRequest;
-import com.spkt.librasys.dto.request.LogoutRequest;
-import com.spkt.librasys.dto.request.RefreshRequest;
+import com.spkt.librasys.dto.request.*;
 import com.spkt.librasys.dto.response.ApiResponse;
 import com.spkt.librasys.dto.response.AuthenticationResponse;
 import com.spkt.librasys.dto.response.IntrospectResponse;
 import com.spkt.librasys.service.AuthenticationService;
+import com.spkt.librasys.service.VerificationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AccessLevel;
@@ -32,7 +30,8 @@ import java.text.ParseException;
 @RequestMapping("/api/v1/auth/")
 public class AuthenticationController {
 
-    private final AuthenticationService authenticationService;
+    AuthenticationService authenticationService;
+    VerificationService verificationService;
 
     /**
      * Đăng nhập người dùng.
@@ -117,4 +116,60 @@ public class AuthenticationController {
                 .result(response)
                 .build();
     }
+    /**
+     * Xác minh tài khoản người dùng.
+     *
+     * @param request yêu cầu xác minh tài khoản
+     * @return ApiResponse thông báo xác minh tài khoản thành công hoặc thất bại
+     */
+    @PostMapping("/verify-email")
+    public ApiResponse<Void> verifyAccount(@RequestBody VerificationRequest request) {
+        boolean isVerified = verificationService.verifyAccount(request);
+        return ApiResponse.<Void>builder()
+                .message(isVerified ? "Tài khoản đã được xác minh thành công" : "Mã xác minh không hợp lệ hoặc đã hết hạn")
+                .build();
+    }
+
+    /**
+     * Gửi lại mã xác minh cho tài khoản.
+     *
+     * @param email email của người dùng cần gửi mã xác minh lại
+     * @return ApiResponse thông báo gửi lại mã xác minh thành công hoặc thất bại
+     */
+    @PostMapping("/resend-verify-email")
+    public ApiResponse<Void> resendVerificationCode(@RequestParam String email) {
+        boolean isResent = verificationService.resendVerificationCode(email);
+        return ApiResponse.<Void>builder()
+                .message(isResent ? "Mã xác minh đã được gửi lại thành công" : "Gửi lại mã xác minh thất bại. Vui lòng thử lại sau.")
+                .build();
+    }
+
+    /**
+     * Yêu cầu gửi mã reset mật khẩu
+     *
+     * @param email email của người dùng yêu cầu reset mật khẩu
+     * @return ApiResponse thông báo gửi email reset thành công hoặc thất bại
+     */
+    @PostMapping("/request-reset-password")
+    public ApiResponse<Void> requestPasswordReset(@RequestParam String email) {
+        verificationService.requestPasswordReset(email);
+        return ApiResponse.<Void>builder()
+                .message("Email hướng dẫn reset mật khẩu đã được gửi. Vui lòng kiểm tra hộp thư.")
+                .build();
+    }
+
+    /**
+     * Xử lý reset mật khẩu
+     *
+     * @param resetPasswordRequest yêu cầu reset mật khẩu với mã token và mật khẩu mới
+     * @return ApiResponse thông báo kết quả của việc đặt lại mật khẩu
+     */
+    @PostMapping("/reset-password")
+    public ApiResponse<Void> resetPassword(@RequestBody ResetPasswordRequest resetPasswordRequest) {
+        boolean isResetSuccessful = verificationService.resetPassword(resetPasswordRequest);
+        return ApiResponse.<Void>builder()
+                .message(isResetSuccessful ? "Mật khẩu đã được thay đổi thành công." : "Mã reset mật khẩu không hợp lệ hoặc đã hết hạn.")
+                .build();
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.spkt.librasys.service;
 
+import com.spkt.librasys.dto.request.ResetPasswordRequest;
 import com.spkt.librasys.dto.request.VerificationRequest;
 
 /**
@@ -25,16 +26,23 @@ public interface VerificationService {
    boolean resendVerificationCode(String email);
 
    /**
-    * Tạo một mã xác minh mới.
-    *
-    * @return Mã xác minh mới được tạo.
-    */
-   String generateVerificationCode();
-
-   /**
     * Gửi mã xác minh đến địa chỉ email người dùng.
     *
     * @param email Địa chỉ email của người dùng cần nhận mã xác minh.
     */
    void verificationCode(String email);
+   /**
+    * Yêu cầu gửi mã reset mật khẩu đến email của người dùng.
+    *
+    * @param email email của người dùng yêu cầu reset mật khẩu
+    */
+   void requestPasswordReset(String email);
+
+   /**
+    * Xác minh mã reset mật khẩu và cập nhật mật khẩu mới.
+    *
+    * @param resetPasswordRequest yêu cầu reset mật khẩu bao gồm token và mật khẩu mới
+    * @return true nếu reset thành công, false nếu mã không hợp lệ hoặc hết hạn
+    */
+   boolean resetPassword(ResetPasswordRequest resetPasswordRequest);
 }
