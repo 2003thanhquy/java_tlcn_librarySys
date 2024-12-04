@@ -207,6 +207,13 @@ public class DocumentServiceImpl implements DocumentService {
             Set<DocumentType> documentTypes = getDocumentTypes(request.getDocumentTypeIds());
             document.setDocumentTypes(documentTypes);
         }
+        // 4. Lấy và thêm các Course vào Document
+        if(!request.getCourseIds().isEmpty()){
+            Set<Course> courses = getCoursesByIds(request.getCourseIds());
+            document.setCourses(courses);
+        }
+
+
 
         // 4. Cập nhật hình ảnh (nếu có)
         MultipartFile image = request.getImage();

@@ -237,7 +237,7 @@ public class DataInit implements CommandLineRunner {
 
 
         // 4. Chèn dữ liệu cho Documents sử dụng builder pattern
-        if (documentRepository.count() <20) {
+        if (documentRepository.count() <1) {
             // Đảm bảo chèn đầy đủ 40 documents
             // Định dạng ngày tháng
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/d/yyyy");
@@ -252,7 +252,7 @@ public class DataInit implements CommandLineRunner {
                             .quantity(20)
                             .availableCount(20)
                             .size(DocumentSize.LARGE)
-                            .status(DocumentStatus.UNAVAILABLE)
+                            .status(DocumentStatus.AVAILABLE)
                             .coverImage("cover_1.jpg")
                             .description("Description of GEFC220105 - Kinh tế học đại cương - Basics of Economics")
                             .documentLink(null) // "########" được chuyển thành null
@@ -265,7 +265,7 @@ public class DataInit implements CommandLineRunner {
                                     .size(DocumentSize.LARGE)
                                     .warehouseId(warehouse.getWarehouseId())
                                     .rackId(null) // Không gán rack cụ thể lúc tạo
-                                    .quantity(19).build()))
+                                    .quantity(20).build()))
                             .build(),
 
                     // Document 2
@@ -276,7 +276,7 @@ public class DataInit implements CommandLineRunner {
                             .quantity(49)
                             .availableCount(49)
                             .size(DocumentSize.SMALL)
-                            .status(DocumentStatus.UNAVAILABLE)
+                            .status(DocumentStatus.AVAILABLE)
                             .coverImage("cover_2.jpg")
                             .description("Description of IQMA220205 - Nhập môn quản trị chất lượng - Quality Management Introduction")
                             .documentLink("http://example.com/book_2")
@@ -300,7 +300,7 @@ public class DataInit implements CommandLineRunner {
                             .quantity(32)
                             .availableCount(32)
                             .size(DocumentSize.LARGE)
-                            .status(DocumentStatus.UNAVAILABLE)
+                            .status(DocumentStatus.AVAILABLE)
                             .coverImage("cover_3.jpg")
                             .description("Description of INMA220305 - Nhập môn Quản trị học - Management Basics")
                             .documentLink(null)
@@ -309,6 +309,11 @@ public class DataInit implements CommandLineRunner {
                             .price(new BigDecimal("74.44"))
                             .publishedDate(null)
                             .publisher("Publisher D")
+                            .locations(List.of(DocumentLocation.builder()
+                                    .size(DocumentSize.LARGE)
+                                    .warehouseId(warehouse.getWarehouseId())
+                                    .rackId(null) // Không gán rack cụ thể lúc tạo
+                                    .quantity(32).build()))
                             .build(),
 
                     // Document 4
@@ -319,7 +324,7 @@ public class DataInit implements CommandLineRunner {
                             .quantity(47)
                             .availableCount(47)
                             .size(DocumentSize.MEDIUM)
-                            .status(DocumentStatus.UNAVAILABLE)
+                            .status(DocumentStatus.AVAILABLE)
                             .coverImage("cover_4.jpg")
                             .description("Description of INLO220405 - Nhập môn Logic học - Introduction to Logic")
                             .documentLink("http://example.com/book_4")
@@ -328,292 +333,14 @@ public class DataInit implements CommandLineRunner {
                             .price(new BigDecimal("56.91"))
                             .publishedDate(LocalDate.parse("9/5/2024", formatter))
                             .publisher("Publisher E")
-                            .build(),
-
-                    // Document 5
-                    Document.builder()
-                            .isbn("4700000000000")
-                            .documentName("TOEN430979 - Development Tools and Environments")
-                            .author("Jane Smith")
-                            .quantity(20)
-                            .availableCount(20)
-                            .size(DocumentSize.SMALL)
-                            .status(DocumentStatus.UNAVAILABLE)
-                            .coverImage("cover_5.jpg")
-                            .description("Description of TOEN430979 - Công cụ và môi trường phát triển PM - Development Tools and Environments")
-                            .documentLink(null)
-                            .language("Vietnamese")
-                            .pageCount(675)
-                            .price(new BigDecimal("45.64"))
-                            .publishedDate(null)
-                            .publisher("Publisher B")
-                            .build(),
-
-                    // Document 6
-                    Document.builder()
-                            .isbn("2670000000000")
-                            .documentName("SOPM431679 - Software Project Management")
-                            .author("Jane Smith")
-                            .quantity(33)
-                            .availableCount(33)
+                            .locations(List.of(DocumentLocation.builder()
                             .size(DocumentSize.MEDIUM)
-                            .status(DocumentStatus.UNAVAILABLE)
-                            .coverImage("cover_6.jpg")
-                            .description("Description of SOPM431679 - Quản lý dự án phần mềm - Software Project Management")
-                            .documentLink(null)
-                            .language("German")
-                            .pageCount(379)
-                            .price(new BigDecimal("18.3"))
-                            .publishedDate(null)
-                            .publisher("Publisher C")
-                            .build(),
+                            .warehouseId(warehouse.getWarehouseId())
+                            .rackId(null) // Không gán rack cụ thể lúc tạo
+                            .quantity(47).build()))
+                    .build()
 
-                    // Document 7
-                    Document.builder()
-                            .isbn("2980000000000")
-                            .documentName("ADMP431879 - Advanced Mobile Programming")
-                            .author("Alice Johnson")
-                            .quantity(30)
-                            .availableCount(30)
-                            .size(DocumentSize.SMALL)
-                            .status(DocumentStatus.AVAILABLE)
-                            .coverImage("cover_7.jpg")
-                            .description("Description of ADMP431879 - Lập trình di động nâng cao - Advanced Mobile Programming")
-                            .documentLink("http://example.com/book_7")
-                            .language("Japanese")
-                            .pageCount(748)
-                            .price(new BigDecimal("63.8"))
-                            .publishedDate(null)
-                            .publisher("Publisher D")
-                            .build(),
 
-                    // Document 8
-                    Document.builder()
-                            .isbn("2620000000000")
-                            .documentName("ADPL331379 - Advanced Programming Languages")
-                            .author("Jane Smith")
-                            .quantity(22)
-                            .availableCount(22)
-                            .size(DocumentSize.LARGE)
-                            .status(DocumentStatus.AVAILABLE)
-                            .coverImage("cover_8.jpg")
-                            .description("Description of ADPL331379 - Ngôn ngữ Lập trình tiên tiến - Advanced Programming Languages")
-                            .documentLink("http://example.com/book_8")
-                            .language("English")
-                            .pageCount(685)
-                            .price(new BigDecimal("52.36"))
-                            .publishedDate(null)
-                            .publisher("Publisher E")
-                            .build(),
-
-                    // Document 9
-                    Document.builder()
-                            .isbn("7400000000000")
-                            .documentName("DIFO432180 -  Digital Forensics")
-                            .author("Alice Johnson")
-                            .quantity(16)
-                            .availableCount(16)
-                            .size(DocumentSize.SMALL)
-                            .status(DocumentStatus.AVAILABLE)
-                            .coverImage("cover_9.jpg")
-                            .description("Description of DIFO432180 - Pháp lý kỹ thuật số - Digital Forensics")
-                            .documentLink("http://example.com/book_9")
-                            .language("Japanese")
-                            .pageCount(631)
-                            .price(new BigDecimal("24.38"))
-                            .publishedDate(LocalDate.parse("1/2/2022", formatter))
-                            .publisher("Publisher D")
-                            .build(),
-
-                    // Document 10
-                    Document.builder()
-                            .isbn("7040000000000")
-                            .documentName("NSMS432280 - Network Security Monitoring Systems")
-                            .author("John Doe")
-                            .quantity(7)
-                            .availableCount(7)
-                            .size(DocumentSize.SMALL)
-                            .status(DocumentStatus.UNAVAILABLE)
-                            .coverImage("cover_10.jpg")
-                            .description("Description of NSMS432280 - Hệ thống giám sát an toàn mạng - Network Security Monitoring Systems")
-                            .documentLink(null)
-                            .language("Vietnamese")
-                            .pageCount(654)
-                            .price(new BigDecimal("73"))
-                            .publishedDate(null)
-                            .publisher("Publisher D")
-                            .build(),
-
-                    // Document 11
-                    Document.builder()
-                            .isbn("5620000000000")
-                            .documentName("WISE432380 - Wireless and Mobile Security")
-                            .author("Bob Brown")
-                            .quantity(17)
-                            .availableCount(17)
-                            .size(DocumentSize.LARGE)
-                            .status(DocumentStatus.UNAVAILABLE)
-                            .coverImage("cover_11.jpg")
-                            .description("Description of WISE432380 - An toàn mạng không dây và di động - Wireless and Mobile Security")
-                            .documentLink(null)
-                            .language("German")
-                            .pageCount(834)
-                            .price(new BigDecimal("31.09"))
-                            .publishedDate(null)
-                            .publisher("Publisher A")
-                            .build(),
-
-                    // Document 12
-                    Document.builder()
-                            .isbn("1420000000000")
-                            .documentName("CLAD432480 - Cloud Administration")
-                            .author("John Doe")
-                            .quantity(30)
-                            .availableCount(30)
-                            .size(DocumentSize.LARGE)
-                            .status(DocumentStatus.UNAVAILABLE)
-                            .coverImage("cover_12.jpg")
-                            .description("Description of CLAD432480 - Quản trị trên môi trường cloud - Cloud Administration")
-                            .documentLink("http://example.com/book_12")
-                            .language("Vietnamese")
-                            .pageCount(898)
-                            .price(new BigDecimal("91.79"))
-                            .publishedDate(null)
-                            .publisher("Publisher A")
-                            .build(),
-
-                    // Document 13
-                    Document.builder()
-                            .isbn("8590000000000")
-                            .documentName("ADDB331784 - Advanced Database Systems")
-                            .author("John Doe")
-                            .quantity(45)
-                            .availableCount(45)
-                            .size(DocumentSize.MEDIUM)
-                            .status(DocumentStatus.AVAILABLE)
-                            .coverImage("cover_13.jpg")
-                            .description("Description of ADDB331784 - Cơ sở dữ liệu Nâng cao - Advanced Database Systems")
-                            .documentLink("http://example.com/book_13")
-                            .language("Japanese")
-                            .pageCount(991)
-                            .price(new BigDecimal("61.9"))
-                            .publishedDate(null)
-                            .publisher("Publisher A")
-                            .build(),
-
-                    // Document 14
-                    Document.builder()
-                            .isbn("4070000000000")
-                            .documentName("DAWH430784 - Data Warehousing")
-                            .author("Carol Davis")
-                            .quantity(19)
-                            .availableCount(19)
-                            .size(DocumentSize.LARGE)
-                            .status(DocumentStatus.UNAVAILABLE)
-                            .coverImage("cover_14.jpg")
-                            .description("Description of DAWH430784 - Kho dữ liệu - Data Warehousing")
-                            .documentLink("http://example.com/book_14")
-                            .language("English")
-                            .pageCount(836)
-                            .price(new BigDecimal("77.05"))
-                            .publishedDate(null)
-                            .publisher("Publisher A")
-                            .build(),
-
-                    // Document 15
-                    Document.builder()
-                            .isbn("5930000000000")
-                            .documentName("INRE431084 - Information Retrieval")
-                            .author("Alice Johnson")
-                            .quantity(12)
-                            .availableCount(12)
-                            .size(DocumentSize.LARGE)
-                            .status(DocumentStatus.AVAILABLE)
-                            .coverImage("cover_15.jpg")
-                            .description("Description of INRE431084 - Truy tìm thông tin - Information Retrieval")
-                            .documentLink("http://example.com/book_15")
-                            .language("German")
-                            .pageCount(650)
-                            .price(new BigDecimal("91.8"))
-                            .publishedDate(null)
-                            .publisher("Publisher E")
-                            .build(),
-
-                    // Document 16
-                    Document.builder()
-                            .isbn("9870000000000")
-                            .documentName("SEEN431579 - Search Engine - Search Engine Technology")
-                            .author("Bob Brown")
-                            .quantity(13)
-                            .availableCount(13)
-                            .size(DocumentSize.SMALL)
-                            .status(DocumentStatus.UNAVAILABLE)
-                            .coverImage("cover_16.jpg")
-                            .description("Description of SEEN431579 - Search Engine - Search Engine Technology")
-                            .documentLink("http://example.com/book_16")
-                            .language("French")
-                            .pageCount(676)
-                            .price(new BigDecimal("21.67"))
-                            .publishedDate(null)
-                            .publisher("Publisher A")
-                            .build(),
-
-                    // Document 17
-                    Document.builder()
-                            .isbn("6360000000000")
-                            .documentName("GEFC220105 - Basics of Economics")
-                            .author("John Doe")
-                            .quantity(9)
-                            .availableCount(9)
-                            .size(DocumentSize.LARGE)
-                            .status(DocumentStatus.AVAILABLE)
-                            .coverImage("cover_17.jpg")
-                            .description("Description of GEFC220105 - Kinh tế học đại cương - Basics of Economics")
-                            .documentLink("http://example.com/book_17")
-                            .language("German")
-                            .pageCount(263)
-                            .price(new BigDecimal("97.71"))
-                            .publishedDate(LocalDate.parse("3/8/2018", formatter))
-                            .publisher("Publisher D")
-                            .build(),
-
-                    // Document 18
-                    Document.builder()
-                            .isbn("3160000000000")
-                            .documentName("ADDB331784 - Advanced Database Systems")
-                            .author("John Doe")
-                            .quantity(46)
-                            .availableCount(46)
-                            .size(DocumentSize.SMALL)
-                            .status(DocumentStatus.AVAILABLE)
-                            .coverImage("cover_18.jpg")
-                            .description("Description of ADDB331784 - Cơ sở dữ liệu Nâng cao - Advanced Database Systems")
-                            .documentLink("http://example.com/book_18")
-                            .language("German")
-                            .pageCount(984)
-                            .price(new BigDecimal("44.36"))
-                            .publishedDate(LocalDate.parse("8/7/2017", formatter))
-                            .publisher("Publisher A")
-                            .build(),
-
-                    // Document 19
-                    Document.builder()
-                            .isbn("1600000000000")
-                            .documentName("DAWH430784 - Data Warehousing")
-                            .author("Carol Davis")
-                            .quantity(2)
-                            .availableCount(2)
-                            .size(DocumentSize.SMALL)
-                            .status(DocumentStatus.AVAILABLE)
-                            .coverImage("cover_19.jpg")
-                            .description("Description of DAWH430784 - Kho dữ liệu - Data Warehousing")
-                            .documentLink("http://example.com/book_19")
-                            .language("French")
-                            .pageCount(596)
-                            .price(new BigDecimal("81.98"))
-                            .publishedDate(LocalDate.parse("7/8/2020", formatter))
-                            .publisher("Publisher C")
-                            .build()
             );
 
             // Liên kết Document với các Course dựa trên related_subjects

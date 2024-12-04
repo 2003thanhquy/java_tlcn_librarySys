@@ -50,6 +50,8 @@ public class DocumentUpdateRequest {
     @NotNull(message = "Document type IDs are required")
     Set<Long> documentTypeIds;
 
+    private Set<Long> courseIds;
+
     // Trường thêm để hỗ trợ cập nhật file ảnh và PDF
     MultipartFile image; // Ảnh bìa
     MultipartFile pdfFile; // File PDF
