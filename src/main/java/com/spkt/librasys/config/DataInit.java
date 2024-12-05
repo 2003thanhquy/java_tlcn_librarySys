@@ -17,6 +17,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -241,7 +242,7 @@ public class DataInit implements CommandLineRunner {
             // Đảm bảo chèn đầy đủ 40 documents
             // Định dạng ngày tháng
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/d/yyyy");
-
+            Optional<DocumentType> documentType = documentTypeRepository.findByTypeName("Fiction");
             // Tạo danh sách các Documents
             List<Document> documents = Arrays.asList(
                     // Document 1
@@ -259,8 +260,9 @@ public class DataInit implements CommandLineRunner {
                             .language("Japanese")
                             .pageCount(202)
                             .price(new BigDecimal("67.62"))
-                            .publishedDate(null) // "########" được chuyển thành null
+                            .publishedDate(null) // "########" được chuyển thành  null
                             .publisher("Publisher D")
+                            .documentTypes(Set.of(documentType.get()))
                             .locations(List.of(DocumentLocation.builder()
                                     .size(DocumentSize.LARGE)
                                     .warehouseId(warehouse.getWarehouseId())

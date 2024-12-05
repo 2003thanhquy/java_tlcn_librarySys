@@ -13,5 +13,4 @@ public interface LoanTransactionMapper {
     @Mapping(target = "username", source = "user.username")
     LoanTransactionResponse toLoanTransactionResponse(LoanTransaction loanTransaction);
 
-    LoanTransaction toLoanTransaction(LoanTransactionRequest loanTransactionRequest);
 }

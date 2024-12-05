@@ -1,5 +1,6 @@
 package com.spkt.librasys.dto.response.fine;
 
+import com.spkt.librasys.dto.response.LoanTransactionResponse;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 
@@ -12,5 +13,5 @@ public class FineResponse {
     String fineId;
     double amount;
     String status;  // UNPAID, PAID
-    String loanTransactionId;
+    LoanTransactionResponse loanTransactionResponse;
 }
