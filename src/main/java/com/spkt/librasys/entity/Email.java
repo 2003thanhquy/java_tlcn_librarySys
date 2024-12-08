@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Entity(name ="emails_001")
+//@Entity(name ="emails_001")
 public class Email {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
