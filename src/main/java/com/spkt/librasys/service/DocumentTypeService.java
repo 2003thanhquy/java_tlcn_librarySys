@@ -12,6 +12,8 @@ import java.util.List;
  */
 public interface DocumentTypeService {
 
+    DocumentTypeResponse getIdDocumentType(Long documentTypeId);
+
     /**
      * Lấy danh sách tất cả các loại tài liệu với phân trang.
      *

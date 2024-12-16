@@ -30,6 +30,8 @@ public class SecurityConfig {
             "/api/v1/documents/{documentId}" ,   // Cho phép xem chi tiết tài liệu mà không cần xác thực
             "/api/v1/documents/{documentId}/read" ,
             "/api/v1/documents/search",
+            "/api/v1/document-types/**",
+            "/api/v1/courses/**",
             "/api/v1/auth/**",
     };
     private final String[] PUBLIC_POST_ENDPOINTS = {

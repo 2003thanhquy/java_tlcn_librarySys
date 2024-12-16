@@ -30,11 +30,26 @@ public class DocumentTypeController {
      * Truy xuất tất cả các loại tài liệu với phân trang.
      * Endpoint này chỉ có thể truy cập bởi người dùng có quyền 'ADMIN' hoặc 'MANAGER'.
      *
+     * @param id dung de truy van tim documentType
+     * @return ApiResponse chứa danh sách các loại tài liệu theo phân trang.
+     */
+    @GetMapping("/{id}")
+    public ApiResponse<DocumentTypeResponse> getIdDocumentTypes(@PathVariable Long id) {
+        DocumentTypeResponse documentTypes = documentTypeService.getIdDocumentType(id);
+        return ApiResponse.<DocumentTypeResponse>builder()
+                .message("lay id loại tài liệu đã được truy xuất thành công")
+                .result(documentTypes)
+                .build();
+    }
+
+    /**
+     * Truy xuất tất cả các loại tài liệu với phân trang.
+     * Endpoint này chỉ có thể truy cập bởi người dùng có quyền 'ADMIN' hoặc 'MANAGER'.
+     *
      * @param pageable Thông tin phân trang (số trang, kích thước trang, hướng sắp xếp).
      * @return ApiResponse chứa danh sách các loại tài liệu theo phân trang.
      */
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     public ApiResponse<PageDTO<DocumentTypeResponse>> getAllDocumentTypes(Pageable pageable) {
         Page<DocumentTypeResponse> documentTypes = documentTypeService.getAllDocumentTypes(pageable);
         PageDTO<DocumentTypeResponse> pageDTO = new PageDTO<>(documentTypes);
@@ -52,7 +67,7 @@ public class DocumentTypeController {
      * @return ApiResponse chứa loại tài liệu mới được tạo thành công.
      */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     public ApiResponse<DocumentTypeResponse> createDocumentType(@Valid @RequestBody DocumentTypeCreateRequest request) {
         DocumentTypeResponse documentType = documentTypeService.createDocumentType(request);
         return ApiResponse.<DocumentTypeResponse>builder()

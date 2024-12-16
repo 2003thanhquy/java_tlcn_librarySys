@@ -1,5 +1,6 @@
 package com.spkt.librasys.service.impl;
 
+import com.github.javafaker.App;
 import com.spkt.librasys.dto.request.document.DocumentTypeCreateRequest;
 import com.spkt.librasys.dto.response.document.DocumentTypeResponse;
 import com.spkt.librasys.entity.DocumentType;
@@ -26,7 +27,13 @@ public class DocumentTypeServiceImpl implements DocumentTypeService {
     DocumentTypeMapper documentTypeMapper;
 
     @Override
-    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public DocumentTypeResponse getIdDocumentType(Long documentTypeId) {
+        return documentTypeMapper.toDocumentTypeResponse(documentTypeRepository.findById(documentTypeId)
+                .orElseThrow(()-> new AppException(ErrorCode.DOCUMENT_TYPE_NOT_FOUND)));
+
+    }
+
+    @Override
     public Page<DocumentTypeResponse> getAllDocumentTypes(Pageable pageable) {
         return documentTypeRepository.findAll(pageable)
                 .map(documentTypeMapper::toDocumentTypeResponse);
