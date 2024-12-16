@@ -2,7 +2,6 @@ package com.spkt.librasys.service.impl;
 
 import com.github.javafaker.Bool;
 import com.spkt.librasys.entity.Email;
-import com.spkt.librasys.repository.EmailRepository;
 import com.spkt.librasys.service.EmailService;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +20,8 @@ public class EmailServiceImpl implements EmailService {
     private static String EMAIL_HOST = "quy2003@wuy.id.vn";
     @Autowired
     private JavaMailSender mailSender;
-    @Autowired
-    EmailRepository emailRepository;
+//    @Autowired
+//    EmailRepository emailRepository;
 
     @Override
     @Async
@@ -82,7 +81,7 @@ public class EmailServiceImpl implements EmailService {
                 email.setStatus("FAILED"); // Đánh dấu trạng thái thất bại
             }
             // Lưu email vào database
-            emailRepository.save(email);
+           // emailRepository.save(email);
             return email.getStatus().equals("SUCCESS");
         });
     }
