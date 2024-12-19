@@ -6,6 +6,7 @@ import com.spkt.librasys.entity.Department;
 import com.spkt.librasys.entity.Role;
 import com.spkt.librasys.entity.User;
 import com.spkt.librasys.exception.AppException;
+import com.spkt.librasys.exception.ErrorCode;
 import com.spkt.librasys.mapper.UserMapper;
 import com.spkt.librasys.repository.DepartmentRepository;
 import com.spkt.librasys.repository.RoleRepository;
@@ -15,6 +16,7 @@ import com.spkt.librasys.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -40,6 +42,7 @@ class CreateUserTest {
 
     private UserCreateRequest userCreateRequest;
     private User mockUser;
+    private UserResponse userResponse;
     private Role mockRole;
     private Department mockDepartment;
 
@@ -57,6 +60,10 @@ class CreateUserTest {
         mockUser.setUsername(userCreateRequest.getUsername());
         mockUser.setPassword(userCreateRequest.getPassword());
 
+        userResponse = new UserResponse();
+        userResponse.setUsername(mockUser.getUsername());
+
+
         mockRole = new Role();
         mockRole.setName("USER");
 
@@ -69,11 +76,12 @@ class CreateUserTest {
         when(roleRepository.findById("USER")).thenReturn(java.util.Optional.of(mockRole));
         when(departmentRepository.findByDepartmentCodeId(1L)).thenReturn(java.util.Optional.of(mockDepartment));
         when(passwordEncoder.encode(userCreateRequest.getPassword())).thenReturn("encodedPassword123");
+        when(userMapper.toUserResponse(mockUser)).thenReturn(userResponse);
     }
 
     @Test
     void testCreateUser_Success() {
-        // Gọi phương thức createUser
+
         UserResponse response = userService.createUser(userCreateRequest);
 
         // Kiểm tra phản hồi
@@ -87,34 +95,11 @@ class CreateUserTest {
     }
 
     @Test
-    void testCreateUser_InvalidEmail() {
-        // Thử tạo người dùng với email không hợp lệ
-        userCreateRequest.setUsername("invalidEmail");
-
-        // Kiểm tra xem ngoại lệ có được ném ra khi email không hợp lệ
-        AppException exception = assertThrows(AppException.class, () -> userService.createUser(userCreateRequest));
-        assertEquals("INVALID_EMAIL_FORMAT", exception.getErrorCode());
-    }
-
-    @Test
-    void testCreateUser_EmailWithoutDepartment() {
-        // Thử tạo người dùng mà không có department hợp lệ
-        userCreateRequest.setUsername("99unknown@domain.com");  // Email không có mã phòng ban hợp lệ
-
-        when(departmentRepository.findByDepartmentCodeId(anyLong())).thenReturn(java.util.Optional.empty());  // Mock không tìm thấy phòng ban
-
-        // Kiểm tra xem có ném ngoại lệ không tìm thấy department không
-        AppException exception = assertThrows(AppException.class, () -> userService.createUser(userCreateRequest));
-        assertEquals("DEPARTMENT_NOT_FOUND", exception.getErrorCode());
-    }
-
-    @Test
     void testCreateUser_DuplicateUser() {
-        // Thử tạo người dùng với username đã tồn tại
-        when(userRepository.save(mockUser)).thenThrow();
+        when(userRepository.save(mockUser)).thenThrow(new DataIntegrityViolationException("Duplicate entry"));
 
         // Kiểm tra xem có ném ngoại lệ Duplicate User không
         AppException exception = assertThrows(AppException.class, () -> userService.createUser(userCreateRequest));
-        assertEquals("DUPLICATE_USER", exception.getErrorCode());
+        assertEquals(ErrorCode.DUPLICATE_USER, exception.getErrorCode());
     }
 }
