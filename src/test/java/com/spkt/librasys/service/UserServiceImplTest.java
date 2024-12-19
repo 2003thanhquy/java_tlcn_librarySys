@@ -10,6 +10,7 @@ import com.spkt.librasys.exception.AppException;
 import com.spkt.librasys.mapper.UserMapper;
 import com.spkt.librasys.repository.RoleRepository;
 import com.spkt.librasys.repository.access.UserRepository;
+import com.spkt.librasys.service.SecurityContextService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -43,6 +44,8 @@ public class UserServiceImplTest {
     private RoleRepository roleRepository;
 
     @Mock
+    private SecurityContextService securityContextService;
+    @Mock
     private SecurityContext securityContext;
 
     @Mock
@@ -72,7 +75,7 @@ public class UserServiceImplTest {
         when(authentication.getName()).thenReturn(username);
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
         when(userMapper.toUserResponse(user)).thenReturn(userResponse);
-
+        when(securityContextService.getCurrentUser()).thenReturn(user);
         UserResponse response = userService.getMyInfo();
 
         // Xuất thông tin để người dùng kiểm tra

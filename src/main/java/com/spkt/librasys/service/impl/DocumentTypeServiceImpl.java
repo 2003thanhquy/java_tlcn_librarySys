@@ -40,7 +40,6 @@ public class DocumentTypeServiceImpl implements DocumentTypeService {
     }
 
     @Override
-    @PreAuthorize("hasRole('ADMIN')")
     @Transactional
     public DocumentTypeResponse createDocumentType(DocumentTypeCreateRequest request) {
         DocumentType documentType = documentTypeMapper.toDocumentType(request);

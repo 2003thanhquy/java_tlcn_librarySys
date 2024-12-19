@@ -63,6 +63,7 @@ public class AuthenticationServiceImplTest {
         User user = new User();
         user.setUsername("testuser");
         user.setPassword(passwordEncoder.encode("password123"));
+        user.setIsActive(User.Status.ACTIVE);
 
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(user));
 

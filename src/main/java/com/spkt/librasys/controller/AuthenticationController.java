@@ -10,6 +10,7 @@ import com.spkt.librasys.service.AuthenticationService;
 import com.spkt.librasys.service.VerificationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -41,7 +42,7 @@ public class AuthenticationController {
      * @return Một đối tượng ApiResponse chứa thông tin đăng nhập thành công hoặc thất bại.
      */
     @PostMapping("/login")
-    public ApiResponse<AuthenticationResponse> login(@RequestBody AuthenticationRequest request) {
+    public ApiResponse<AuthenticationResponse> login(@Valid @RequestBody AuthenticationRequest request) {
         return ApiResponse.<AuthenticationResponse>builder()
                 .result(authenticationService.login(request))
                 .build();

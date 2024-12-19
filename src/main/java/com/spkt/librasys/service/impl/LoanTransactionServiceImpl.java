@@ -111,17 +111,13 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
 
         // 7. Chuyển đổi giao dịch thành phản hồi LoanTransactionResponse.
         LoanTransactionResponse loanResponse = loanTransactionMapper.toLoanTransactionResponse(savedTransaction);
-
         // 8. Gửi thông báo WebSocket cho người dùng và quản lý về trạng thái giao dịch mượn sách.
         sendLoanStatusUpdate(loanTransaction, loanResponse);
 
         // 9. Tạo và gửi thông báo cho người dùng về yêu cầu mượn sách đã được tạo và đang chờ phê duyệt.
-        NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
-                .userIds(List.of(user.getUserId()))
-                .title("Yêu cầu mượn sách được tạo")
-                .content(String.format("Yêu cầu mượn sách '%s' của bạn đã được tạo và đang chờ phê duyệt.", document.getDocumentName()))
-                .build();
-        notificationService.createNotifications(notificationCreateRequest);
+        String title = "Yêu cầu mượn sách được tạo";
+        String content = String.format("Yêu cầu mượn sách '%s' của bạn đã được tạo và đang chờ phê duyệt.", document.getDocumentName());
+        this.sendNotification(List.of(user.getUserId()),title, content);
 
         // 10. Trả về phản hồi chứa thông tin giao dịch mượn sách.
         return loanResponse;
@@ -186,9 +182,6 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
             locationDetails = String.format("Kho ID: %d, Địa điểm: %s", warehouse.getWarehouseId(), warehouse.getLocation());
         }
 
-        String managerMessage = String.format("Bạn đã phê duyệt yêu cầu mượn sách '%s'. Vị trí lấy sách: %s. Vui lòng chuẩn bị sách để giao cho người dùng.",
-                document.getDocumentName(), locationDetails);
-
         // 10. Lưu giao dịch mượn sách đã cập nhật
         loanTransaction = loanTransactionRepository.save(loanTransaction);
         LoanTransactionResponse loanResponse = loanTransactionMapper.toLoanTransactionResponse(loanTransaction);
@@ -197,24 +190,17 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         sendLoanStatusUpdate(loanTransaction, loanResponse);
 
         // 12. Tạo và gửi thông báo cho người duyệt (Manager/Admin)
-        NotificationCreateRequest managerNotification = NotificationCreateRequest.builder()
-                .userIds(List.of(userCurrent.getUserId()))
-                .title("Phê duyệt yêu cầu mượn sách")
-                .content(managerMessage)
-                .build();
-        notificationService.createNotifications(managerNotification);
-
+        String title = "Phê duyệt yêu cầu mượn sách";
+        String managerMessage = String.format("Bạn đã phê duyệt yêu cầu mượn sách '%s'. Vị trí lấy sách: %s. Vui lòng chuẩn bị sách để giao cho người dùng.",
+                document.getDocumentName(), locationDetails);
+        this.sendNotification(List.of(userCurrent.getUserId()),title,managerMessage);
         // 13. Tạo và gửi thông báo cho người dùng yêu cầu mượn sách đã được phê duyệt
         LocalDateTime expiryTime = loanTransaction.getUpdatedAt().plusDays(2).withHour(0).withMinute(0).withSecond(0).withNano(0);
-        NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
-                .userIds(List.of(user.getUserId()))
-                .title("Yêu cầu mượn sách được phê duyệt")
-                .content(String.format("Yêu cầu mượn sách '%s' của bạn đã được phê duyệt. " +
-                                "Bạn có 48 giờ để nhận sách. Nếu không nhận trong thời gian này, yêu cầu sẽ bị hủy tự động vào lúc 00:00 ngày %s.",
-                        loanTransaction.getDocument().getDocumentName(), expiryTime.toLocalDate()))
-                .build();
-        notificationService.createNotifications(notificationCreateRequest);
-
+        String titleUser = "Yêu cầu mượn sách được phê duyệt";
+        String contentUser = String.format("Yêu cầu mượn sách '%s' của bạn đã được phê duyệt. " +
+                        "Bạn có 48 giờ để nhận sách. Nếu không nhận trong thời gian này, yêu cầu sẽ bị hủy tự động vào lúc 00:00 ngày %s.",
+                loanTransaction.getDocument().getDocumentName(), expiryTime.toLocalDate());
+        this.sendNotification(List.of(user.getUserId()),titleUser,contentUser);
         // 14. Trả về phản hồi chứa thông tin giao dịch mượn sách
         return loanResponse;
     }
@@ -246,12 +232,9 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         sendLoanStatusUpdate(loanTransaction, loanResponse);
 
         // 7. Tạo và gửi thông báo từ chối giao dịch cho người dùng
-        NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
-                .userIds(List.of(loanTransaction.getUser().getUserId()))
-                .title("Yêu cầu mượn sách bị từ chối")
-                .content(String.format("Yêu cầu mượn sách '%s' của bạn đã bị từ chối.", loanTransaction.getDocument().getDocumentName()))
-                .build();
-        notificationService.createNotifications(notificationCreateRequest);
+        String titleUser = "Yêu cầu mượn sách bị từ chối";
+        String contentUser = String.format("Yêu cầu mượn sách '%s' của bạn đã bị từ chối.", loanTransaction.getDocument().getDocumentName());
+        this.sendNotification(List.of(loanTransaction.getUser().getUserId()),titleUser,contentUser);
 
         // 8. Trả về phản hồi chứa thông tin giao dịch mượn sách
         return loanResponse;
@@ -278,8 +261,6 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                 .min(Comparator.comparingInt(LoanPolicy::getMaxLoanDays))
                 .orElseThrow(() -> new AppException(ErrorCode.POLICY_NOT_FOUND, "Không tìm thấy chính sách phù hợp"));
 
-
-
         LocalDateTime currentDate = LocalDateTime.now();
         loanTransaction.setLoanDate(currentDate);
         loanTransaction.setDueDate(currentDate.toLocalDate().plusDays(loanPolicy.getMaxLoanDays()));
@@ -294,12 +275,9 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         // Gửi thông báo WebSocket cho người dùng và quản lý
         sendLoanStatusUpdate(loanTransaction, loanResponse);
         // Gửi thông báo nhận sách
-        NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
-                .userIds(List.of(loanTransaction.getUser().getUserId()))
-                .title("Sách đã được nhận")
-                .content(String.format("Bạn đã nhận sách '%s' thành công.", loanTransaction.getDocument().getDocumentName()))
-                .build();
-        notificationService.createNotifications(notificationCreateRequest);
+        String titleUser = "Sách đã được nhận";
+        String contentUser = String.format("Bạn đã nhận sách '%s' thành công.", loanTransaction.getDocument().getDocumentName());
+        this.sendNotification(List.of(loanTransaction.getUser().getUserId()), titleUser, contentUser);
 
         return loanResponse;
     }
@@ -332,12 +310,9 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         sendLoanStatusUpdate(loanTransaction, loanResponse);
 
         // Gửi thông báo xác nhận trả sách
-        NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
-                .userIds(List.of(user.getUserId()))
-                .title("Sách đã được trả")
-                .content(String.format("Bạn đã trả sách '%s' thành công.", loanTransaction.getDocument().getDocumentName()))
-                .build();
-        notificationService.createNotifications(notificationCreateRequest);
+        String titleUser = "Sách đã được trả";
+        String contentUser = String.format("Bạn đã trả sách '%s' thành công.", loanTransaction.getDocument().getDocumentName());
+        this.sendNotification(List.of(user.getUserId()), titleUser, contentUser);
 
         return loanResponse;
     }
@@ -441,7 +416,7 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
                             return newLocation;
                         });
                 warehouseLocation.setQuantity(warehouseLocation.getQuantity() + 1);
-                warehouseLocation.updateTotalSize();
+                //warehouseLocation.updateTotalSize();
                 // Gửi thông báo cho quản lý
                message = String.format("Sách '%s' đã được trả về kho '%s' vì kệ gốc đã đầy.",
                         document.getDocumentName(), warehouse.getWarehouseName());
@@ -449,12 +424,8 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
             }
             documentRepository.save(document);
 
-            NotificationCreateRequest managerNotification = NotificationCreateRequest.builder()
-                    .userIds(List.of(userCurrent.getUserId()))
-                    .title(title)
-                    .content(message)
-                    .build();
-            notificationService.createNotifications(managerNotification);
+            //send notifi manager
+            this.sendNotification(List.of(userCurrent.getUserId()),title,message);
 
             // Xử lý phạt trả muộn nếu có
             if (request.getFineAmount() > 0) {
@@ -476,12 +447,9 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
         sendLoanStatusUpdate(loanTransaction, loanResponse);
 
         // Gửi thông báo xác nhận trả sách cho người dùng
-        NotificationCreateRequest userNotification = NotificationCreateRequest.builder()
-                .userIds(List.of(loanTransaction.getUser().getUserId()))
-                .title("Xác nhận trả sách")
-                .content(String.format("Sách '%s' đã được trả và xác nhận thành công.", document.getDocumentName()))
-                .build();
-        notificationService.createNotifications(userNotification);
+        String titleUser = "Xác nhận trả sách";
+        String contentUser = String.format("Sách '%s' đã được trả và xác nhận thành công.", document.getDocumentName());
+        this.sendNotification(List.of(loanTransaction.getUser().getUserId()), titleUser, contentUser);
 
         return loanResponse;
     }
@@ -687,7 +655,6 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Chỉ có thể hủy yêu cầu ở trạng thái PENDING hoặc APPROVED trong vòng 24 giờ.");
         }
     }
-
 
     @Override
     @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
@@ -1022,6 +989,14 @@ public class LoanTransactionServiceImpl implements LoanTransactionService {
             webSocketService.sendUpdateStatusLoan(managerUserId, loanResponse);
         }
     }
-
+    //
+    private void sendNotification(List<String> lstUserIds, String title, String content ){
+        NotificationCreateRequest notificationCreateRequest = NotificationCreateRequest.builder()
+                .userIds(lstUserIds)
+                .title(title)
+                .content(content)
+                .build();
+        notificationService.createNotifications(notificationCreateRequest);
+    }
 
 }
